@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
+  m_Name: Ondine
+  m_EditorClassIdentifier: 
+  idCard: 18
+  nom: Ondine
+  nameCapacity: "Vague l\xE9tale"
+  descriptionCapacity: "Inflige 1 d\xE9g\xE2t \xE0 2 ennemis al\xE9atoires"
+  atk: 3
+  def: 5
+  capacityId: 18
+  image: {fileID: 21300000, guid: 8ac2a9beb33d8394fac2e880447f710a, type: 3}
+  color: 91c6da

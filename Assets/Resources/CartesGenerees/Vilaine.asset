@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
+  m_Name: Vilaine
+  m_EditorClassIdentifier: 
+  idCard: 7
+  nom: Vilaine
+  nameCapacity: "Malus d\u2019attaque"
+  descriptionCapacity: "Inflige -1 attaque \xE0 la cible sur son attaque"
+  atk: 5
+  def: 3
+  capacityId: 7
+  image: {fileID: 21300000, guid: c81d25b3f55d5e1499582dd89f633e07, type: 3}
+  color: ebbc38

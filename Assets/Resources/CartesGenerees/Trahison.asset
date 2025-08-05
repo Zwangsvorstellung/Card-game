@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
+  m_Name: Trahison
+  m_EditorClassIdentifier: 
+  idCard: 13
+  nom: Trahison
+  nameCapacity: "Terreur S\xE9lective"
+  descriptionCapacity: "Si n\u2019attaque pas, toutes les cartes ennemies passives
+    subissent -1 DFS"
+  atk: 4
+  def: 4
+  capacityId: 13
+  image: {fileID: 21300000, guid: 7f06df23a4a9a1046997030f3f03cdb3, type: 3}
+  color: afe0cf
