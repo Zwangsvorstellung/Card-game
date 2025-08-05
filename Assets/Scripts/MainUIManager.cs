@@ -24,7 +24,7 @@ public class MainUIManager : MonoBehaviour
                 GameObject cardGO = Instantiate(cartePrefab, transform);
                 if (cardGO.TryGetComponent<CarteUI>(out var cardUI))
                 {
-                    cardUI.ShowCard(card);
+                    cardUI.setAttributesInitCard(card);
                 }
             }
         }

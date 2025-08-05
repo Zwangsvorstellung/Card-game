@@ -36,11 +36,10 @@ public class BoardManager : MonoBehaviour
             GameObject carteGO = Instantiate(cartePrefab, mainAdversaireTransform);
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
             carteUI.isCarteAdversaire = true;
-
-            carteUI.ShowCard(carte);
-            DisableCardInteractions(carteUI);
+            carteUI.setAttributesInitCard(carte);
             cartesInstanciees.Add(carteGO);
         }
+        LayoutRebuilder.ForceRebuildLayoutImmediate(mainAdversaireTransform as RectTransform);
 
         // Instancier les cartes du joueur (4 dernières)
         foreach (var carte in cartesJoueur)
@@ -48,31 +47,27 @@ public class BoardManager : MonoBehaviour
             GameObject carteGO = Instantiate(cartePrefab, mainJoueurTransform);
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
             carteUI.isCartePlayer = true;
-
-            carteUI.ShowCard(carte);
-            EnableCardInteractions(carteUI);
+            carteUI.setAttributesInitCard(carte);
             cartesInstanciees.Add(carteGO);
+        }
+        LayoutRebuilder.ForceRebuildLayoutImmediate(mainJoueurTransform as RectTransform);
+        
+        foreach (var go in cartesInstanciees)
+        {
+            CarteUI carteUI = go.GetComponent<CarteUI>();
+            SetCardPropertiesForGame(carteUI);
         }
     }
     
-    // to do - une fonction pour disabled les cartes de l'adversaire et une autre pour les cartes du joueur
-    private void DisableCardInteractions(CarteUI carteUI)
+    public void SetCardPropertiesForGame(CarteUI carteUI)
     {
         CarteBoardInteraction interactionBoard = carteUI.GetComponent<CarteBoardInteraction>();
-        // Marquer comme carte adversaire (non sélectionnable)
+        RectTransform rectTransform = carteUI.GetComponent<RectTransform>();
+
         interactionBoard.isCardPlayer = carteUI.isCartePlayer;
         interactionBoard.isCardAdversaire = carteUI.isCarteAdversaire;
-
-    }
-    
-    // to do - une fonction pour réactiver les cartes de l'adversaire et une autre pour les cartes du joueur
-    private void EnableCardInteractions(CarteUI carteUI)
-    {
-        CarteBoardInteraction interactionBoard = carteUI.GetComponent<CarteBoardInteraction>();        
-
-        // Marquer comme carte joueur (sélectionnable)
-        interactionBoard.isCardPlayer = carteUI.isCartePlayer;
-        interactionBoard.isCardAdversaire = carteUI.isCarteAdversaire;
+        interactionBoard.positionInitiale = (Vector3)carteUI.GetComponent<RectTransform>().anchoredPosition;
+        interactionBoard.nouvellePosition = (Vector3)carteUI.GetComponent<RectTransform>().anchoredPosition;
     }
 
     // fonction de récupération des mains joueur
@@ -106,15 +101,17 @@ public class BoardManager : MonoBehaviour
     public void PrepareNextTurn()
     {    
         GameManager.nombreAttaquesUtilisees = 0;
-        
-        foreach (var carte in CarteBoardInteraction.AllCardsInteractions){
-    
+        foreach(CarteBoardInteraction carte in CarteBoardInteraction.AllCardsInteractions){
+
             carte.ResetIcon(carte);
             carte.RestoreCardColor(carte);
             carte.ResetPosition();
             carte.DestroyButton();
             carte.nombreCiblages = 0;
+            carte.stateDefensif = "notCibled";
+            carte.stateOffensif = "waitOrder";
             carte.choiceDo = false;
+            carte.isSelected = false;
         }
         
         PanelManager.instance.AddLog($"=== TOUR {GameManager.numeroTour} ===");

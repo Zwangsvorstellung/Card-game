@@ -9,9 +9,9 @@ public class PanelManager : MonoBehaviour
     public static PanelManager instance;
     
     // Configuration du panel
-    private const int MAX_LOGS = 50;
+    private const int MAX_LOGS = 29;
     private const float PANEL_OPACITY = 0.85f;  
-    private const float PANEL_WIDTH = 220f;
+    private const float PANEL_WIDTH = 280f;
     private const float PANEL_MARGIN_TOP = 125f;
     private const float PANEL_MARGIN_BOTTOM = 25f;
     private const float PANEL_MARGIN_RIGHT = 60f;

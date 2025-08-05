@@ -13,16 +13,17 @@ public class GameManager : MonoBehaviour
     
     private List<int> cartesSelectionnees = new List<int>(); // Index des cartes sélectionnées
     private List<CarteData> cartesPlacees = new List<CarteData>(); // Cartes placées sur le tapis
-    private const int MAX_CARTES_TAPIS = 4;
+    public const int MAX_CARTES_TAPIS = 4;
 
     public static GameManager Instance { get; private set; }
 
     public static string mode;
-    public static bool iaActive = false;
+    public static bool iaActive = true;
     public static int scoreJoueur;
     public static int scoreAdversaire;
     public static int numeroTour;
     public static int nombreAttaquesUtilisees;
+    public static int nombreAttaquesUtiliseesIA;
     public static int nombreAttaquesMaximales = 2;
 
 
@@ -92,7 +93,7 @@ public class GameManager : MonoBehaviour
 
         // Distribuer les cartes dans les mains
         int nombreCartesMain = Mathf.Min(7, deckPlayerA.Count);
-        int nombreCartesMainAdversaire = Mathf.Min(4, deckPlayerB.Count);
+        int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS, deckPlayerB.Count);
         for (int i = 0; i < nombreCartesMain; i++)
         {
             mainPlayerA.Enqueue(deckPlayerA[i]);

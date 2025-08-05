@@ -28,7 +28,7 @@ public class IA : MonoBehaviour
     {
         Debug.Log("[IA] Début du tour IA");
         
-        GameManager.nombreAttaquesUtilisees = 0;
+        GameManager.nombreAttaquesUtiliseesIA = 0;
         
         List<CarteBoardInteraction> cartesAdversaires = GetCartesAdversaires();
         
@@ -41,7 +41,7 @@ public class IA : MonoBehaviour
         // Pour chaque carte adverse, faire un choix
         foreach (var carte in cartesAdversaires)
         {
-            if (carte == null || !carte.enabled) 
+            if (carte == null) 
                 continue;
             
             yield return new WaitForSeconds(delaiAction);
@@ -58,7 +58,7 @@ public class IA : MonoBehaviour
     private List<CarteBoardInteraction> GetCartesAdversaires()
     {
         return CarteBoardInteraction.AllCardsInteractions
-            .Where(c => !c.isCardPlayer && c.enabled)
+            .Where(c => c.isCardAdversaire)
             .ToList();
     }
     
@@ -69,7 +69,7 @@ public class IA : MonoBehaviour
         // Logique simple : 70% de chance d'attaquer, 30% de passer
         float random = Random.Range(0f, 1f);
         
-        if (random < 0.7f && CanAttack())
+        if (random < 0.7f && GameManager.nombreAttaquesUtiliseesIA < 2)
         {
             // Attaquer
             Debug.Log($"[IA] {nomCarte} : ATTAQUE");
@@ -83,11 +83,6 @@ public class IA : MonoBehaviour
         }
     }
     
-    private bool CanAttack()
-    {
-        return CarteBoardInteraction.GetRemainingAttacks() > 0;
-    }
-    
     private void ExecuteAttack(CarteBoardInteraction carte)
     {        
         ApplyIAAttackVisualEffect(carte);
@@ -98,43 +93,42 @@ public class IA : MonoBehaviour
     {
         string nomCarte = carte.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
         
-        // Incrémenter le compteur d'attaques
-        GameManager.nombreAttaquesUtilisees++;
+        GameManager.nombreAttaquesUtiliseesIA++;
         
-        // Marquer que la carte a fait son choix
-        carte.choiceDo = true;
+        carte.choiceDo = true;        
+        carte.stateOffensif = "atk";
+        PanelManager.instance.AddLog($"{nomCarte} : ATTAQUE IA ({GameManager.nombreAttaquesUtiliseesIA}/{GameManager.nombreAttaquesMaximales})");
         
-        // Rendre la carte non cliquable
-        carte.enabled = false;
-        
-        PanelManager.instance.AddLog($"{nomCarte} : ATTAQUE IA ({GameManager.nombreAttaquesUtilisees}/{GameManager.nombreAttaquesMaximales})");
-        
-        SelectRandomTarget(nomCarte, GameManager.nombreAttaquesUtilisees);
+        SelectRandomTarget(nomCarte, GameManager.nombreAttaquesUtiliseesIA);
     }
 
     private void SelectRandomTarget(string nomAttaquant, int numberAtk)
     {
-        // Récupérer toutes les cartes du joueur
-        var cartesJoueur = FindObjectsByType<CarteBoardInteraction>(FindObjectsSortMode.None)
+        var cartesJoueur = CarteBoardInteraction.AllCardsInteractions
             .Where(c => c.isCardPlayer)
             .ToList();
+
         if (cartesJoueur.Count > 0)
         {
-            // Choisir une cible aléatoire
             var cible = cartesJoueur[Random.Range(0, cartesJoueur.Count)];
             ApplyAttack(nomAttaquant, cible.name, numberAtk);
         }
     }
     
-    private void ApplyAttack(string nomAttaquant, string cibleName, int numberAtk){
-
+    private void ApplyAttack(string nomAttaquant, string cibleName, int numberAtk)
+    {
         Color couleurAttaque = numberAtk == 1 ? new Color(0.8f, 0.8f, 1f, 1f) : new Color(1f, 0.8f, 0.8f, 1f);
-        var carteJoueur = FindObjectsByType<CarteUI>(FindObjectsSortMode.None)
-            .Where(c => c.name == cibleName);
 
-        foreach (CarteUI carte in carteJoueur)
+        var cible = CarteBoardInteraction.AllCardsInteractions.FirstOrDefault(c => c.name == cibleName);
+        if (cible != null)
         {
-            carte.ShowAttackIcon(1);
+            CarteUI carteUI = cible.GetComponent<CarteUI>();
+            if (carteUI != null)
+            {
+                carteUI.ShowAttackIcon(1);
+                PanelManager.instance.AddLog($"{nomAttaquant} : ATTAQUE -> ({cibleName})");
+
+            }
         }
     }
 
@@ -161,6 +155,8 @@ public class IA : MonoBehaviour
                 button.onClick.Invoke();
             }
         }
+        carte.choiceDo = true;        
+        carte.stateOffensif = "passed";
     }
     
     // Méthode pour démarrer l'IA au début du jeu
@@ -175,15 +171,11 @@ public class IA : MonoBehaviour
         // Récupérer le RectTransform de la carte
         RectTransform rectTransform = carte.GetComponent<RectTransform>();
                 
-        if (!carte.positionInitialeEnregistree)
-        {
-            carte.positionInitiale = rectTransform.anchoredPosition;
-            carte.positionInitialeEnregistree = true;
-        }
+        carte.positionInitiale = rectTransform.anchoredPosition;
         
         // Désactiver le LayoutElement pour que la carte ne soit plus affectée par le GridLayout
         LayoutElement layoutElement = carte.GetComponent<LayoutElement>();
-        layoutElement.ignoreLayout = true;
+        //layoutElement.ignoreLayout = true;
         
         // Déplacer la carte vers le bas de 50 pixels
         Vector3 nouvellePosition = carte.positionInitiale + new Vector3(0, -50, 0);

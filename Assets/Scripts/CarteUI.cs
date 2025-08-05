@@ -8,8 +8,8 @@ using System.Collections.Generic;
 public class CarteUI : MonoBehaviour, IPointerClickHandler
 {
     [Header("Composants UI")]
-    public Image imageCarte; // Composant Image pour afficher le sprite
-    public TMP_Text nomText; // Composant UI pour le texte
+    public Image imageCarte;
+    public TMP_Text nomText; 
     public TMP_Text attaqueText;
     public TMP_Text defenseText;
     public TMP_Text nameCapacity;
@@ -25,11 +25,10 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     public int indexCarte; // Index dans la collection
 
     [Header("Effets visuels")]
-    public Vector3 offsetHover = new Vector3(0, 450, 0); // Montée beaucoup plus haute
-    public float rotationMax = 8f; // Rotation maximale en degrés
+    public Vector3 offsetHover = new Vector3(0, 450, 0);
+    public float rotationMax = 8f;
     
     private Vector3 positionInitiale;
-    private bool positionInitialeEnregistree = false;
     public RectTransform rectTransform;
     public bool isSelect = false;
     public int indexHierarchieOriginal;
@@ -67,7 +66,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         mainUIManager = MainUIManager.Instance;
     }
 
-    public void ShowCard(CarteData data)
+    public void setAttributesInitCard(CarteData data)
     {
         imageCarte.sprite = data.image;
         nomText?.SetText(data.nom);
@@ -86,23 +85,16 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     {
         if(GameManager.mode == "deck"){
 
-            // Sélectionner/désélectionner la carte
             if (!isSelect)
             {
-                // Vérifier si on peut encore sélectionner une carte (max 4)
-                if (CountSelectedCards() >= 4)
-                {
-                    return; // Ne pas sélectionner si on a déjà 4 cartes
-                }            
-                SelectCard();
+                if (CountSelectedCards() < GameManager.MAX_CARTES_TAPIS)
+                    SelectCard();
             }
             else
-            {
                 DeselectCard();
-            }
-            
+
             int nombreCartesSelectionnees = CountSelectedCards();
-            mainUIManager.ShowValidateButton(nombreCartesSelectionnees >= 4);
+            mainUIManager.ShowValidateButton(nombreCartesSelectionnees >= GameManager.MAX_CARTES_TAPIS);
         }
     }
 
@@ -113,11 +105,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         layoutGroup.enabled = false;
         
         // Enregistre la position initiale à la première sélection, après le layout
-        if (!positionInitialeEnregistree)
-        {
-            positionInitiale = rectTransform.anchoredPosition;
-            positionInitialeEnregistree = true;
-        }
+        positionInitiale = rectTransform.anchoredPosition;
         
         isSelect = true;
         rectTransform.anchoredPosition = positionInitiale + offsetHover;
