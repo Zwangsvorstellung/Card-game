@@ -111,24 +111,43 @@ public class IA : MonoBehaviour
         if (cartesJoueur.Count > 0)
         {
             var cible = cartesJoueur[Random.Range(0, cartesJoueur.Count)];
-            ApplyAttack(nomAttaquant, cible.name, numberAtk);
+            ApplyAttack(nomAttaquant, cible.name);
         }
     }
     
-    private void ApplyAttack(string nomAttaquant, string cibleName, int numberAtk)
+    private void ApplyAttack(string nomAttaquant, string cibleName)
     {
-        Color couleurAttaque = numberAtk == 1 ? new Color(0.8f, 0.8f, 1f, 1f) : new Color(1f, 0.8f, 0.8f, 1f);
-
-        var cible = CarteBoardInteraction.AllCardsInteractions.FirstOrDefault(c => c.name == cibleName);
+        CarteBoardInteraction cible = CarteBoardInteraction.AllCardsInteractions.FirstOrDefault(c => c.name == cibleName);
+        CarteBoardInteraction attaquant = CarteBoardInteraction.AllCardsInteractions.FirstOrDefault(c => c.name == nomAttaquant);
         if (cible != null)
         {
             CarteUI carteUI = cible.GetComponent<CarteUI>();
             if (carteUI != null)
             {
-                carteUI.ShowAttackIcon(1);
+                cible.nombreCiblages = cible.nombreCiblages++;
+                carteUI.ShowAttackIcon(cible.nombreCiblages);
                 PanelManager.instance.AddLog($"{nomAttaquant} : ATTAQUE -> ({cibleName})");
+                
+                CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
 
+                var so = System.Array.Find(cartesAssets, c => c.nom == nomAttaquant);
+                if (so != null && !string.IsNullOrEmpty(so.color))
+                {
+                    if (cible.nombreCiblages == 1)
+                    {
+                        carteUI.SetAtk1IconColor(so.color);
+                        carteUI.SetAtk1IconTooltip(so.nom, so.atk);
+                    }
+                    else if (cible.nombreCiblages == 2)
+                    {
+                        carteUI.SetAtk2IconColor(so.color);
+                        carteUI.SetAtk2IconTooltip(so.nom, so.atk);
+                    }
+                }
             }
+
+            cible.stateDefensif = "isAttacked";
+            cible.ComputeAndStoreDamageIA(attaquant, cible, nomAttaquant, cibleName);
         }
     }
 

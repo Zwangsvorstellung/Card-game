@@ -150,7 +150,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     // Méthode pour afficher l'icône d'attaque (première ou deuxième)
     public void ShowAttackIcon(int numeroAttaque)
     {
-        passedIcon.SetActive(false);
+        //passedIcon.SetActive(false);
         atk1Icon.SetActive(true);
         atk2Icon.SetActive(false);
 

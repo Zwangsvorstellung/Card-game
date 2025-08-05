@@ -525,6 +525,19 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         degatsDuTour.Add($"{nomAttaquant} (ATK:{attaqueAttaquant}) → {nomCible} (DEF:{defenseCible}) = {attaqueAttaquant} dégâts");
         attaquesDuTour.Add(new AttaqueInfo(carteAttaquante, this, attaqueAttaquant));
     }
+
+    public void ComputeAndStoreDamageIA(CarteBoardInteraction carteAttaquante, CarteBoardInteraction cible, string nomAttaquant, string nomCible)
+    {        
+        int attaqueAttaquant = GetAttackValue(carteAttaquante);
+        int defenseCible = GetDefenseValue(cible);
+                        
+        PanelManager.instance?.AddLog($"[ATTAQUE] {nomAttaquant} : ATK = {attaqueAttaquant}");
+        PanelManager.instance?.AddLog($"[DEFENSE] {nomCible} : DEF = {defenseCible}");
+        
+        degatsDuTour.Add($"{nomAttaquant} (ATK:{attaqueAttaquant}) → {nomCible} (DEF:{defenseCible}) = {attaqueAttaquant} dégâts");
+        attaquesDuTour.Add(new AttaqueInfo(carteAttaquante, cible, attaqueAttaquant));
+    }
+
     
     private int GetAttackValue(CarteBoardInteraction carte)
     {
@@ -662,6 +675,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         rectTransform.anchoredPosition = positionInitiale;
         transform.localRotation = Quaternion.identity;
+        isHover = false;
         if (carteUI.indexHierarchieOriginal >= 0)
         {
             transform.SetSiblingIndex(carteUI.indexHierarchieOriginal);
