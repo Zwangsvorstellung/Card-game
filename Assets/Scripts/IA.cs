@@ -110,14 +110,13 @@ public class IA : MonoBehaviour
 
         if (cartesJoueur.Count > 0)
         {
-            var cible = cartesJoueur[Random.Range(0, cartesJoueur.Count)];
-            ApplyAttack(nomAttaquant, cible.name);
+            CarteBoardInteraction cible = cartesJoueur[Random.Range(0, cartesJoueur.Count)];
+            ApplyAttack(nomAttaquant, cible);
         }
     }
     
-    private void ApplyAttack(string nomAttaquant, string cibleName)
+    private void ApplyAttack(string nomAttaquant, CarteBoardInteraction cible)
     {
-        CarteBoardInteraction cible = CarteBoardInteraction.AllCardsInteractions.FirstOrDefault(c => c.name == cibleName);
         CarteBoardInteraction attaquant = CarteBoardInteraction.AllCardsInteractions.FirstOrDefault(c => c.name == nomAttaquant);
         if (cible != null)
         {
