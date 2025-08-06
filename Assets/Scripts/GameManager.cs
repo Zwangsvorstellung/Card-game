@@ -25,10 +25,12 @@ public class GameManager : MonoBehaviour
     public static int nombreAttaquesUtilisees;
     public static int nombreAttaquesUtiliseesIA;
     public static int nombreAttaquesMaximales = 2;
+    public static bool isEndturnPlayer = false;
 
 
+    [SerializeField] private bool isEndturnPlayerdebug = false;
     [SerializeField] private string debugMode;
-    [SerializeField] private int debugMode2;
+    [SerializeField] private int nombreAttaquesUtiliseesdebug;
 
     void Awake()
     {
@@ -119,7 +121,8 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         debugMode = mode;
-        debugMode2 = nombreAttaquesUtilisees;
+        nombreAttaquesUtiliseesdebug = nombreAttaquesUtilisees;
+        isEndturnPlayerdebug = isEndturnPlayer;
     }
     private void SelectCard(int indexCarte)
     {

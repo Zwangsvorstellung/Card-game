@@ -24,11 +24,11 @@ public class CamController : MonoBehaviour
     {
         if(Input.GetAxis("Mouse ScrollWheel") < 0)
         {
-            GoToHeadView();
+           // GoToHeadView();
         }
         if(Input.GetAxis("Mouse ScrollWheel") > 0)
         {
-            GoToBoardView();
+            //GoToBoardView();
         }
     }
 

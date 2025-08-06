@@ -27,7 +27,6 @@ public class IA : MonoBehaviour
     private IEnumerator ExecuteAITurn()
     {
         Debug.Log("[IA] Début du tour IA");
-        
         GameManager.nombreAttaquesUtiliseesIA = 0;
         
         List<CarteBoardInteraction> cartesAdversaires = GetCartesAdversaires();
@@ -50,6 +49,10 @@ public class IA : MonoBehaviour
         }
         
         Debug.Log("[IA] Tour IA terminé");
+
+        CarteBoardInteraction instance = FindObjectOfType<CarteBoardInteraction>();
+        if (instance != null)
+            instance.ApplyAllAttacks();
         
         yield return new WaitForSeconds(1f);
         CarteBoardInteraction.EndAITurn();
@@ -71,13 +74,11 @@ public class IA : MonoBehaviour
         
         if (random < 0.7f && GameManager.nombreAttaquesUtiliseesIA < 2)
         {
-            // Attaquer
             Debug.Log($"[IA] {nomCarte} : ATTAQUE");
             ExecuteAttack(carte);
         }
         else
         {
-            // Passer
             Debug.Log($"[IA] {nomCarte} : PASSER");
             ExecutePass(carte);
         }
@@ -97,7 +98,7 @@ public class IA : MonoBehaviour
         
         carte.choiceDo = true;        
         carte.stateOffensif = "atk";
-        PanelManager.instance.AddLog($"{nomCarte} : ATTAQUE IA ({GameManager.nombreAttaquesUtiliseesIA}/{GameManager.nombreAttaquesMaximales})");
+        PanelManager.instance.AddLog($"ATTAQUE IA ({GameManager.nombreAttaquesUtiliseesIA}/{GameManager.nombreAttaquesMaximales})");
         
         SelectRandomTarget(nomCarte, GameManager.nombreAttaquesUtiliseesIA);
     }
@@ -119,15 +120,16 @@ public class IA : MonoBehaviour
     {
         if (cible == null) return;
         
-        CarteBoardInteraction attaquant = CarteBoardInteraction.AllCardsInteractions.FirstOrDefault(c => c.name == nomAttaquant);
+        CarteBoardInteraction attaquant = CarteBoardInteraction.AllCardsInteractions
+            .FirstOrDefault(c => c.carteUI != null && c.carteUI.nomText != null && c.carteUI.nomText.text == nomAttaquant);
     
         CarteUI carteUI = cible.GetComponent<CarteUI>();
         if (carteUI == null) return;
         
         cible.nombreCiblages++;
         carteUI.ShowAttackIcon(cible.nombreCiblages);
-        
-        PanelManager.instance.AddLog($"{nomAttaquant} : ATTAQUE -> ({cible.name})");
+
+        PanelManager.instance.AddLog($"{nomAttaquant} : ATQ -> {carteUI.nomText.text}");
         
         CarteScriptableObject so = Resources.LoadAll<CarteScriptableObject>("CartesGenerees").FirstOrDefault(c => c.nom == nomAttaquant);
         
@@ -149,10 +151,9 @@ public class IA : MonoBehaviour
 
         // État de la carte cible
         cible.stateDefensif = "isAttacked";
-        cible.isAttack = true;
 
         // Calcul des dégâts
-        cible.ComputeAndStoreDamageIA(attaquant, cible, nomAttaquant, cible.name);
+        cible.ComputeAndStoreDamageIA(attaquant, cible, nomAttaquant, carteUI.nomText.text);
     }
 
     private void ExecutePass(CarteBoardInteraction carte)

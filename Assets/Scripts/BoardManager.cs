@@ -67,7 +67,28 @@ public class BoardManager : MonoBehaviour
         interactionBoard.isCardPlayer = carteUI.isCartePlayer;
         interactionBoard.isCardAdversaire = carteUI.isCarteAdversaire;
         interactionBoard.positionInitiale = (Vector3)carteUI.GetComponent<RectTransform>().anchoredPosition;
-        interactionBoard.nouvellePosition = (Vector3)carteUI.GetComponent<RectTransform>().anchoredPosition;
+
+        Vector2 anchoredPos = carteUI.GetComponent<RectTransform>().anchoredPosition;
+
+        // Stocke la position initiale (convertie en Vector3)
+        interactionBoard.positionInitiale = (Vector3)anchoredPos;
+
+        if(interactionBoard.isCardPlayer){
+        // Crée une nouvelle position avec Y + 50
+            interactionBoard.nouvellePosition = new Vector3(
+                anchoredPos.x,
+                anchoredPos.y + 50f,
+                0f
+            );
+        }
+
+        if(interactionBoard.isCardAdversaire){
+            interactionBoard.nouvellePosition = new Vector3(
+                anchoredPos.x,
+                anchoredPos.y - 50f,
+                0f
+            );
+        }
     }
 
     // fonction de récupération des mains joueur
@@ -112,6 +133,7 @@ public class BoardManager : MonoBehaviour
             carte.stateOffensif = "waitOrder";
             carte.choiceDo = false;
             carte.isSelected = false;
+            carte.layoutGroup.enabled = true;
         }
         
         PanelManager.instance.AddLog($"=== TOUR {GameManager.numeroTour} ===");
