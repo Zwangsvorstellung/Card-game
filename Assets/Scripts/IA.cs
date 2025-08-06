@@ -117,37 +117,42 @@ public class IA : MonoBehaviour
     
     private void ApplyAttack(string nomAttaquant, CarteBoardInteraction cible)
     {
+        if (cible == null) return;
+        
         CarteBoardInteraction attaquant = CarteBoardInteraction.AllCardsInteractions.FirstOrDefault(c => c.name == nomAttaquant);
-        if (cible != null)
+    
+        CarteUI carteUI = cible.GetComponent<CarteUI>();
+        if (carteUI == null) return;
+        
+        cible.nombreCiblages++;
+        carteUI.ShowAttackIcon(cible.nombreCiblages);
+        
+        PanelManager.instance.AddLog($"{nomAttaquant} : ATTAQUE -> ({cible.name})");
+        
+        CarteScriptableObject so = Resources.LoadAll<CarteScriptableObject>("CartesGenerees").FirstOrDefault(c => c.nom == nomAttaquant);
+        
+        if (so != null && !string.IsNullOrEmpty(so.color))
         {
-            CarteUI carteUI = cible.GetComponent<CarteUI>();
-            if (carteUI != null)
+            switch (cible.nombreCiblages)
             {
-                cible.nombreCiblages = cible.nombreCiblages++;
-                carteUI.ShowAttackIcon(cible.nombreCiblages);
-                PanelManager.instance.AddLog($"{nomAttaquant} : ATTAQUE -> ({cibleName})");
-                
-                CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
-
-                var so = System.Array.Find(cartesAssets, c => c.nom == nomAttaquant);
-                if (so != null && !string.IsNullOrEmpty(so.color))
-                {
-                    if (cible.nombreCiblages == 1)
-                    {
-                        carteUI.SetAtk1IconColor(so.color);
-                        carteUI.SetAtk1IconTooltip(so.nom, so.atk);
-                    }
-                    else if (cible.nombreCiblages == 2)
-                    {
-                        carteUI.SetAtk2IconColor(so.color);
-                        carteUI.SetAtk2IconTooltip(so.nom, so.atk);
-                    }
-                }
+                case 1:
+                    carteUI.SetAtk1IconColor(so.color);
+                    carteUI.SetAtk1IconTooltip(so.nom, so.atk);
+                    break;
+    
+                case 2:
+                    carteUI.SetAtk2IconColor(so.color);
+                    carteUI.SetAtk2IconTooltip(so.nom, so.atk);
+                    break;
             }
-
-            cible.stateDefensif = "isAttacked";
-            cible.ComputeAndStoreDamageIA(attaquant, cible, nomAttaquant, cibleName);
         }
+
+        // État de la carte cible
+        cible.stateDefensif = "isAttacked";
+        cible.isAttack = true;
+
+        // Calcul des dégâts
+        cible.ComputeAndStoreDamageIA(attaquant, cible, nomAttaquant, cible.name);
     }
 
     private void ExecutePass(CarteBoardInteraction carte)
@@ -163,15 +168,10 @@ public class IA : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
         
-        // Chercher le bouton passer de cette carte
-        var boutonPasser = carte.transform.Find("BoutonPasser");
-        if (boutonPasser != null)
-        {
-            var button = boutonPasser.GetComponent<Button>();
-            if (button != null && button.interactable)
-            {
-                button.onClick.Invoke();
-            }
+        Button boutonPasser = carte.transform.Find("BoutonPasser")?.GetComponent<Button>();
+        if (boutonPasser != null && boutonPasser.interactable)
+        {          
+            boutonPasser.onClick.Invoke();
         }
         carte.choiceDo = true;        
         carte.stateOffensif = "passed";
@@ -186,7 +186,6 @@ public class IA : MonoBehaviour
     
     private void ApplyIAAttackVisualEffect(CarteBoardInteraction carte)
     {
-        // Récupérer le RectTransform de la carte
         RectTransform rectTransform = carte.GetComponent<RectTransform>();
                 
         carte.positionInitiale = rectTransform.anchoredPosition;
