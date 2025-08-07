@@ -29,23 +29,23 @@ public class IA : MonoBehaviour
         Debug.Log("[IA] Début du tour IA");
         GameManager.nombreAttaquesUtiliseesIA = 0;
         
-        List<CarteBoardInteraction> cartesAdversaires = GetCartesAdversaires();
+        List<CarteBoardInteraction> opponentCards = GetCartesAdversaires();
         
-        if (cartesAdversaires.Count == 0)
+        if (opponentCards.Count == 0)
         {
             Debug.Log("[IA] Aucune carte adverse trouvée");
             yield break;
         }
         
         // Pour chaque carte adverse, faire un choix
-        foreach (var carte in cartesAdversaires)
+        foreach (var card in opponentCards)
         {
-            if (carte == null) 
+            if (card == null) 
                 continue;
             
             yield return new WaitForSeconds(delaiAction);
             
-            DecideCardAction(carte);
+            DecideCardAction(card);
         }
         
         Debug.Log("[IA] Tour IA terminé");
@@ -65,77 +65,79 @@ public class IA : MonoBehaviour
             .ToList();
     }
     
-    private void DecideCardAction(CarteBoardInteraction carte)
+    private void DecideCardAction(CarteBoardInteraction card)
     {
-        string nomCarte = carte.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
+        string nameCard = card.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
         
         // Logique simple : 70% de chance d'attaquer, 30% de passer
         float random = Random.Range(0f, 1f);
         
         if (random < 0.7f && GameManager.nombreAttaquesUtiliseesIA < 2)
         {
-            Debug.Log($"[IA] {nomCarte} : ATTAQUE");
-            ExecuteAttack(carte);
+            Debug.Log($"[IA] {nameCard} : ATTAQUE");
+            ExecuteAttack(card);
         }
         else
         {
-            Debug.Log($"[IA] {nomCarte} : PASSER");
-            ExecutePass(carte);
+            Debug.Log($"[IA] {nameCard} : PASSER");
+            ExecutePass(card);
         }
     }
     
-    private void ExecuteAttack(CarteBoardInteraction carte)
+    private void ExecuteAttack(CarteBoardInteraction card)
     {        
-        ApplyIAAttackVisualEffect(carte);
-        SimulateAIAttack(carte);
+        ApplyIAAttackVisualEffect(card);
+        SimulateAIAttack(card);
     }
     
-    private void SimulateAIAttack(CarteBoardInteraction carte)
+    private void SimulateAIAttack(CarteBoardInteraction card)
     {
-        string nomCarte = carte.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
+        string nameCard = card.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
         
         GameManager.nombreAttaquesUtiliseesIA++;
         
-        carte.choiceDo = true;        
-        carte.stateOffensif = "atk";
+        card.choiceDo = true;        
+        card.stateOffensif = "atk";
         PanelManager.instance.AddLog($"ATTAQUE IA ({GameManager.nombreAttaquesUtiliseesIA}/{GameManager.nombreAttaquesMaximales})");
         
-        SelectRandomTarget(nomCarte, GameManager.nombreAttaquesUtiliseesIA);
+        SelectRandomTarget(nameCard, GameManager.nombreAttaquesUtiliseesIA);
     }
 
-    private void SelectRandomTarget(string nomAttaquant, int numberAtk)
+    private void SelectRandomTarget(string nameAttacker, int numberAtk)
     {
-        var cartesJoueur = CarteBoardInteraction.AllCardsInteractions
+        var cardsPlayer = CarteBoardInteraction.AllCardsInteractions
             .Where(c => c.isCardPlayer)
             .ToList();
 
-        if (cartesJoueur.Count > 0)
+        if (cardsPlayer.Count > 0)
         {
-            CarteBoardInteraction cible = cartesJoueur[Random.Range(0, cartesJoueur.Count)];
-            ApplyAttack(nomAttaquant, cible);
+            CarteBoardInteraction target = cardsPlayer[Random.Range(0, cardsPlayer.Count)];
+            ApplyAttack(nameAttacker, target);
         }
     }
     
-    private void ApplyAttack(string nomAttaquant, CarteBoardInteraction cible)
+    private void ApplyAttack(string nameAttacker, CarteBoardInteraction target)
     {
-        if (cible == null) return;
+        if (target == null) return;
         
-        CarteBoardInteraction attaquant = CarteBoardInteraction.AllCardsInteractions
-            .FirstOrDefault(c => c.carteUI != null && c.carteUI.nomText != null && c.carteUI.nomText.text == nomAttaquant);
+        CarteBoardInteraction cardAttacker = CarteBoardInteraction.AllCardsInteractions
+        .FirstOrDefault(c => c.carteUI?.nomText?.text == nameAttacker);
+
+        if (cardAttacker == null) return;
     
         CarteUI carteUI = cible.GetComponent<CarteUI>();
         if (carteUI == null) return;
         
-        cible.nombreCiblages++;
-        carteUI.ShowAttackIcon(cible.nombreCiblages);
+        target.nombreCiblages++;
+        carteUI.ShowAttackIcon(target.nombreCiblages);
 
-        PanelManager.instance.AddLog($"{nomAttaquant} : ATQ -> {carteUI.nomText.text}");
+        PanelManager.instance.AddLog($"{nameAttacker} : ATQ -> {carteUI.nomText.text}");
         
-        CarteScriptableObject so = Resources.LoadAll<CarteScriptableObject>("CartesGenerees").FirstOrDefault(c => c.nom == nomAttaquant);
+        CarteScriptableObject so = Resources.LoadAll<CarteScriptableObject>("CartesGenerees").FirstOrDefault(c => c.nom == nameAttacker);
         
         if (so != null && !string.IsNullOrEmpty(so.color))
         {
-            switch (cible.nombreCiblages)
+            switch (target.nombreCiblages)
             {
                 case 1:
                     carteUI.SetAtk1IconColor(so.color);
@@ -150,32 +152,32 @@ public class IA : MonoBehaviour
         }
 
         // État de la carte cible
-        cible.stateDefensif = "isAttacked";
+        target.stateDefensif = "isAttacked";
 
         // Calcul des dégâts
-        cible.ComputeAndStoreDamageIA(attaquant, cible, nomAttaquant, carteUI.nomText.text);
+        target.ComputeAndStoreDamageIA(cardAttacker, target, nameAttacker, carteUI.nomText.text);
     }
 
-    private void ExecutePass(CarteBoardInteraction carte)
+    private void ExecutePass(CarteBoardInteraction card)
     {
         // Simuler le clic sur la carte pour la sélectionner
-        carte.OnPointerClick(null);
+        card.OnPointerClick(null);
         
         // Attendre un peu puis cliquer sur le bouton passer
-        StartCoroutine(ClickPassButton(carte));
+        StartCoroutine(ClickPassButton(card));
     }
     
-    private IEnumerator ClickPassButton(CarteBoardInteraction carte)
+    private IEnumerator ClickPassButton(CarteBoardInteraction card)
     {
         yield return new WaitForSeconds(0.2f);
         
-        Button boutonPasser = carte.transform.Find("BoutonPasser")?.GetComponent<Button>();
+        Button boutonPasser = card.transform.Find("BoutonPasser")?.GetComponent<Button>();
         if (boutonPasser != null && boutonPasser.interactable)
         {          
             boutonPasser.onClick.Invoke();
         }
-        carte.choiceDo = true;        
-        carte.stateOffensif = "passed";
+        card.choiceDo = true;        
+        card.stateOffensif = "passed";
     }
     
     // Méthode pour démarrer l'IA au début du jeu
@@ -185,18 +187,18 @@ public class IA : MonoBehaviour
         StartAITurn();
     }
     
-    private void ApplyIAAttackVisualEffect(CarteBoardInteraction carte)
+    private void ApplyIAAttackVisualEffect(CarteBoardInteraction card)
     {
-        RectTransform rectTransform = carte.GetComponent<RectTransform>();
+        RectTransform rectTransform = card.GetComponent<RectTransform>();
                 
-        carte.positionInitiale = rectTransform.anchoredPosition;
+        card.positionInitiale = rectTransform.anchoredPosition;
         
         // Désactiver le LayoutElement pour que la carte ne soit plus affectée par le GridLayout
-        LayoutElement layoutElement = carte.GetComponent<LayoutElement>();
+        LayoutElement layoutElement = card.GetComponent<LayoutElement>();
         //layoutElement.ignoreLayout = true;
         
         // Déplacer la carte vers le bas de 50 pixels
-        Vector3 nouvellePosition = carte.positionInitiale + new Vector3(0, -50, 0);
-        rectTransform.anchoredPosition = nouvellePosition;
+        Vector3 newPosition = card.positionInitiale + new Vector3(0, -50, 0);
+        rectTransform.anchoredPosition = newPosition;
     }
 } 
