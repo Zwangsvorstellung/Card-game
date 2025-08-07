@@ -167,12 +167,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     private void DeselectAllOtherCards()
     {
-        foreach (var interaction in AllCardsInteractions)
+        foreach (var card in AllCardsInteractions)
         {
-            if (interaction.isSelected && !choiceDo)
+            if (card.isSelected && !choiceDo)
             {
-                interaction.DeselectCard();
-                interaction.HideActionButtons();
+                card.DeselectCard();
+                card.HideActionButtons();
             }
         }
     }
@@ -183,42 +183,52 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 
         if (boutonAttaque == null || boutonPasser == null)
             CreateButtonsUnderCard();
-        
-        boutonAttaque?.SetActive(GameManager.nombreAttaquesUtilisees < GameManager.nombreAttaquesMaximales);
+            
+        bool canAttack = GameManager.nombreAttaquesUtilisees < GameManager.nombreAttaquesMaximales;
+
+        boutonAttaque?.SetActive(canAttack);
         boutonPasser?.SetActive(true);
     }
     
     private void CreateButtonsUnderCard()
     {        
-        float positionY = -(GetComponent<RectTransform>().sizeDelta.y + 100);
-        
-        boutonAttaque = CreateButton("Attaque", OnAttaque, new Vector2(-50, positionY));
-        boutonPasser = CreateButton("Passer", OnPasser, new Vector2(50, positionY));
+        float offsetY = - (GetComponent<RectTransform>().sizeDelta.y + 100);
+    
+        Vector2 attaquePosition = new Vector2(-50, offsetY);
+        Vector2 passerPosition = new Vector2(50, offsetY);
+    
+        boutonAttaque = CreateButton("Attaque", OnAttaque, attaquePosition);
+        boutonPasser = CreateButton("Passer", OnPasser, passerPosition);
+    
         boutonAttaque.SetActive(false);
         boutonPasser.SetActive(false);
     }
     
-    private GameObject CreateButton(string texte, UnityEngine.Events.UnityAction action, Vector2 position)
+    private GameObject CreateButton(string text, UnityEngine.Events.UnityAction action, Vector2 position)
     {
-        GameObject boutonGO = new GameObject($"Bouton{texte}");
+        // Création de l'objet bouton
+        GameObject boutonGO = new GameObject($"Bouton{text}");
         boutonGO.transform.SetParent(transform, false);
-        
+
+        // Setup du RectTransform
         RectTransform rectBouton = boutonGO.AddComponent<RectTransform>();
         rectBouton.sizeDelta = new Vector2(120, 30);
         rectBouton.anchoredPosition = position;
-        
+
+        // Ajout du composant Button
         Button bouton = boutonGO.AddComponent<Button>();
         bouton.onClick.AddListener(action);
 
-        ColorBlock colors = bouton.colors;
+        // Rendre le bouton invisible par défaut (fond transparent)
+        var colors = bouton.colors;
         colors.normalColor = new Color(1, 1, 1, 0);
-        bouton.colors = colors;        
+        bouton.colors = colors;     
 
         GameObject texteGO = new GameObject("Texte");
         texteGO.transform.SetParent(boutonGO.transform, false);
         
         TMP_Text texteBouton = texteGO.AddComponent<TextMeshProUGUI>();
-        texteBouton.text = texte.ToUpper();
+        texteBouton.text = texte.ToUpperInvariant();
         texteBouton.color = Color.white;
         texteBouton.font = poppinsRegular;
         texteBouton.fontSize = 22;
@@ -235,40 +245,43 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
     public void DestroyButton()
     {
-        if (boutonAttaque != null)
-            Destroy(boutonAttaque);
-        
-        if (boutonPasser != null)
-            Destroy(boutonPasser);
+        if (boutonAttaque) Destroy(boutonAttaque);
+        if (boutonPasser) Destroy(boutonPasser);
     }
     
     private void OnAttaque()
     {
         GameManager.mode = "atk";
-        string nomCarte = carteUI?.nomText?.text ?? "Nom inconnu";
+        string nameCard = carteUI?.nomText?.text ?? "Nom inconnu";
         
-        boutonPasser.SetActive(false);
-     
-        RectTransform rectAttaque = boutonAttaque.GetComponent<RectTransform>();
-        rectAttaque.anchoredPosition = new Vector2(0, rectAttaque.anchoredPosition.y);
-        rectAttaque.sizeDelta = new Vector2(140, 36);
-        
-        // Changer la couleur du texte en rouge et mettre en gras
-        TMP_Text texteAttaque = boutonAttaque.GetComponentInChildren<TMP_Text>();
-        texteAttaque.color = Color.red;
-        texteAttaque.fontStyle = FontStyles.Bold;
-        texteAttaque.fontSize = 22;
-        
-        // Désactiver le bouton Attaque
-        Button boutonAttaqueComponent = boutonAttaque.GetComponent<Button>();
-        boutonAttaqueComponent.interactable = false;
-      
-        if (layoutElement != null)
-            layoutElement.ignoreLayout = true;               
+        if (boutonPasser) boutonPasser.SetActive(false);    
+
+        if (boutonAttaque)
+        {
+            RectTransform rect = boutonAttaque.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                rect.anchoredPosition = new Vector2(0, rect.anchoredPosition.y);
+                rect.sizeDelta = new Vector2(140, 36);
+            }
+    
+            TMP_Text text = boutonAttaque.GetComponentInChildren<TMP_Text>();
+            if (texte != null)
+            {
+                text.color = Color.red;
+                text.fontStyle = FontStyles.Bold;
+                text.fontSize = 22;
+            }
+    
+            Button bouton = boutonAttaque.GetComponent<Button>();
+            if (bouton != null) bouton.interactable = false;
+        }
+
+        if (layoutElement) layoutElement.ignoreLayout = true;               
         
         carteAttaquante = this;
 
-        PanelManager.instance.AddLog($"{nomCarte} : ATTAQUE sélectionnée ({GameManager.nombreAttaquesUtilisees}/{GameManager.nombreAttaquesMaximales})");
+        PanelManager.instance.AddLog($"{nameCard} : ATTAQUE sélectionnée ({GameManager.nombreAttaquesUtilisees}/{GameManager.nombreAttaquesMaximales})");
         PanelManager.instance.AddLog("   → Sélectionnez une cible adverse");
         
         CheckEndOfTurn();
