@@ -124,14 +124,14 @@ public class GameManager : MonoBehaviour
         nombreAttaquesUtiliseesdebug = nombreAttaquesUtilisees;
         isEndturnPlayerdebug = isEndturnPlayer;
     }
-    private void SelectCard(int indexCarte)
+    private void SelectCard(int indexCard)
     {
-        cartesSelectionnees.Add(indexCarte);
+        cartesSelectionnees.Add(indexCard);
     }
 
-    private void DeselectCard(int indexCarte)
+    private void DeselectCard(int indexCard)
     {
-        cartesSelectionnees.Remove(indexCarte);
+        cartesSelectionnees.Remove(indexCard);
     }
 
     private void Shuffle(List<CarteData> deck)
@@ -152,8 +152,8 @@ public class GameManager : MonoBehaviour
         List<CarteData> mainList = mainPlayerA.ToList();
         
         return mainUIManager.transform.GetComponentsInChildren<CarteUI>(true)
-            .Where(carte => carte.isSelect)
-            .OrderBy(carte => carte.transform.GetSiblingIndex())
+            .Where(card => card.isSelect)
+            .OrderBy(card => card.transform.GetSiblingIndex())
             .Select(carteUI => mainList.FirstOrDefault(c => c.idCard.ToString() == carteUI.carteID))
             .Where(carteData => carteData != null)
             .ToList();
