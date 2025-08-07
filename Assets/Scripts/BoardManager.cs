@@ -25,29 +25,29 @@ public class BoardManager : MonoBehaviour
             Destroy(gameObject);
     }
 
-    public void ShowCardsOnTable(List<CarteData> cartesAdversaire, List<CarteData> cartesJoueur)
+    public void ShowCardsOnTable(List<CarteData> cardsOpponent, List<CarteData> cardsPlayer)
     {        
         cartesInstanciees.ForEach(go => { if (go != null) Destroy(go); });
         cartesInstanciees.Clear();
 
         // Instancier les cartes de l'adversaire (4 premières)
-        foreach (var carte in cartesAdversaire)
+        foreach (var card in cardsOpponent)
         {
             GameObject carteGO = Instantiate(cartePrefab, mainAdversaireTransform);
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
             carteUI.isCarteAdversaire = true;
-            carteUI.setAttributesInitCard(carte);
+            carteUI.setAttributesInitCard(card);
             cartesInstanciees.Add(carteGO);
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(mainAdversaireTransform as RectTransform);
 
         // Instancier les cartes du joueur (4 dernières)
-        foreach (var carte in cartesJoueur)
+        foreach (var card in cardsPlayer)
         {
             GameObject carteGO = Instantiate(cartePrefab, mainJoueurTransform);
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
             carteUI.isCartePlayer = true;
-            carteUI.setAttributesInitCard(carte);
+            carteUI.setAttributesInitCard(card);
             cartesInstanciees.Add(carteGO);
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(mainJoueurTransform as RectTransform);
@@ -122,18 +122,18 @@ public class BoardManager : MonoBehaviour
     public void PrepareNextTurn()
     {    
         GameManager.nombreAttaquesUtilisees = 0;
-        foreach(CarteBoardInteraction carte in CarteBoardInteraction.AllCardsInteractions){
+        foreach(CarteBoardInteraction card in CarteBoardInteraction.AllCardsInteractions){
 
-            carte.ResetIcon(carte);
-            carte.RestoreCardColor(carte);
-            carte.ResetPosition();
-            carte.DestroyButton();
-            carte.nombreCiblages = 0;
-            carte.stateDefensif = "notCibled";
-            carte.stateOffensif = "waitOrder";
-            carte.choiceDo = false;
-            carte.isSelected = false;
-            carte.layoutGroup.enabled = true;
+            card.ResetIcon(card);
+            card.RestoreCardColor(card);
+            card.ResetPosition();
+            card.DestroyButton();
+            card.nombreCiblages = 0;
+            card.stateDefensif = "notCibled";
+            card.stateOffensif = "waitOrder";
+            card.choiceDo = false;
+            card.isSelected = false;
+            card.layoutGroup.enabled = true;
         }
         
         PanelManager.instance.AddLog($"=== TOUR {GameManager.numeroTour} ===");
