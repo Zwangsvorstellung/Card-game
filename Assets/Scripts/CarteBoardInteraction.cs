@@ -15,16 +15,20 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public string stateOffensif = "";
     [SerializeField] public string stateDefensif = "";    
 
+    private Coroutine currentMoveCoroutine;
     public static readonly List<CarteBoardInteraction> AllCardsInteractions = new();
 
     public bool choiceDo = false;
     public CarteUI carteUI;
     private LayoutElement layoutElement;
     public LayoutGroup layoutGroup;
+    private CardAnimations cardAnimations;
+    private Image img;
 
     public Vector3 positionInitiale;
     public Vector3 nouvellePosition;
     private RectTransform rectTransform;
+    private bool ignorePointer  = false;
 
     private bool carteJaune = false;
     private static CarteBoardInteraction carteAttaquante = null;
@@ -54,7 +58,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     }
     private static List<AttaqueInfo> attaquesDuTour = new List<AttaqueInfo>();
   
-    // Indique si c'est le tour de l'IA
     public static bool isAITurn = false;
 
     private void Awake()
@@ -64,12 +67,16 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         layoutGroup = transform.parent?.GetComponent<LayoutGroup>();
         poppinsBold = Resources.Load<TMP_FontAsset>("Fonts/Poppins-Bold SDF");
         poppinsRegular = Resources.Load<TMP_FontAsset>("Fonts/Poppins-Regular SDF");
+
+        cardAnimations = GetComponent<CardAnimations>();
     }
     
     void Start()
     {
         GameManager.numeroTour = 1;
         carteUI = GetComponent<CarteUI>();
+
+        img = carteUI.GetComponent<Image>();
         GameManager.nombreAttaquesUtilisees = 0;
 
         isAITurn = false;
@@ -90,11 +97,21 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     public void OnPointerClick(PointerEventData eventData)
     {
+        //StartCoroutine(cardAnimations.Rotate360());
+        //StartCoroutine(cardAnimations.Wobble());
+        //StartCoroutine(cardAnimations.Flip());
+        //StartCoroutine(cardAnimations.Rotate());
+        //StartCoroutine(cardAnimations.PopScale());
+        //StartCoroutine(cardAnimations.Bounce(0.5f, 30f));
+
         if (isAITurn) return;
         if (GameManager.mode == "deck") return;
         if (isCardAdversaire && GameManager.mode != "atk") return;
         if (isCardPlayer && GameManager.mode == "atk") return;
         if (!isCardPlayer && GameManager.mode == "select" && GameManager.mode == "selectCard") return;
+        cardAnimations.targetImage = carteUI.GetComponentInChildren<Image>();
+        //StartCoroutine(cardAnimations.Glow(carteUI));
+        //StartCoroutine(cardAnimations.Fade(carteUI, 1f, 0f, 0.5f));
 
         if(!choiceDo && GameManager.mode != "atk"){
             if (isSelected)
@@ -112,34 +129,57 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
         if (GameManager.mode == "atk" && this.isCardAdversaire){
             SelectTarget();
+            StartCoroutine(Shake());
         }
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if(this.choiceDo) return;
+        if (ignorePointer || choiceDo) return;
 
-        if (GameManager.mode == "select" && isCardPlayer){
-            rectTransform.anchoredPosition = nouvellePosition;
-        }
-        
-        if (GameManager.mode == "atk" && isCardAdversaire){
-            rectTransform.anchoredPosition = nouvellePosition;
-        }        
+        if ((GameManager.mode == "select" && isCardPlayer) || (GameManager.mode == "atk" && isCardAdversaire))
+        {
+            rectTransform.anchoredPosition = (Vector2)nouvellePosition;
+            ignorePointer = true;
+            StartCoroutine(ReenablePointerAfterDelay(0.1f));
+        }      
+    }
+
+    private IEnumerator ReenablePointerAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        ignorePointer = false;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         if(this.choiceDo) return;
-        if (GameManager.mode == "select" && isCardPlayer){
-            rectTransform.anchoredPosition = positionInitiale;
-        }
-        
-        if (GameManager.mode == "atk" && isCardAdversaire){
+
+        if ((GameManager.mode == "select" && isCardPlayer) || (GameManager.mode == "atk" && isCardAdversaire))
+        {
             rectTransform.anchoredPosition = positionInitiale;
         }
     }
     
+    public IEnumerator Shake(float duration = 0.3f, float magnitude = 5f)
+    {
+        Vector3 originalPos = rectTransform.anchoredPosition;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float x = UnityEngine.Random.Range(-1f, 1f) * magnitude;
+            float y = UnityEngine.Random.Range(-1f, 1f) * magnitude;
+
+            rectTransform.anchoredPosition = originalPos + new Vector3(x, y, 0);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        rectTransform.anchoredPosition = originalPos;
+    }
+
     private void SelectCard()
     {           
         isSelected = true;
@@ -228,7 +268,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         texteGO.transform.SetParent(boutonGO.transform, false);
         
         TMP_Text texteBouton = texteGO.AddComponent<TextMeshProUGUI>();
-        texteBouton.text = texte.ToUpperInvariant();
+        texteBouton.text = text.ToUpperInvariant();
         texteBouton.color = Color.white;
         texteBouton.font = poppinsRegular;
         texteBouton.fontSize = 22;
@@ -254,27 +294,27 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         GameManager.mode = "atk";
         string nameCard = carteUI?.nomText?.text ?? "Nom inconnu";
         
-        if (boutonPasser) boutonPasser.SetActive(false);    
+        boutonPasser?.SetActive(false);    
 
         if (boutonAttaque)
         {
-            RectTransform rect = boutonAttaque.GetComponent<RectTransform>();
-            if (rect != null)
+            if (boutonAttaque.TryGetComponent(out RectTransform rect))
             {
                 rect.anchoredPosition = new Vector2(0, rect.anchoredPosition.y);
                 rect.sizeDelta = new Vector2(140, 36);
             }
     
-            TMP_Text text = boutonAttaque.GetComponentInChildren<TMP_Text>();
-            if (texte != null)
+            if (boutonAttaque.TryGetComponent(out TMP_Text text))
             {
                 text.color = Color.red;
                 text.fontStyle = FontStyles.Bold;
                 text.fontSize = 22;
             }
-    
-            Button bouton = boutonAttaque.GetComponent<Button>();
-            if (bouton != null) bouton.interactable = false;
+
+            if (boutonAttaque.TryGetComponent(out Button bouton))
+            {
+                bouton.interactable = false;
+            }
         }
 
         if (layoutElement) layoutElement.ignoreLayout = true;               
@@ -298,7 +338,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             cartesColorees.Add(this);
 
         Image imageCarte = GetComponent<Image>() ?? GetComponentInChildren<Image>();
-        imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+        StartCoroutine(ChangeColorSmoothly(imageCarte, new Color(0.4f, 0.4f, 0.4f, 1f), 0.5f));
         
         if (layoutElement != null)
             layoutElement.ignoreLayout = true;
@@ -488,6 +528,20 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         Debug.Log("[IA] Tour IA terminé, passage au tour suivant");
         BoardManager.Instance.ShowButtonNextStep(true);
+    }
+
+    private IEnumerator ChangeColorSmoothly(Image image, Color targetColor, float duration)
+    {
+        Color startColor = image.color;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            image.color = Color.Lerp(startColor, targetColor, elapsed / duration);
+            yield return null;
+        }
+        image.color = targetColor;
     }
     
     public void AutoPass()

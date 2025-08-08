@@ -35,7 +35,7 @@ public class BoutonValider : MonoBehaviour
         List<CarteData> cartesAdversaire = GenerateOpponentCards();
 
         // Masquer toutes les cartes UI
-        MasquerToutesLesCartes();
+        //MasquerToutesLesCartes();
 
         // Afficher les cartes sur la table via BoardManager     
         BoardManager.Instance.ShowCardsOnTable(cartesAdversaire, cartesSelectionnees);

@@ -50,7 +50,7 @@ public class IA : MonoBehaviour
         
         Debug.Log("[IA] Tour IA terminé");
 
-        CarteBoardInteraction instance = FindObjectOfType<CarteBoardInteraction>();
+        CarteBoardInteraction instance = FindAnyObjectByType<CarteBoardInteraction>();
         if (instance != null)
             instance.ApplyAllAttacks();
         
@@ -125,7 +125,7 @@ public class IA : MonoBehaviour
 
         if (cardAttacker == null) return;
     
-        CarteUI carteUI = cible.GetComponent<CarteUI>();
+        CarteUI carteUI = cardAttacker.GetComponent<CarteUI>();
         if (carteUI == null) return;
         
         target.nombreCiblages++;

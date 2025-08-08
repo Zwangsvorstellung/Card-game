@@ -9,14 +9,14 @@ public class PanelManager : MonoBehaviour
     public static PanelManager instance;
     
     // Configuration du panel
-    private const int MAX_LOGS = 29;
+    private const int MAX_LOGS = 150;
     private const float PANEL_OPACITY = 0.85f;  
-    private const float PANEL_WIDTH = 280f;
+    private const float PANEL_WIDTH = 400f;
     private const float PANEL_MARGIN_TOP = 125f;
     private const float PANEL_MARGIN_BOTTOM = 25f;
     private const float PANEL_MARGIN_RIGHT = 60f;
-    private const float LOGS_MARGIN = 10f;
-    private const float LOGS_FONT_SIZE = 14f;
+    private const float LOGS_MARGIN = 20f;
+    private const float LOGS_FONT_SIZE = 18f;
     
     // Configuration du panel de victoire
     private const float VICTORY_PANEL_WIDTH = 400f;
@@ -29,24 +29,28 @@ public class PanelManager : MonoBehaviour
     private const float BUTTON_TEXT_SIZE = 18f;
     
     private GameObject panelDroit;
-    private bool estEnVueBoard = false;
     private TMP_Text zoneLogs;
     private List<string> logs = new List<string>();
     
     void Awake()
     {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         instance = this;
+        DontDestroyOnLoad(gameObject);
         CreateRightPanel();
     }
     
     void Update()
     {
-        bool nouvelleVueBoard = CamController.Instance?.EstEnVueBoard() ?? false;
+        bool nouvelleVueBoard = CamController.Instance?.ViewBoardOn ?? false;
         
-        if (nouvelleVueBoard != estEnVueBoard)
+        if (panelDroit != null && panelDroit.activeSelf != nouvelleVueBoard)
         {
-            estEnVueBoard = nouvelleVueBoard;
-            panelDroit?.SetActive(estEnVueBoard);
+            panelDroit?.SetActive(nouvelleVueBoard);
         }
     }
     
@@ -57,7 +61,13 @@ public class PanelManager : MonoBehaviour
         
         // Créer le panel droit
         GameObject panelGO = new GameObject("PanelDroit");
-        panelGO.transform.SetParent(canvas.transform, false);
+
+        Transform boardRoot = GameObject.Find("BoardManager")?.transform;
+        if (boardRoot != null)
+            panelGO.transform.SetParent(boardRoot, false);
+        else
+            panelGO.transform.SetParent(canvas.transform, false); // Fallback
+
         
         // Ajouter les composants UI
         Image imagePanel = panelGO.AddComponent<Image>();
@@ -65,18 +75,16 @@ public class PanelManager : MonoBehaviour
         
         RectTransform rectPanel = panelGO.GetComponent<RectTransform>();
         
-        // Positionner le panel sur la droite avec les marges spécifiées
-        rectPanel.anchorMin = new Vector2(1, 0); // Ancré en bas à droite
-        rectPanel.anchorMax = new Vector2(1, 1); // Ancré en haut à droite
-        rectPanel.pivot = new Vector2(1, 0.5f); // Pivot à droite
-        rectPanel.anchoredPosition = new Vector2(0, 0); // Position de base
-        
-        rectPanel.offsetMin = new Vector2(-PANEL_MARGIN_RIGHT, PANEL_MARGIN_TOP);
-        rectPanel.offsetMax = new Vector2(-PANEL_MARGIN_RIGHT, -PANEL_MARGIN_BOTTOM);
-        
+        rectPanel.anchorMin = new Vector2(1, 0.5f);
+        rectPanel.anchorMax = new Vector2(1, 0.5f);
+        rectPanel.pivot = new Vector2(1, 0.5f);
+        rectPanel.anchoredPosition = new Vector2(-PANEL_MARGIN_RIGHT, 0);
+        rectPanel.sizeDelta = new Vector2(PANEL_WIDTH, 0);
+
         // Forcer la largeur du panel
         rectPanel.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, PANEL_WIDTH);
-        
+        float hauteurPanel = canvas.GetComponent<RectTransform>().rect.height - (PANEL_MARGIN_TOP + PANEL_MARGIN_BOTTOM);
+        rectPanel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, hauteurPanel);
         CreateLogsArea(panelGO);
         
         panelDroit = panelGO;
@@ -85,34 +93,123 @@ public class PanelManager : MonoBehaviour
 
     private void CreateLogsArea(GameObject panelParent)
     {
-        // Créer le conteneur pour les logs
         GameObject logsContainer = new GameObject("LogsContainer");
         logsContainer.transform.SetParent(panelParent.transform, false);
-        
-        // Configuration du RectTransform du conteneur
+
+        // === RectTransform du conteneur principal ===
         RectTransform rectLogs = logsContainer.AddComponent<RectTransform>();
         rectLogs.anchorMin = new Vector2(0, 0);
         rectLogs.anchorMax = new Vector2(1, 1);
         rectLogs.offsetMin = new Vector2(LOGS_MARGIN, LOGS_MARGIN);
         rectLogs.offsetMax = new Vector2(-LOGS_MARGIN, -LOGS_MARGIN);
-        
-        // Créer la zone de texte avec la méthode utilitaire
-        zoneLogs = CreateUIText(logsContainer, "ZoneLogs", "Choisissez une action pour chaque carte en la sélectionnant.", 
-                               LOGS_FONT_SIZE, Color.white, TextAlignmentOptions.TopLeft);
-        // Charger la police Poppins si disponible
+
+        // === Image de fond + Mask ===
+        Image bgImage = logsContainer.AddComponent<Image>();
+        bgImage.color = new Color(0, 0, 0, 0.25f);
+        Mask mask = logsContainer.AddComponent<Mask>();
+        mask.showMaskGraphic = false;
+
+        // === ScrollRect ===
+        ScrollRect scrollRect = logsContainer.AddComponent<ScrollRect>();
+        scrollRect.horizontal = false;
+        scrollRect.vertical = true;
+        scrollRect.movementType = ScrollRect.MovementType.Clamped;
+
+        // === Scrollbar ===
+        GameObject scrollbarGO = new GameObject("ScrollbarVertical");
+        scrollbarGO.transform.SetParent(logsContainer.transform, false);
+        RectTransform scrollbarRect = scrollbarGO.AddComponent<RectTransform>();
+        scrollbarRect.anchorMin = new Vector2(1, 0);
+        scrollbarRect.anchorMax = new Vector2(1, 1);
+        scrollbarRect.pivot = new Vector2(1, 0.5f);
+        scrollbarRect.sizeDelta = new Vector2(6f, 0);
+        scrollbarRect.anchoredPosition = Vector2.zero;
+
+        Image scrollbarImage = scrollbarGO.AddComponent<Image>();
+        scrollbarImage.color = new Color(1f, 1f, 1f, 0.1f);
+
+        Scrollbar scrollbar = scrollbarGO.AddComponent<Scrollbar>();
+        scrollbar.direction = Scrollbar.Direction.BottomToTop;
+
+        // === Handle ===
+        GameObject handleGO = new GameObject("Handle");
+        handleGO.transform.SetParent(scrollbarGO.transform, false);
+        RectTransform handleRect = handleGO.AddComponent<RectTransform>();
+        handleRect.anchorMin = Vector2.zero;
+        handleRect.anchorMax = Vector2.one;
+        handleRect.offsetMin = Vector2.zero;
+        handleRect.offsetMax = Vector2.zero;
+
+        Image handleImage = handleGO.AddComponent<Image>();
+        handleImage.color = new Color(1f, 1f, 1f, 0.35f);
+        scrollbar.handleRect = handleRect;
+        scrollbar.targetGraphic = handleImage;
+
+        // Connect Scrollbar au ScrollRect
+        scrollRect.verticalScrollbar = scrollbar;
+        scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+
+        // === Content ===
+        GameObject contentGO = new GameObject("Content");
+        contentGO.transform.SetParent(logsContainer.transform, false);
+        RectTransform contentRect = contentGO.AddComponent<RectTransform>();
+        contentRect.anchorMin = new Vector2(0, 1);
+        contentRect.anchorMax = new Vector2(1, 1);
+        contentRect.pivot = new Vector2(0.5f, 1);
+        contentRect.anchoredPosition = Vector2.zero;
+        contentRect.sizeDelta = new Vector2(0, 0);
+
+        scrollRect.content = contentRect;
+
+        // Layout et Fitter
+        VerticalLayoutGroup layout = contentGO.AddComponent<VerticalLayoutGroup>();
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandHeight = false;
+        layout.childForceExpandWidth = false;
+        layout.padding = new RectOffset(10, 10, 10, 10);
+        layout.spacing = 5f;
+
+        ContentSizeFitter fitter = contentGO.AddComponent<ContentSizeFitter>();
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        // Zone de texte
+        zoneLogs = CreateUIText(contentGO, "ZoneLogs", "Choisissez une action pour chaque carte en la sélectionnant.",
+                                LOGS_FONT_SIZE, Color.white, TextAlignmentOptions.TopLeft);
+
         TMP_FontAsset poppinsFont = Resources.Load<TMP_FontAsset>("Fonts/Poppins-Regular SDF");
-        zoneLogs.font = poppinsFont;
-        
+        if (poppinsFont != null)
+            zoneLogs.font = poppinsFont;
+
+        zoneLogs.enableWordWrapping = true;
+        zoneLogs.overflowMode = TextOverflowModes.Overflow;
+
+        // RectTransform du texte
+        RectTransform zoneLogsRect = zoneLogs.GetComponent<RectTransform>();
+        zoneLogsRect.anchorMin = new Vector2(0, 1);
+        zoneLogsRect.anchorMax = new Vector2(1, 1);
+        zoneLogsRect.pivot = new Vector2(0.5f, 1);
+        zoneLogsRect.anchoredPosition = Vector2.zero;
+        zoneLogsRect.sizeDelta = new Vector2(0, 0);
     }
+
     
     public void AddLog(string message)
     {
         logs.Add(message);
         
-        if (logs.Count > MAX_LOGS)
-            logs.RemoveAt(0);
+       // if (logs.Count > MAX_LOGS)
+           // logs.RemoveAt(0);
         
         zoneLogs?.SetText(string.Join("\n", logs));
+
+        // ➤ Forcer le scroll tout en bas
+        ScrollRect scroll = zoneLogs?.GetComponentInParent<ScrollRect>();
+        if (scroll != null)
+        {
+            Canvas.ForceUpdateCanvases(); // Important pour forcer le layout à se mettre à jour
+            scroll.verticalNormalizedPosition = 0f;
+        }
     }
     
     public void ShowVictory(int score)
@@ -176,9 +273,9 @@ public class PanelManager : MonoBehaviour
     public void RestartGame() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
     // Méthodes utilitaires pour la création d'UI
-    private TMP_Text CreateUIText(GameObject parent, string nom, string texte, float taille, Color couleur, TextAlignmentOptions alignement)
+    private TMP_Text CreateUIText(GameObject parent, string name, string text, float size, Color color, TextAlignmentOptions align)
     {
-        GameObject texteGO = new GameObject(nom);
+        GameObject texteGO = new GameObject(name);
         texteGO.transform.SetParent(parent.transform, false);
         
         RectTransform rectTexte = texteGO.AddComponent<RectTransform>();
@@ -188,10 +285,10 @@ public class PanelManager : MonoBehaviour
         rectTexte.offsetMax = Vector2.zero;
         
         TMP_Text tmpTexte = texteGO.AddComponent<TextMeshProUGUI>();
-        tmpTexte.text = texte;
-        tmpTexte.fontSize = taille;
-        tmpTexte.color = couleur;
-        tmpTexte.alignment = alignement;
+        tmpTexte.text = text;
+        tmpTexte.fontSize = size;
+        tmpTexte.color = color;
+        tmpTexte.alignment = align;
         
         return tmpTexte;
     }

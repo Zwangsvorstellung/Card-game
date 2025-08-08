@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine.EventSystems;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections;
 
 public class CarteUI : MonoBehaviour, IPointerClickHandler
 {
@@ -14,6 +15,12 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     public TMP_Text defenseText;
     public TMP_Text nameCapacity;
     public TMP_Text descriptionCapacity;
+    private CardAnimations cardAnimations;
+    private Coroutine pulseCoroutine;
+    private Coroutine swingCoroutine;
+    private Coroutine pulseAtk1Coroutine;
+    private Coroutine pulseAtk2Coroutine;
+
 
     [Header("Icônes d'état")]
     public GameObject atk1Icon; // Icône première attaque
@@ -54,7 +61,9 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         atk2Icon = atk2Transform.gameObject;
         Transform passedTransform = transform.Find("passed");
         passedIcon = passedTransform.gameObject;
-        
+
+        cardAnimations = GetComponent<CardAnimations>();
+
         HideAllIcons();
     }
 
@@ -83,15 +92,29 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        //StartCoroutine(cardAnimations.ColorFlash());
+
         if(GameManager.mode == "deck"){
 
             if (!isSelect)
             {
-                if (CountSelectedCards() < GameManager.MAX_CARTES_TAPIS)
+                if (CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
                     SelectCard();
+                    //if (pulseCoroutine == null)
+                    //    pulseCoroutine = StartCoroutine(cardAnimations.Pulse(0.7f, 0.95f, 1f));
+    
+                }
             }
-            else
+            else{
+
+                if (pulseCoroutine != null)
+                {
+                    //StopCoroutine(pulseCoroutine);
+                   // pulseCoroutine = null;
+                    //rectTransform.localScale = new Vector3(0.8f, 0.8f, 1f);
+                }
                 DeselectCard();
+            }
 
             int nombreCartesSelectionnees = CountSelectedCards();
             mainUIManager.ShowValidateButton(nombreCartesSelectionnees >= GameManager.MAX_CARTES_TAPIS);
@@ -146,16 +169,51 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     {
         HideAllIcons();
         passedIcon.SetActive(true);
+        RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
+
+        swingCoroutine = StartCoroutine(SwingSablier(passedRect));
     }
+
+    private IEnumerator SwingSablier(RectTransform passedRect, float angleMax = 10f, float speed = 2f)
+    {
+        float elapsed = 0f;
+        while (true)
+        {
+            // oscillation entre -angleMax et +angleMax (en degrés)
+            float angle = Mathf.Sin(elapsed * speed) * angleMax;
+            passedRect.localRotation = Quaternion.Euler(0, 0, angle);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator Pulse(RectTransform rectTransform, float minScale = 0.9f, float maxScale = 1.1f, float speed = 2f)
+    {
+        float elapsed = 0f;
+        while (true)
+        {
+            float scale = Mathf.Lerp(minScale, maxScale, (Mathf.Sin(elapsed * speed) + 1f) / 2f);
+            rectTransform.localScale = new Vector3(scale, scale, 1f);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
     // Méthode pour afficher l'icône d'attaque (première ou deuxième)
     public void ShowAttackIcon(int numeroAttaque)
     {
         //passedIcon.SetActive(false);
         atk1Icon.SetActive(true);
         atk2Icon.SetActive(false);
+    
+        RectTransform atkRect = atk1Icon.GetComponent<RectTransform>();
+        pulseAtk1Coroutine  = StartCoroutine(Pulse(atkRect));
 
-        if (numeroAttaque == 2)
+        if (numeroAttaque == 2){
             atk2Icon.SetActive(true);
+            RectTransform atkRect2 = atk2Icon.GetComponent<RectTransform>();
+            pulseAtk2Coroutine  = StartCoroutine(Pulse(atkRect2));
+        }
     }
     public void SetAtk1IconColor(string hexColor)
     {
