@@ -8,6 +8,8 @@ using System.Linq;
 
 public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
+    public List<IAAction.Capacite> capacites; // la liste des capacités de la carte
+
     [SerializeField] public bool isCardPlayer = false;
     [SerializeField] public bool isCardAdversaire = false;
     [SerializeField] public bool isSelected = false;
@@ -60,6 +62,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
   
     public static bool isAITurn = false;
 
+    public string LastTarget = "zao";
+    public CarteBoardInteraction CurrentTarget;
+
+    public bool HasAttackedThisTurn = false;
+    public bool WillAttackThisTurn = false;
+
     private void Awake()
     {
         layoutElement = GetComponent<LayoutElement>();
@@ -111,7 +119,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         if (!isCardPlayer && GameManager.mode == "select" && GameManager.mode == "selectCard") return;
         cardAnimations.targetImage = carteUI.GetComponentInChildren<Image>();
         //StartCoroutine(cardAnimations.Glow(carteUI));
-        //StartCoroutine(cardAnimations.Fade(carteUI, 1f, 0f, 0.5f));
+        StartCoroutine(cardAnimations.Fade(carteUI, 1f, 0f, 0.5f));
 
         if(!choiceDo && GameManager.mode != "atk"){
             if (isSelected)
@@ -127,7 +135,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             }
         }
 
-        if (GameManager.mode == "atk" && this.isCardAdversaire){
+        if (GameManager.mode == "atk" && this.isCardAdversaire && this.stateDefensif != "isAttacked"){
             SelectTarget();
             StartCoroutine(Shake());
         }
@@ -445,19 +453,20 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     public void ApplyAllAttacks()
     {
-        Debug.Log("=== [ApplyAllAttacks] Début de l'application des attaques ===");
-        Debug.Log($"Nombre d'attaques à appliquer : {attaquesDuTour.Count}");
+        //Debug.Log("=== [ApplyAllAttacks] Début de l'application des attaques ===");
+        //Debug.Log($"Nombre d'attaques à appliquer : {attaquesDuTour.Count}");
 
         foreach (AttaqueInfo attaque in attaquesDuTour)
         {
             string attaquantNom = attaque.attaquant?.carteUI?.nomText?.text ?? "NULL";
             string cibleNom = attaque.cible?.carteUI?.nomText?.text ?? "NULL";
-            Debug.Log($"[ApplyAllAttacks] Attaquant : {attaquantNom}, Cible : {cibleNom}, Dégâts : {attaque.degats}");
+            //Debug.Log($"[ApplyAllAttacks] Attaquant : {attaquantNom}, Cible : {cibleNom}, Dégâts : {attaque.degats}");
 
             if (attaque.cible != null)
             {
                 attaque.cible.ApplyDamageToTarget(attaque.degats);
                 cartesCibled.Add(attaque.cible);
+                CurrentTarget = attaque.cible;
             }
         }
 
@@ -607,7 +616,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     }
 
     
-    private int GetAttackValue(CarteBoardInteraction carte)
+    public int GetAttackValue(CarteBoardInteraction carte)
     {
         if (carte?.carteUI?.attaqueText != null)
         {
@@ -617,7 +626,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         return 0;
     }
     
-    private int GetDefenseValue(CarteBoardInteraction carte)
+    public int GetDefenseValue(CarteBoardInteraction carte)
     {
         if (carte?.carteUI?.defenseText != null)
         {
@@ -867,5 +876,18 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         
         GameManager.scoreJoueur++;
         PanelManager.instance.ShowVictory(GameManager.scoreJoueur);
+    }
+
+    public bool HasCapacite(IAAction.Capacite cap)
+    {
+        return capacites != null && capacites.Contains(cap);
+    }
+
+    public static bool IsAdjacentTo(CarteBoardInteraction a, CarteBoardInteraction b)
+    {
+        CarteUI carteUIA = a.GetComponent<CarteUI>();
+        CarteUI carteUIB = b.GetComponent<CarteUI>();
+        if (carteUIA == null || carteUIB == null) return false;
+        return Mathf.Abs(carteUIA.indexCarte - carteUIB.indexCarte) == 1;
     }
 } 

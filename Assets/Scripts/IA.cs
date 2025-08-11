@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
 using UnityEngine.UI;
+using static IAAction;
 
 public class IA : MonoBehaviour
 {
@@ -26,81 +27,121 @@ public class IA : MonoBehaviour
     
     private IEnumerator ExecuteAITurn()
     {
-        Debug.Log("[IA] Début du tour IA");
+       // Debug.Log("[IA] Début du tour IA");
+
         GameManager.nombreAttaquesUtiliseesIA = 0;
-        
-        List<CarteBoardInteraction> opponentCards = GetCartesAdversaires();
-        
-        if (opponentCards.Count == 0)
+
+        List<CarteBoardInteraction> cartesIA = GetCartesAdversaire();
+        List<CarteBoardInteraction> cardsPlayer = GetCartesPlayer();
+
+        if (cartesIA.Count == 0)
         {
             Debug.Log("[IA] Aucune carte adverse trouvée");
             yield break;
         }
-        
-        // Pour chaque carte adverse, faire un choix
-        foreach (var card in opponentCards)
-        {
-            if (card == null) 
-                continue;
-            
-            yield return new WaitForSeconds(delaiAction);
-            
-            DecideCardAction(card);
-        }
-        
-        Debug.Log("[IA] Tour IA terminé");
 
+        const int maxAttaques = 2;
+        const int seuilMinAttaque = 2; // seuil minimal pour qu'une attaque soit envisagée
+
+        int attaquesEffectuees = 0;
+
+        // On crée une liste temporaire pour gérer les cartes IA pouvant attaquer
+        List<CarteBoardInteraction> cartesIADisponibles = new List<CarteBoardInteraction>(cartesIA);
+        List<CarteBoardInteraction> cartesAAttaque = new List<CarteBoardInteraction>();
+
+        while (attaquesEffectuees < maxAttaques && cartesIADisponibles.Count > 0)
+        {
+            int meilleureScore = 0;
+            CarteBoardInteraction meilleurAttaquant = null;
+            CarteBoardInteraction meilleureCible = null;
+
+            // Pour chaque carte IA disponible, on décide l'action
+            foreach (var carteIA in cartesIADisponibles)
+            {
+                var decision = IAAction.DecideAction(carteIA, cartesIA, cardsPlayer);
+                Debug.Log($"[IA] Carte {carteIA.name} : attack={decision.attack}, score={decision.score}, target={(decision.target != null ? decision.target.name : "null")}");
+
+                if (decision.attack && decision.score > meilleureScore && decision.score >= seuilMinAttaque)
+                {
+                    meilleureScore = decision.score;
+                    meilleurAttaquant = carteIA;
+                    meilleureCible = decision.target;
+                }
+            }
+
+            if (meilleurAttaquant != null && meilleureCible != null)
+            {
+                Debug.Log($"[IA] {meilleurAttaquant.name} attaque la cible {meilleureCible} avec un score {meilleureScore}");
+                ExecuteAttack(meilleurAttaquant, meilleureCible);
+
+                attaquesEffectuees++;
+                cartesAAttaque.Add(meilleurAttaquant);
+                // On retire le meilleur attaquant de la liste pour qu'il n'attaque qu'une fois
+                cartesIADisponibles.Remove(meilleurAttaquant);
+
+                // On peut aussi retirer la cible si tu veux éviter qu'elle soit attaquée plusieurs fois
+                cardsPlayer.Remove(meilleureCible);
+
+                yield return new WaitForSeconds(delaiAction);
+            }
+            else
+            {
+                break;
+            } 
+        }
+
+        foreach (var carteIA in cartesIA)
+        {
+            if (!cartesAAttaque.Contains(carteIA))
+            {
+                Debug.Log($"[IA] {carteIA.name} : PASSER");
+                ExecutePass(carteIA);
+                yield return new WaitForSeconds(delaiAction);
+            }
+        }
+
+        //Debug.Log("[IA] Tour IA terminé");
+
+        // Appliquer toutes les attaques
         CarteBoardInteraction instance = FindAnyObjectByType<CarteBoardInteraction>();
         if (instance != null)
             instance.ApplyAllAttacks();
-        
+
         yield return new WaitForSeconds(1f);
         CarteBoardInteraction.EndAITurn();
     }
     
-    private List<CarteBoardInteraction> GetCartesAdversaires()
+    private List<CarteBoardInteraction> GetCartesAdversaire()
     {
         return CarteBoardInteraction.AllCardsInteractions
             .Where(c => c.isCardAdversaire)
             .ToList();
     }
-    
-    private void DecideCardAction(CarteBoardInteraction card)
+
+    private List<CarteBoardInteraction> GetCartesPlayer()
     {
-        string nameCard = card.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
-        
-        // Logique simple : 70% de chance d'attaquer, 30% de passer
-        float random = Random.Range(0f, 1f);
-        
-        if (random < 0.7f && GameManager.nombreAttaquesUtiliseesIA < 2)
-        {
-            Debug.Log($"[IA] {nameCard} : ATTAQUE");
-            ExecuteAttack(card);
-        }
-        else
-        {
-            Debug.Log($"[IA] {nameCard} : PASSER");
-            ExecutePass(card);
-        }
+        return CarteBoardInteraction.AllCardsInteractions
+            .Where(c => c.isCardPlayer)
+            .ToList();
     }
     
-    private void ExecuteAttack(CarteBoardInteraction card)
+    private void ExecuteAttack(CarteBoardInteraction attaquant, CarteBoardInteraction cible)
     {        
-        ApplyIAAttackVisualEffect(card);
-        SimulateAIAttack(card);
+        ApplyIAAttackVisualEffect(attaquant);
+        SimulateAIAttack(attaquant, cible);
     }
     
-    private void SimulateAIAttack(CarteBoardInteraction card)
+    private void SimulateAIAttack(CarteBoardInteraction attaquant, CarteBoardInteraction cible)
     {
-        string nameCard = card.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
-        
+        string nameCard = attaquant.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
+
         GameManager.nombreAttaquesUtiliseesIA++;
-        
-        card.choiceDo = true;        
-        card.stateOffensif = "atk";
+
+        attaquant.choiceDo = true;
+        attaquant.stateOffensif = "atk";
         PanelManager.instance.AddLog($"ATTAQUE IA ({GameManager.nombreAttaquesUtiliseesIA}/{GameManager.nombreAttaquesMaximales})");
-        
-        SelectRandomTarget(nameCard, GameManager.nombreAttaquesUtiliseesIA);
+
+        ApplyAttack(nameCard, cible);
     }
 
     private void SelectRandomTarget(string nameAttacker, int numberAtk)
@@ -125,7 +166,7 @@ public class IA : MonoBehaviour
 
         if (cardAttacker == null) return;
     
-        CarteUI carteUI = cardAttacker.GetComponent<CarteUI>();
+        CarteUI carteUI = target.GetComponent<CarteUI>();
         if (carteUI == null) return;
         
         target.nombreCiblages++;
@@ -170,6 +211,9 @@ public class IA : MonoBehaviour
     private IEnumerator ClickPassButton(CarteBoardInteraction card)
     {
         yield return new WaitForSeconds(0.2f);
+
+        Image imageCarte = card.GetComponent<Image>() ?? card.GetComponentInChildren<Image>();
+        imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
         
         Button boutonPasser = card.transform.Find("BoutonPasser")?.GetComponent<Button>();
         if (boutonPasser != null && boutonPasser.interactable)

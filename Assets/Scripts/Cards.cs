@@ -75,14 +75,5 @@ public class Cards : MonoBehaviour
             
         }
     }
-    
-    void Start()
-    {
-        
-    }
 
-    void Update()
-    {
-        
-    }
 }
