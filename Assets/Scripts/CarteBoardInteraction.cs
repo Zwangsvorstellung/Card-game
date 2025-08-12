@@ -441,6 +441,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             SetDefenseValue(nouvelleDefense);
             PanelManager.instance?.AddLog($"{nomCarte} : PASSER sélectionné (+1 défense)");
         }
+        elseif(nomCarte == "Cassandre"){
+            // + 1 atk au cartes adjacentes
+            // recup son index
+            // +1 -1 autour
+            // appliquer le bonus
+        }
         else
         {
             PanelManager.instance?.AddLog($"{nomCarte} : PASSER sélectionné");
@@ -515,6 +521,20 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         //Debug.Log("=== [ApplyAllAttacks] Début de l'application des attaques ===");
         //Debug.Log($"Nombre d'attaques à appliquer : {attaquesDuTour.Count}");
 
+
+        HashSet<Carte> cartesAttaquantes = new HashSet<Carte>();
+
+        //foreach (CarteBoardInteraction interaction in AllCardsInteractions)
+        //{
+        //}
+
+        foreach (AttaqueInfo attaque in attaquesDuTour)
+        {
+            if (attaque.attaquant != null)
+                cartesAttaquantes.Add(attaque.attaquant);
+        }
+
+
         foreach (AttaqueInfo attaque in attaquesDuTour)
         {
             string attaquantNom = attaque.attaquant?.carteUI?.nomText?.text ?? "NULL";
@@ -523,6 +543,26 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
             if (attaque.cible != null)
             {
+                bool targetIsAttacking = cartesAttaquantes.Contains(attaque.cible);
+                bool isZao = cibleNom == "Zao";
+
+                // Règle : une carte qui attaque esquive, sauf si elle s'appelle "Zao"
+                bool shouldDodge = targetIsAttacking && !isZao;
+
+                if (shouldDodge)
+                {
+                    Debug.Log($"[ApplyAllAttacks] {cibleNom} esquive l'attaque de {attaquantNom}.");
+                    continue;
+                }
+
+                // Apply freeze effect if attacker is "Hiver"
+                if (attackerName == "Hiver")
+                {
+                    attack.target.freeze = 1;
+                    Debug.Log($"[ApplyAllAttacks] {targetName} is frozen by Hiver.");
+                }
+                
+                // Sinon elle prend les dégâts
                 attaque.cible.ApplyDamageToTarget(attaque.degats, attaquantNom);
                 cartesCibled.Add(attaque.cible);
                 CurrentTarget = attaque.cible;
@@ -531,6 +571,13 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         }
 
         attaquesDuTour.Clear();
+    }
+
+    public (Carte leftCard, Carte rightCard) GetAdjacentCards(int index, List<Carte> allCards)
+    {
+        Carte leftCard = allCards.Find(c => c.carteUI.indexHierarchieOriginal == index - 1);
+        Carte rightCard = allCards.Find(c => c.carteUI.indexHierarchieOriginal == index + 1);
+        return (leftCard, rightCard);
     }
     
     public void ResetIconCardTooltip()
