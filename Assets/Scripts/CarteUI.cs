@@ -35,7 +35,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     public Vector3 offsetHover = new Vector3(0, 450, 0);
     public float rotationMax = 8f;
     
-    private Vector3 positionInitiale;
+    private Vector3 startPosition;
     public RectTransform rectTransform;
     public bool isSelect = false;
     public int indexHierarchieOriginal;
@@ -70,7 +70,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
-        // Ne pas enregistrer positionInitiale ici, car le layout n'a pas encore positionné la carte
+        // Ne pas enregistrer startPosition ici, car le layout n'a pas encore positionné la carte
         indexHierarchieOriginal = transform.GetSiblingIndex();
         mainUIManager = MainUIManager.Instance;
     }
@@ -126,10 +126,10 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         layoutGroup.enabled = false;
         
         // Enregistre la position initiale à la première sélection, après le layout
-        positionInitiale = rectTransform.anchoredPosition;
+        startPosition = rectTransform.anchoredPosition;
         
         isSelect = true;
-        rectTransform.anchoredPosition = positionInitiale + offsetHover;
+        rectTransform.anchoredPosition = startPosition + offsetHover;
         
         // Met la carte au premier plan et applique la rotation
         transform.SetAsLastSibling();
@@ -139,7 +139,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     private void DeselectCard()
     {
         isSelect = false;
-        rectTransform.anchoredPosition = positionInitiale;
+        rectTransform.anchoredPosition = startPosition;
         
         // Remet la carte à sa position d'origine dans la hiérarchie
         transform.SetSiblingIndex(indexHierarchieOriginal);

@@ -18,6 +18,7 @@
 *.booproj
 *.svd
 *.pdb
+*.meta
 
 # Fichiers système
 .DS_Store

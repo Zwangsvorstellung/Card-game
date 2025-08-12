@@ -13,7 +13,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public bool isCardPlayer = false;
     [SerializeField] public bool isCardAdversaire = false;
     [SerializeField] public bool isSelected = false;
-    [SerializeField] public int nombreCiblages = 0;
+    [SerializeField] public int targetCount = 0; 
     [SerializeField] public string stateOffensif = "";
     [SerializeField] public string stateDefensif = "";  
     [SerializeField] public string LastTarget = "";
@@ -22,6 +22,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public int bonusDfs;  
     [SerializeField] public int malusAtk;  
     [SerializeField] public int malusDfs;  
+    [SerializeField] public bool freeze;  
 
     private Coroutine currentMoveCoroutine;
     public static readonly List<CarteBoardInteraction> AllCardsInteractions = new();
@@ -33,12 +34,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     private CardAnimations cardAnimations;
     private Image img;
 
-    public Vector3 positionInitiale;
+    public Vector3 startPosition; 
     public Vector3 nouvellePosition;
     private RectTransform rectTransform;
     private bool ignorePointer  = false;
 
-    public bool carteJaune = false;
+    public bool yellowCard = false; 
     private static CarteBoardInteraction carteAttaquante = null;
     public static int nombreAttaquesMaximales = 2;
   
@@ -51,7 +52,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     private static Color couleurAttaque2 = new Color(1f, 0.8f, 0.8f, 1f);
     private static List<CarteBoardInteraction> cartesColorees = new List<CarteBoardInteraction>();
     private static List<CarteBoardInteraction> cartesCibled = new List<CarteBoardInteraction>();
-    private static List<string> degatsDuTour = new List<string>();
+    private static List<string> roundDamage = new List<string>(); 
     private struct AttaqueInfo
     {
         public CarteBoardInteraction attaquant;
@@ -87,11 +88,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         bonusDfs = 0;
         malusAtk = 0;
         malusDfs = 0;
+        freeze = false;
     }
     
     void Start()
     {
-        GameManager.numeroTour = 1;
+        GameManager.currentRound = 1;
         carteUI = GetComponent<CarteUI>();
 
         img = carteUI.GetComponent<Image>();
@@ -176,7 +178,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
         if ((GameManager.mode == "select" && isCardPlayer) || (GameManager.mode == "atk" && isCardAdversaire))
         {
-            rectTransform.anchoredPosition = positionInitiale;
+            rectTransform.anchoredPosition = startPosition;
         }
     }
     
@@ -218,7 +220,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         GameManager.mode = "select";
 
         isSelected = false;
-        rectTransform.anchoredPosition = positionInitiale;
+        rectTransform.anchoredPosition = startPosition;
         
         if (layoutElement != null)
             layoutElement.ignoreLayout = false;
@@ -392,19 +394,16 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         if (layoutElement != null)
             layoutElement.ignoreLayout = true;
         
-        rectTransform.anchoredPosition = positionInitiale;
+        rectTransform.anchoredPosition = startPosition;
         
-        // Masquer le bouton Attaque
+        // Masquer bouton Attaque
         boutonAttaque.SetActive(false);
 
-        // Centrer le bouton
         RectTransform rectPasser = boutonPasser.GetComponent<RectTransform>();
         rectPasser.anchoredPosition = new Vector2(0, rectPasser.anchoredPosition.y);
         
-        // Augmenter la taille
         rectPasser.sizeDelta = new Vector2(140, 36);
         
-        // Changer la couleur du texte en rouge et mettre en gras
         TMP_Text textePasser = boutonPasser.GetComponentInChildren<TMP_Text>();
         if (textePasser != null)
         {
@@ -420,7 +419,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         Button boutonCarte = GetComponent<Button>();
         if (boutonCarte != null)
         {
-            // Désactiver les transitions de couleur
             ColorBlock colors = boutonCarte.colors;
             colors.normalColor = Color.white;
             colors.highlightedColor = Color.white;
@@ -441,11 +439,13 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             SetDefenseValue(nouvelleDefense);
             PanelManager.instance?.AddLog($"{nomCarte} : PASSER sélectionné (+1 défense)");
         }
-        elseif(nomCarte == "Cassandre"){
-            // + 1 atk au cartes adjacentes
-            // recup son index
-            // +1 -1 autour
-            // appliquer le bonus
+        else if(nomCarte == "Cassandre"){
+            int index = carteUIComponent.indexHierarchieOriginal;
+
+            var (leftCard, rightCard) = GetAdjacentCards(index, AllCardsInteractions);
+
+            ApplyAttackBonus(leftCard, nomCarte);
+            ApplyAttackBonus(rightCard, nomCarte);
         }
         else
         {
@@ -461,10 +461,26 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         CheckEndOfTurn();
     }
 
+    private void ApplyAttackBonus(CarteBoardInteraction card, string nomCarte)
+    {
+        if (card == null) return;
+
+        int currentAttaque = GetAttackValue(card);
+        int nouvelleAttaque = currentAttaque + 1;
+        card.SetAttaqueValue(nouvelleAttaque);
+        Debug.Log($"{nomCarte} : +1 atk");
+    }
+
     private void SetDefenseValue(int nouvelleDefense)
     {
         if (carteUI?.defenseText != null)
             carteUI.defenseText.SetText(nouvelleDefense.ToString());
+    }
+
+    private void SetAttaqueValue(int nouvelleAtaque)
+    {
+        if (carteUI?.attaqueText != null)
+            carteUI.attaqueText.SetText(nouvelleAtaque.ToString());
     }
         
     public void HideActionButtons()
@@ -522,7 +538,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         //Debug.Log($"Nombre d'attaques à appliquer : {attaquesDuTour.Count}");
 
 
-        HashSet<Carte> cartesAttaquantes = new HashSet<Carte>();
+        HashSet<CarteBoardInteraction> cartesAttaquantes = new HashSet<CarteBoardInteraction>();
 
         //foreach (CarteBoardInteraction interaction in AllCardsInteractions)
         //{
@@ -538,27 +554,27 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         foreach (AttaqueInfo attaque in attaquesDuTour)
         {
             string attaquantNom = attaque.attaquant?.carteUI?.nomText?.text ?? "NULL";
-            string cibleNom = attaque.cible?.carteUI?.nomText?.text ?? "NULL";
-            //Debug.Log($"[ApplyAllAttacks] Attaquant : {attaquantNom}, Cible : {cibleNom}, Dégâts : {attaque.degats}");
+            string targetName = attaque.cible?.carteUI?.nomText?.text ?? "NULL";
+            //Debug.Log($"[ApplyAllAttacks] Attaquant : {attaquantNom}, Cible : {targetName}, Dégâts : {attaque.degats}");
 
             if (attaque.cible != null)
             {
                 bool targetIsAttacking = cartesAttaquantes.Contains(attaque.cible);
-                bool isZao = cibleNom == "Zao";
+                bool isZao = targetName == "Zao";
 
                 // Règle : une carte qui attaque esquive, sauf si elle s'appelle "Zao"
                 bool shouldDodge = targetIsAttacking && !isZao;
 
                 if (shouldDodge)
                 {
-                    Debug.Log($"[ApplyAllAttacks] {cibleNom} esquive l'attaque de {attaquantNom}.");
+                    Debug.Log($"[ApplyAllAttacks] {targetName} esquive l'attaque de {attaquantNom}.");
                     continue;
                 }
 
                 // Apply freeze effect if attacker is "Hiver"
-                if (attackerName == "Hiver")
+                if (attaquantNom == "Hiver")
                 {
-                    attack.target.freeze = 1;
+                    attaque.cible.freeze = true;
                     Debug.Log($"[ApplyAllAttacks] {targetName} is frozen by Hiver.");
                 }
                 
@@ -566,17 +582,27 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 attaque.cible.ApplyDamageToTarget(attaque.degats, attaquantNom);
                 cartesCibled.Add(attaque.cible);
                 CurrentTarget = attaque.cible;
-                currentTargetString = cibleNom;
+                currentTargetString = targetName;
             }
         }
 
         attaquesDuTour.Clear();
     }
 
-    public (Carte leftCard, Carte rightCard) GetAdjacentCards(int index, List<Carte> allCards)
+    public (CarteBoardInteraction leftCard, CarteBoardInteraction rightCard) GetAdjacentCards(int index, List<CarteBoardInteraction> allCardsInteractions)
     {
-        Carte leftCard = allCards.Find(c => c.carteUI.indexHierarchieOriginal == index - 1);
-        Carte rightCard = allCards.Find(c => c.carteUI.indexHierarchieOriginal == index + 1);
+        CarteBoardInteraction leftCard = allCardsInteractions.Find(c => 
+        {
+            var carteUI = c.GetComponent<CarteUI>();
+            return carteUI != null && carteUI.indexHierarchieOriginal == index - 1;
+        });
+
+        CarteBoardInteraction rightCard = allCardsInteractions.Find(c =>
+        {
+            var carteUI = c.GetComponent<CarteUI>();
+            return carteUI != null && carteUI.indexHierarchieOriginal == index + 1;
+        });
+
         return (leftCard, rightCard);
     }
     
@@ -594,7 +620,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
     public void ResetPosition()
     {
-        rectTransform.anchoredPosition = positionInitiale;
+        rectTransform.anchoredPosition = startPosition;
     }
     
     private void AutoPassLastCards()
@@ -618,13 +644,13 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         
             Invoke("StartAI", 0.2f);
             
-            if (degatsDuTour.Count > 0)
+            if (roundDamage.Count > 0)
             {
                 PanelManager.instance.AddLog("--- RÉSUMÉ DES DÉGÂTS ---");
-                foreach (string calcul in degatsDuTour)
+                foreach (string calcul in roundDamage)
                     PanelManager.instance.AddLog(calcul);
             }
-            degatsDuTour.Clear();
+            roundDamage.Clear();
             
             PanelManager.instance.AddLog($"--- SCORE ACTUEL: {GameManager.scoreJoueur} points ---");
         }
@@ -632,7 +658,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         {            
             BoardManager.Instance.ShowButtonNextStep(true);
         }
-        GameManager.numeroTour++;
+        GameManager.currentRound++;
     }
         
     private void StartAI()
@@ -678,7 +704,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             layoutElement.ignoreLayout = true;
         
         // Redescendre la carte à sa position initiale
-        rectTransform.anchoredPosition = positionInitiale;
+        rectTransform.anchoredPosition = startPosition;
         
         // Désactiver les effets de hover du Button si présent
         Button boutonCarte = GetComponent<Button>();
@@ -706,7 +732,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         PanelManager.instance?.AddLog($"[ATTAQUE] {nomAttaquant} : ATK = {attaqueAttaquant}");
         PanelManager.instance?.AddLog($"[DEFENSE] {nomCible} : DEF = {defenseCible}");
         
-        degatsDuTour.Add($"{nomAttaquant} (ATK:{attaqueAttaquant}) → {nomCible} (DEF:{defenseCible}) = {attaqueAttaquant} dégâts");
+        roundDamage.Add($"{nomAttaquant} (ATK:{attaqueAttaquant}) → {nomCible} (DEF:{defenseCible}) = {attaqueAttaquant} dégâts");
         attaquesDuTour.Add(new AttaqueInfo(carteAttaquante, this, attaqueAttaquant));
     }
 
@@ -718,7 +744,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         PanelManager.instance?.AddLog($"[ATTAQUEAI] {nomAttaquant} : ATK = {attaqueAttaquant}");
         PanelManager.instance?.AddLog($"[DEFENSEAI] {nomCible} : DEF = {defenseCible}");
         
-        degatsDuTour.Add($"{nomAttaquant} (ATK:{attaqueAttaquant}) → {nomCible} (DEF:{defenseCible}) = {attaqueAttaquant} dégâts");
+        roundDamage.Add($"{nomAttaquant} (ATK:{attaqueAttaquant}) → {nomCible} (DEF:{defenseCible}) = {attaqueAttaquant} dégâts");
         attaquesDuTour.Add(new AttaqueInfo(carteAttaquante, cible, attaqueAttaquant));
     }
 
@@ -760,9 +786,9 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         carteUI?.defenseText?.SetText(nouvelleDefense.ToString());
         carteUI?.attaqueText?.SetText(GetAttackValue(this).ToString());
         
-        if (nouvelleDefense <= 0 && !carteJaune)
+        if (nouvelleDefense <= 0 && !yellowCard)
         {
-            carteJaune = true;
+            yellowCard = true;
             if (carteUI?.imageCarte != null)
                 carteUI.imageCarte.color = Color.yellow;
             
@@ -797,13 +823,13 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         GameManager.nombreAttaquesUtilisees++;
 
         Color couleurAttaque = GameManager.nombreAttaquesUtilisees == 1 ? couleurAttaque1 : couleurAttaque2;        
-        nombreCiblages++;
+        targetCount++;
         
         // Afficher l'icône d'attaque sur la carte cible (cette carte)
         CarteUI carteUIComponent = GetComponent<CarteUI>();
         
         // Afficher atk1 pour le premier ciblage, atk2 pour le deuxième
-        carteUIComponent.ShowAttackIcon(nombreCiblages);
+        carteUIComponent.ShowAttackIcon(targetCount);
         // Appliquer la couleur de l'attaquant sur l'icône d'attaque
         if (carteAttaquante != null && carteAttaquante.carteUI != null)
         {
@@ -813,12 +839,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             var so = System.Array.Find(cartesAssets, c => c.nom == nomAttaquantSO);
             if (so != null && !string.IsNullOrEmpty(so.color))
             {
-                if (nombreCiblages == 1)
+                if (targetCount == 1)
                 {
                     carteUIComponent.SetAtk1IconColor(so.color);
                     carteUIComponent.SetAtk1IconTooltip(so.nom, so.atk);
                 }
-                else if (nombreCiblages == 2)
+                else if (targetCount == 2)
                 {
                     carteUIComponent.SetAtk2IconColor(so.color);
                     carteUIComponent.SetAtk2IconTooltip(so.nom, so.atk);
@@ -867,7 +893,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     // Remet la carte à sa position d'origine (utilisé dans le reset global ou à la fin de la sélection).
     public void ResetCardPosition()
     {
-        rectTransform.anchoredPosition = positionInitiale;
+        rectTransform.anchoredPosition = startPosition;
         transform.localRotation = Quaternion.identity;
         if (carteUI.indexHierarchieOriginal >= 0)
         {
@@ -877,8 +903,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
     public void ReplaceOpponentYellowCards()
     {
-        var jaunesAdversaire = AllCardsInteractions.Where(c => c.carteJaune && c.isCardAdversaire).ToList();
-        var jaunesPlayer = AllCardsInteractions.Where(c => c.carteJaune && c.isCardPlayer).ToList();
+        var jaunesAdversaire = AllCardsInteractions.Where(c => c.yellowCard && c.isCardAdversaire).ToList();
+        var jaunesPlayer = AllCardsInteractions.Where(c => c.yellowCard && c.isCardPlayer).ToList();
         
         if (jaunesAdversaire.Count == 0 && jaunesPlayer.Count == 0) 
             return;
@@ -918,7 +944,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             Transform parent = carte.transform.parent;
             int siblingIndex = carte.transform.GetSiblingIndex();
 
-            Vector3 anciennepositionInitiale = carte.positionInitiale;
+            Vector3 anciennepositionInitiale = carte.startPosition;
 
             GameObject.DestroyImmediate(carte.gameObject);
 
@@ -959,7 +985,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             Transform parent = carte.transform.parent;
             int siblingIndex = carte.transform.GetSiblingIndex();
 
-            Vector3 anciennepositionInitiale = carte.positionInitiale;
+            Vector3 anciennepositionInitiale = carte.startPosition;
 
             GameObject.DestroyImmediate(carte.gameObject);
 

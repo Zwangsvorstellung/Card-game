@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
     public static bool iaActive = true;
     public static int scoreJoueur;
     public static int scoreAdversaire;
-    public static int numeroTour;
+    public static int currentRound;
     public static int nombreAttaquesUtilisees;
     public static int nombreAttaquesUtiliseesIA;
     public static int nombreAttaquesMaximales = 2;

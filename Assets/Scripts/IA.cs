@@ -169,8 +169,8 @@ public class IA : MonoBehaviour
         CarteUI carteUI = target.GetComponent<CarteUI>();
         if (carteUI == null) return;
         
-        target.nombreCiblages++;
-        carteUI.ShowAttackIcon(target.nombreCiblages);
+        target.targetCount++;
+        carteUI.ShowAttackIcon(target.targetCount);
 
         PanelManager.instance.AddLog($"{nameAttacker} : ATQ -> {carteUI.nomText.text}");
         
@@ -178,7 +178,7 @@ public class IA : MonoBehaviour
         
         if (so != null && !string.IsNullOrEmpty(so.color))
         {
-            switch (target.nombreCiblages)
+            switch (target.targetCount)
             {
                 case 1:
                     carteUI.SetAtk1IconColor(so.color);
@@ -235,14 +235,14 @@ public class IA : MonoBehaviour
     {
         RectTransform rectTransform = card.GetComponent<RectTransform>();
                 
-        card.positionInitiale = rectTransform.anchoredPosition;
+        card.startPosition = rectTransform.anchoredPosition;
         
         // Désactiver le LayoutElement pour que la carte ne soit plus affectée par le GridLayout
         LayoutElement layoutElement = card.GetComponent<LayoutElement>();
         //layoutElement.ignoreLayout = true;
         
         // Déplacer la carte vers le bas de 50 pixels
-        Vector3 newPosition = card.positionInitiale + new Vector3(0, -50, 0);
+        Vector3 newPosition = card.startPosition + new Vector3(0, -50, 0);
         rectTransform.anchoredPosition = newPosition;
     }
 } 

@@ -67,15 +67,14 @@ public class BoardManager : MonoBehaviour
 
         interactionBoard.isCardPlayer = carteUI.isCartePlayer;
         interactionBoard.isCardAdversaire = carteUI.isCarteAdversaire;
-        interactionBoard.positionInitiale = (Vector3)carteUI.GetComponent<RectTransform>().anchoredPosition;
+        interactionBoard.startPosition = (Vector3)carteUI.GetComponent<RectTransform>().anchoredPosition;
 
         Vector2 anchoredPos = carteUI.GetComponent<RectTransform>().anchoredPosition;
 
-        // Stocke la position initiale (convertie en Vector3)
-        interactionBoard.positionInitiale = (Vector3)anchoredPos;
+        interactionBoard.startPosition = (Vector3)anchoredPos;
 
         if(interactionBoard.isCardPlayer){
-        // Crée une nouvelle position avec Y + 50
+            
             interactionBoard.nouvellePosition = new Vector3(
                 anchoredPos.x,
                 anchoredPos.y + 50f,
@@ -120,7 +119,7 @@ public class BoardManager : MonoBehaviour
     private IEnumerator FadeAllCards(float fromAlpha, float toAlpha, float duration)
     {
         var cartesJaunes = CarteBoardInteraction.AllCardsInteractions
-        .Where(c => c.carteJaune && (c.isCardPlayer || c.isCardAdversaire))
+        .Where(c => c.yellowCard && (c.isCardPlayer || c.isCardAdversaire))
         .ToList();
 
         foreach (var card in cartesJaunes)
@@ -160,7 +159,7 @@ public class BoardManager : MonoBehaviour
             card.RestoreCardColor(card);
             card.ResetPosition();
             card.DestroyButton();
-            card.nombreCiblages = 0;
+            card.targetCount = 0;
             card.stateDefensif = "notCibled";
             card.stateOffensif = "waitOrder";
             card.choiceDo = false;
@@ -168,7 +167,7 @@ public class BoardManager : MonoBehaviour
             card.layoutGroup.enabled = true;
         }
         
-        PanelManager.instance.AddLog($"=== TOUR {GameManager.numeroTour} ===");
+        PanelManager.instance.AddLog($"=== TOUR {GameManager.currentRound} ===");
         PanelManager.instance.AddLog($"Score: {GameManager.scoreJoueur} points");
     }
 } 
