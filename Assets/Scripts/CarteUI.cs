@@ -92,8 +92,6 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        //StartCoroutine(cardAnimations.ColorFlash());
-
         if(GameManager.mode == "deck"){
 
             if (!isSelect)

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using System.Collections;
 
 public class BoardManager : MonoBehaviour
 {
@@ -110,14 +111,45 @@ public class BoardManager : MonoBehaviour
     public void OnButtonNextStepClicked()
     {
         ShowButtonNextStep(false);
-        if(GameManager.iaActive)
+        if (GameManager.iaActive)
             CarteBoardInteraction.isAITurn = false;
 
-        CarteBoardInteraction interactionBoard = FindFirstObjectByType<CarteBoardInteraction>();        
+        StartCoroutine(NextStepSequence());
+    }
+
+    private IEnumerator FadeAllCards(float fromAlpha, float toAlpha, float duration)
+    {
+        var cartesJaunes = CarteBoardInteraction.AllCardsInteractions
+        .Where(c => c.carteJaune && (c.isCardPlayer || c.isCardAdversaire))
+        .ToList();
+
+        foreach (var card in cartesJaunes)
+        {
+            var anim = card.GetComponent<CardAnimations>();
+            var img = card.GetComponentInChildren<Image>();
+
+            if (anim != null && img != null)
+            {
+                anim.targetImage = img;
+                yield return StartCoroutine(anim.Fade(card.GetComponent<CarteUI>(), fromAlpha, toAlpha, duration));
+            }
+        }
+    }
+
+    private IEnumerator NextStepSequence()
+    {
+        // 1) Fade des cartes de 1 à 0 (disparition)
+        yield return StartCoroutine(FadeAllCards(1f, 0f, 0.5f));
+        yield return new WaitForSeconds(1f);
+
+        // 2) Remplacement des cartes après le fade
+        CarteBoardInteraction interactionBoard = FindFirstObjectByType<CarteBoardInteraction>();
         interactionBoard.ReplaceOpponentYellowCards();
 
+        // 3) Préparation du prochain tour (pas de fade ici)
         PrepareNextTurn();
     }
+    
 
     public void PrepareNextTurn()
     {    

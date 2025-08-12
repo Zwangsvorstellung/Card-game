@@ -76,7 +76,7 @@ public class CardAnimations : MonoBehaviour
     
     public IEnumerator ColorFlash(Color flashColor = default, float duration = 0.5f)
     {
-        if (flashColor == default) flashColor = Color.red; // valeur par défaut
+        if (flashColor == default) flashColor = Color.red;
 
         Image img = GetComponentInChildren<Image>();
         if (img == null) yield break;
@@ -157,21 +157,20 @@ public class CardAnimations : MonoBehaviour
 
     public IEnumerator Fade(CarteUI carteUI, float startAlpha, float endAlpha, float duration = 0.5f)
     {
-        Image img = carteUI.GetComponentInChildren<Image>();
-        if (img == null) yield break;
+        CanvasGroup canvasGroup = carteUI.GetComponent<CanvasGroup>();
+        if (canvasGroup == null) yield break;
 
         float elapsed = 0f;
-        Color c = img.color;
 
         while (elapsed < duration)
         {
             float alpha = Mathf.Lerp(startAlpha, endAlpha, elapsed / duration);
-            img.color = new Color(c.r, c.g, c.b, alpha);
+            canvasGroup.alpha = alpha;
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        img.color = new Color(c.r, c.g, c.b, endAlpha);
+        canvasGroup.alpha = endAlpha;
     }
 
     public IEnumerator Rotate360(float duration = 1f)

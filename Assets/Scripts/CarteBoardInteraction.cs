@@ -15,7 +15,13 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public bool isSelected = false;
     [SerializeField] public int nombreCiblages = 0;
     [SerializeField] public string stateOffensif = "";
-    [SerializeField] public string stateDefensif = "";    
+    [SerializeField] public string stateDefensif = "";  
+    [SerializeField] public string LastTarget = "";
+    [SerializeField] public string currentTargetString = "";  
+    [SerializeField] public int bonusAtk;  
+    [SerializeField] public int bonusDfs;  
+    [SerializeField] public int malusAtk;  
+    [SerializeField] public int malusDfs;  
 
     private Coroutine currentMoveCoroutine;
     public static readonly List<CarteBoardInteraction> AllCardsInteractions = new();
@@ -32,7 +38,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     private RectTransform rectTransform;
     private bool ignorePointer  = false;
 
-    private bool carteJaune = false;
+    public bool carteJaune = false;
     private static CarteBoardInteraction carteAttaquante = null;
     public static int nombreAttaquesMaximales = 2;
   
@@ -62,7 +68,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
   
     public static bool isAITurn = false;
 
-    public string LastTarget = "zao";
     public CarteBoardInteraction CurrentTarget;
 
     public bool HasAttackedThisTurn = false;
@@ -77,6 +82,11 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         poppinsRegular = Resources.Load<TMP_FontAsset>("Fonts/Poppins-Regular SDF");
 
         cardAnimations = GetComponent<CardAnimations>();
+
+        bonusAtk = 0;
+        bonusDfs = 0;
+        malusAtk = 0;
+        malusDfs = 0;
     }
     
     void Start()
@@ -119,7 +129,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         if (!isCardPlayer && GameManager.mode == "select" && GameManager.mode == "selectCard") return;
         cardAnimations.targetImage = carteUI.GetComponentInChildren<Image>();
         //StartCoroutine(cardAnimations.Glow(carteUI));
-        StartCoroutine(cardAnimations.Fade(carteUI, 1f, 0f, 0.5f));
+       // StartCoroutine(cardAnimations.Fade(carteUI, 1f, 0f, 0.5f));
 
         if(!choiceDo && GameManager.mode != "atk"){
             if (isSelected)
@@ -137,6 +147,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
         if (GameManager.mode == "atk" && this.isCardAdversaire && this.stateDefensif != "isAttacked"){
             SelectTarget();
+            StartCoroutine(cardAnimations.ColorFlash());
             StartCoroutine(Shake());
         }
     }
@@ -330,7 +341,37 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         carteAttaquante = this;
 
         PanelManager.instance.AddLog($"{nameCard} : ATTAQUE sélectionnée ({GameManager.nombreAttaquesUtilisees}/{GameManager.nombreAttaquesMaximales})");
-        PanelManager.instance.AddLog("   → Sélectionnez une cible adverse");
+        
+        if(nameCard == "Tyroine")
+        {
+            PanelManager.instance.AddLog("   → Sélection aléatoire");
+
+            // Récupérer toutes les cartes adversaires valides
+            var ciblesPossibles = CarteBoardInteraction.AllCardsInteractions
+                .Where(c => c.isCardAdversaire && c.stateDefensif != "isAttacked")
+                .ToList();
+
+            if(ciblesPossibles.Count > 0)
+            {
+                // Choisir une cible aléatoire
+                int randomIndex = Random.Range(0, ciblesPossibles.Count);
+                var cibleChoisie = ciblesPossibles[randomIndex];
+
+                // Sélectionner la cible (par exemple appeler sa méthode SelectTarget())
+                cibleChoisie.SelectTarget();
+
+                // Ajouter log ou autre comportement
+                PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée : {cibleChoisie.carteUI.nomText.text}");
+            }
+            else
+            {
+                PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
+            }
+        }
+        else
+        {
+            PanelManager.instance.AddLog("   → Sélectionnez une cible adverse");
+        }
         
         CheckEndOfTurn();
     }
@@ -390,18 +431,36 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             colors.fadeDuration = 0;
             boutonCarte.colors = colors;
         }
+
+        if (nomCarte == "Clorel")
+        {
+            int currentDefense = GetDefenseValue(this);
+            bonusDfs++;
+            int nouvelleDefense = currentDefense + bonusDfs;
+            carteUI?.defenseText?.SetText(nouvelleDefense.ToString());
+            SetDefenseValue(nouvelleDefense);
+            PanelManager.instance?.AddLog($"{nomCarte} : PASSER sélectionné (+1 défense)");
+        }
+        else
+        {
+            PanelManager.instance?.AddLog($"{nomCarte} : PASSER sélectionné");
+        }
         
         choiceDo = true;
         stateOffensif = "passed";
         isSelected = false;
         
         GameManager.mode = "select";
-        
-        PanelManager.instance?.AddLog($"{nomCarte} : PASSER sélectionné");
-        
+                
         CheckEndOfTurn();
     }
-    
+
+    private void SetDefenseValue(int nouvelleDefense)
+    {
+        if (carteUI?.defenseText != null)
+            carteUI.defenseText.SetText(nouvelleDefense.ToString());
+    }
+        
     public void HideActionButtons()
     {
         boutonAttaque?.SetActive(false);
@@ -464,9 +523,10 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
             if (attaque.cible != null)
             {
-                attaque.cible.ApplyDamageToTarget(attaque.degats);
+                attaque.cible.ApplyDamageToTarget(attaque.degats, attaquantNom);
                 cartesCibled.Add(attaque.cible);
                 CurrentTarget = attaque.cible;
+                currentTargetString = cibleNom;
             }
         }
 
@@ -635,10 +695,20 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         }
         return 0;
     }
-    
-    private void ApplyDamageToTarget(int degats)
+
+    private int CalculateEffectiveDefense(int baseDefense, string attaquantNom)
     {
-        int nouvelleDefense = Mathf.Max(0, GetDefenseValue(this) - degats);
+        if (attaquantNom == "Tyroine") 
+            return Mathf.Max(0, baseDefense - 1);
+        return baseDefense;
+    }
+
+    private void ApplyDamageToTarget(int degats, string attaquantNom )
+    {
+        int defenseValeur = GetDefenseValue(this);
+        defenseValeur = CalculateEffectiveDefense(defenseValeur, attaquantNom);
+
+        int nouvelleDefense = Mathf.Max(0, defenseValeur - degats);
         
         carteUI?.defenseText?.SetText(nouvelleDefense.ToString());
         carteUI?.attaqueText?.SetText(GetAttackValue(this).ToString());
@@ -723,6 +793,9 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         carteAttaquante.stateOffensif = "atk";
         carteAttaquante.isSelected = false;
         stateDefensif = "isAttacked";
+
+        carteAttaquante.LastTarget = carteAttaquante.currentTargetString;
+        carteAttaquante.currentTargetString = nomCible;
         
         PanelManager.instance?.AddLog($"{nomAttaquant} attaque {nomCible} !");
         
