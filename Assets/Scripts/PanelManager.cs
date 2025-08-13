@@ -178,7 +178,7 @@ public class PanelManager : MonoBehaviour
                                 LOGS_FONT_SIZE, Color.white, TextAlignmentOptions.TopLeft);
 
         TMP_FontAsset poppinsFont = Resources.Load<TMP_FontAsset>("Fonts/Poppins-Regular SDF");
-        if (poppinsFont != null)
+        if (poppinsFont)
             zoneLogs.font = poppinsFont;
 
         zoneLogs.enableWordWrapping = true;
@@ -205,7 +205,7 @@ public class PanelManager : MonoBehaviour
 
         // ➤ Forcer le scroll tout en bas
         ScrollRect scroll = zoneLogs?.GetComponentInParent<ScrollRect>();
-        if (scroll != null)
+        if (scroll)
         {
             Canvas.ForceUpdateCanvases(); // Important pour forcer le layout à se mettre à jour
             scroll.verticalNormalizedPosition = 0f;
@@ -224,8 +224,8 @@ public class PanelManager : MonoBehaviour
         rectVictoire.sizeDelta = new Vector2(VICTORY_PANEL_WIDTH, VICTORY_PANEL_HEIGHT);
         rectVictoire.anchoredPosition = Vector2.zero;
         
-        Image imageFond = panelVictoire.AddComponent<Image>();
-        imageFond.color = new Color(0, 0, 0, VICTORY_PANEL_OPACITY);
+        Image backgroundImage  = panelVictoire.AddComponent<Image>();
+        backgroundImage.color = new Color(0, 0, 0, VICTORY_PANEL_OPACITY);
         
         // Créer le texte de victoire
         GameObject texteVictoire = new GameObject("TexteVictoire");
@@ -240,56 +240,56 @@ public class PanelManager : MonoBehaviour
         CreateUIText(texteVictoire, "TexteVictoire", "VICTOIRE !", VICTORY_TEXT_SIZE, Color.yellow, TextAlignmentOptions.Center);
         
         // Créer le texte du score
-        GameObject texteScore = new GameObject("TexteScore");
-        texteScore.transform.SetParent(panelVictoire.transform, false);
+        GameObject txtScore = new GameObject("txtScore");
+        txtScore.transform.SetParent(panelVictoire.transform, false);
         
-        RectTransform rectScore = texteScore.AddComponent<RectTransform>();
+        RectTransform rectScore = txtScore.AddComponent<RectTransform>();
         rectScore.anchorMin = new Vector2(0.5f, 0.5f);
         rectScore.anchorMax = new Vector2(0.5f, 0.5f);
         rectScore.sizeDelta = new Vector2(350, 30);
         rectScore.anchoredPosition = Vector2.zero;
         
-        CreateUIText(texteScore, "TexteScore", $"Score : {score}", SCORE_TEXT_SIZE, Color.white, TextAlignmentOptions.Center);
+        CreateUIText(txtScore, "txtScore", $"Score : {score}", SCORE_TEXT_SIZE, Color.white, TextAlignmentOptions.Center);
         
         // Créer le bouton de relance
-        GameObject boutonRelance = new GameObject("BoutonRelance");
-        boutonRelance.transform.SetParent(panelVictoire.transform, false);
+        GameObject retryButton = new GameObject("retryButton");
+        retryButton.transform.SetParent(panelVictoire.transform, false);
         
-        RectTransform rectBouton = boutonRelance.AddComponent<RectTransform>();
+        RectTransform rectBouton = retryButton.AddComponent<RectTransform>();
         rectBouton.anchorMin = new Vector2(0.5f, 0.3f);
         rectBouton.anchorMax = new Vector2(0.5f, 0.3f);
         rectBouton.sizeDelta = new Vector2(BUTTON_WIDTH, BUTTON_HEIGHT);
         rectBouton.anchoredPosition = Vector2.zero;
         
-        Image imageBouton = boutonRelance.AddComponent<Image>();
-        imageBouton.color = new Color(0.2f, 0.6f, 1f, 1f);
+        Image imageButton = retryButton.AddComponent<Image>();
+        imageButton.color = new Color(0.2f, 0.6f, 1f, 1f);
         
-        Button bouton = boutonRelance.AddComponent<Button>();
-        bouton.onClick.AddListener(RestartGame);
+        Button button = retryButton.AddComponent<Button>();
+        button.onClick.AddListener(RestartGame);
         
-        CreateUIText(boutonRelance, "TexteBouton", "Rejouer", BUTTON_TEXT_SIZE, Color.white, TextAlignmentOptions.Center);
+        CreateUIText(retryButton, "TexteBouton", "Rejouer", BUTTON_TEXT_SIZE, Color.white, TextAlignmentOptions.Center);
     }
 
     public void RestartGame() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
     // Méthodes utilitaires pour la création d'UI
-    private TMP_Text CreateUIText(GameObject parent, string name, string text, float size, Color color, TextAlignmentOptions align)
+    private TMP_Text CreateUIText(GameObject parent, string name, string txt, float size, Color color, TextAlignmentOptions align)
     {
-        GameObject texteGO = new GameObject(name);
-        texteGO.transform.SetParent(parent.transform, false);
+        GameObject txtGO = new GameObject(name);
+        txtGO.transform.SetParent(parent.transform, false);
         
-        RectTransform rectTexte = texteGO.AddComponent<RectTransform>();
+        RectTransform rectTexte = txtGO.AddComponent<RectTransform>();
         rectTexte.anchorMin = Vector2.zero;
         rectTexte.anchorMax = Vector2.one;
         rectTexte.offsetMin = Vector2.zero;
         rectTexte.offsetMax = Vector2.zero;
         
-        TMP_Text tmpTexte = texteGO.AddComponent<TextMeshProUGUI>();
-        tmpTexte.text = text;
-        tmpTexte.fontSize = size;
-        tmpTexte.color = color;
-        tmpTexte.alignment = align;
+        TMP_Text tmpTxt = txtGO.AddComponent<TextMeshProUGUI>();
+        tmpTxt.text = txt;
+        tmpTxt.fontSize = size;
+        tmpTxt.color = color;
+        tmpTxt.alignment = align;
         
-        return tmpTexte;
+        return tmpTxt;
     }
 } 

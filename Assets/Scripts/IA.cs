@@ -29,7 +29,7 @@ public class IA : MonoBehaviour
     {
        // Debug.Log("[IA] Début du tour IA");
 
-        GameManager.nombreAttaquesUtiliseesIA = 0;
+        GameManager.numberOfAttacksUsedIA = 0;
 
         List<CarteBoardInteraction> cartesIA = GetCartesAdversaire();
         List<CarteBoardInteraction> cardsPlayer = GetCartesPlayer();
@@ -114,7 +114,7 @@ public class IA : MonoBehaviour
     private List<CarteBoardInteraction> GetCartesAdversaire()
     {
         return CarteBoardInteraction.AllCardsInteractions
-            .Where(c => c.isCardAdversaire)
+            .Where(c => c.isCardOpponent)
             .ToList();
     }
 
@@ -135,11 +135,11 @@ public class IA : MonoBehaviour
     {
         string nameCard = attaquant.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
 
-        GameManager.nombreAttaquesUtiliseesIA++;
+        GameManager.numberOfAttacksUsedIA++;
 
         attaquant.choiceDo = true;
         attaquant.stateOffensif = "atk";
-        PanelManager.instance.AddLog($"ATTAQUE IA ({GameManager.nombreAttaquesUtiliseesIA}/{GameManager.nombreAttaquesMaximales})");
+        PanelManager.instance.AddLog($"ATTAQUE IA ({GameManager.numberOfAttacksUsedIA}/{GameManager.numberOfAttacksMax})");
 
         ApplyAttack(nameCard, cible);
     }
@@ -215,10 +215,10 @@ public class IA : MonoBehaviour
         Image imageCarte = card.GetComponent<Image>() ?? card.GetComponentInChildren<Image>();
         imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
         
-        Button boutonPasser = card.transform.Find("BoutonPasser")?.GetComponent<Button>();
-        if (boutonPasser != null && boutonPasser.interactable)
+        Button boutonPass = card.transform.Find("boutonPass")?.GetComponent<Button>();
+        if (boutonPass != null && boutonPass.interactable)
         {          
-            boutonPasser.onClick.Invoke();
+            boutonPass.onClick.Invoke();
         }
         card.choiceDo = true;        
         card.stateOffensif = "passed";

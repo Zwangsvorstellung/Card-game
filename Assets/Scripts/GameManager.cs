@@ -19,18 +19,18 @@ public class GameManager : MonoBehaviour
 
     public static string mode;
     public static bool iaActive = true;
-    public static int scoreJoueur;
+    public static int playerScore;
     public static int scoreAdversaire;
     public static int currentRound;
-    public static int nombreAttaquesUtilisees;
-    public static int nombreAttaquesUtiliseesIA;
-    public static int nombreAttaquesMaximales = 2;
+    public static int numberOfAttacksUsed;
+    public static int numberOfAttacksUsedIA;
+    public static int numberOfAttacksMax = 2;
     public static bool isEndturnPlayer = false;
 
 
     [SerializeField] private bool isEndturnPlayerdebug = false;
     [SerializeField] private string debugMode;
-    [SerializeField] private int nombreAttaquesUtiliseesdebug;
+    [SerializeField] private int numberOfAttacksUseddebug;
 
     void Awake()
     {
@@ -44,7 +44,7 @@ public class GameManager : MonoBehaviour
     {
         mode = "selectDeck";
 
-        scoreJoueur = 10;
+        playerScore = 10;
         scoreAdversaire = 10;
         
         // CarteBoardInteraction.ShowScore(); // Désactivé pour ne pas afficher le score au lancement
@@ -121,7 +121,7 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         debugMode = mode;
-        nombreAttaquesUtiliseesdebug = nombreAttaquesUtilisees;
+        numberOfAttacksUseddebug = numberOfAttacksUsed;
         isEndturnPlayerdebug = isEndturnPlayer;
     }
     private void SelectCard(int indexCard)

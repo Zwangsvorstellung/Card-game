@@ -66,7 +66,7 @@ public class BoardManager : MonoBehaviour
         RectTransform rectTransform = carteUI.GetComponent<RectTransform>();
 
         interactionBoard.isCardPlayer = carteUI.isCartePlayer;
-        interactionBoard.isCardAdversaire = carteUI.isCarteAdversaire;
+        interactionBoard.isCardOpponent = carteUI.isCarteAdversaire;
         interactionBoard.startPosition = (Vector3)carteUI.GetComponent<RectTransform>().anchoredPosition;
 
         Vector2 anchoredPos = carteUI.GetComponent<RectTransform>().anchoredPosition;
@@ -75,15 +75,15 @@ public class BoardManager : MonoBehaviour
 
         if(interactionBoard.isCardPlayer){
             
-            interactionBoard.nouvellePosition = new Vector3(
+            interactionBoard.newPosition = new Vector3(
                 anchoredPos.x,
                 anchoredPos.y + 50f,
                 0f
             );
         }
 
-        if(interactionBoard.isCardAdversaire){
-            interactionBoard.nouvellePosition = new Vector3(
+        if(interactionBoard.isCardOpponent){
+            interactionBoard.newPosition = new Vector3(
                 anchoredPos.x,
                 anchoredPos.y - 50f,
                 0f
@@ -119,7 +119,7 @@ public class BoardManager : MonoBehaviour
     private IEnumerator FadeAllCards(float fromAlpha, float toAlpha, float duration)
     {
         var cartesJaunes = CarteBoardInteraction.AllCardsInteractions
-        .Where(c => c.yellowCard && (c.isCardPlayer || c.isCardAdversaire))
+        .Where(c => c.yellowCard && (c.isCardPlayer || c.isCardOpponent))
         .ToList();
 
         foreach (var card in cartesJaunes)
@@ -152,7 +152,7 @@ public class BoardManager : MonoBehaviour
 
     public void PrepareNextTurn()
     {    
-        GameManager.nombreAttaquesUtilisees = 0;
+        GameManager.numberOfAttacksUsed = 0;
         foreach(CarteBoardInteraction card in CarteBoardInteraction.AllCardsInteractions){
 
             card.ResetIcon(card);
@@ -164,10 +164,11 @@ public class BoardManager : MonoBehaviour
             card.stateOffensif = "waitOrder";
             card.choiceDo = false;
             card.isSelected = false;
+            card.freeze = false;
             card.layoutGroup.enabled = true;
         }
         
         PanelManager.instance.AddLog($"=== TOUR {GameManager.currentRound} ===");
-        PanelManager.instance.AddLog($"Score: {GameManager.scoreJoueur} points");
+        PanelManager.instance.AddLog($"Score: {GameManager.playerScore} points");
     }
 } 

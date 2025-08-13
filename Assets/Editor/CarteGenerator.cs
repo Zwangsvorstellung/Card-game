@@ -19,7 +19,7 @@ public class CarteGenerator
             (3, "Cassandre", "Aura de Force","+1 d'ATK aux alliés adjacents si Cassandre n'attaque pas", 4, 4, 3, "d9af4e"),
             (4, "Solicia", "Réflexion partielle","Quand un allié est attaqué, inflige 1 dégât à l’attaquant.", 3, 6, 4, "47a658"),
             (5, "Triomphe", "Frappe Puissante","Inflige +1 dégât quand Triomphe attaque", 4, 5, 5, "854b22"),
-            (6, "Désir", "Tentation", "Lorsque Désir attaque un adversaire, celui-ci ne peut pas attaquer au tour suivant",3, 4, 6, "262752"),
+            (6, "Désir", "Tentation", "Lorsque Désir passe son tour, un adversaire au hasard ne peut pas attaquer au tour suivant",3, 4, 6, "262752"),
             (7, "Vilaine", "Malus d’attaque", "Inflige -1 attaque à la cible sur son attaque", 5, 3, 7, "ebbc38"),
             (8, "Jaycota", "Attaque de Provocation", "Quand Jaycota est attaquée, elle inflige 1 dégât à l’attaquant", 2, 6, 8, "6f0000"),
             (9, "Neo", "Attaque Surprise","Augmente de 1 dégât à chaque attaque si Neo vise une cible différente",  4, 4, 9,"94a2a7"),

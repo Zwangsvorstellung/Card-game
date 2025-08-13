@@ -73,7 +73,7 @@ public static class IAAction
             score += 1;
 
         // Attaque Surprise : bonus si attaque une cible différente de la précédente
-        if (attacker.HasCapacite(Capacite.AttaqueSurprise) && attacker.LastTarget != null && attacker.LastTarget != defender.name)
+        if (attacker.HasCapacite(Capacite.AttaqueSurprise) && attacker.lastTarget != null && attacker.lastTarget != defender.name)
             score += 1;
 
         if (attacker.HasCapacite(Capacite.Combo) && attackerAllies != null)

@@ -6,13 +6,13 @@ using System.Linq;
 
 public class BoutonValider : MonoBehaviour
 {
-    public string texteBouton = "Valider";
+    public string txtButton = "Valider";
     private Button bouton;
     
     void Start()
     {        
         bouton = GetComponent<Button>();
-        bouton.GetComponentInChildren<TMP_Text>().text = texteBouton;
+        bouton.GetComponentInChildren<TMP_Text>().text = txtButton;
         bouton.onClick.AddListener(OnBoutonClic);
     }
     
