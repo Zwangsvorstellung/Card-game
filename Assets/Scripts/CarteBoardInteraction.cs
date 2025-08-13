@@ -57,12 +57,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         public CarteBoardInteraction attaquant;
         public CarteBoardInteraction cible;
-        public int degats;
-        public AttaqueInfo(CarteBoardInteraction attaquant, CarteBoardInteraction cible, int degats)
+        public int damage;
+        public AttaqueInfo(CarteBoardInteraction attaquant, CarteBoardInteraction cible, int damage)
         {
             this.attaquant = attaquant;
             this.cible = cible;
-            this.degats = degats;
+            this.damage = damage;
         }
     }
     private static List<AttaqueInfo> attaquesDuTour = new List<AttaqueInfo>();
@@ -129,6 +129,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         if (isCardAdversaire && GameManager.mode != "atk") return;
         if (isCardPlayer && GameManager.mode == "atk") return;
         if (!isCardPlayer && GameManager.mode == "select" && GameManager.mode == "selectCard") return;
+
         cardAnimations.targetImage = carteUI.GetComponentInChildren<Image>();
         //StartCoroutine(cardAnimations.Glow(carteUI));
        // StartCoroutine(cardAnimations.Fade(carteUI, 1f, 0f, 0.5f));
@@ -157,6 +158,10 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (ignorePointer || choiceDo) return;
+
+        if (GameManager.mode == "select" && freeze){
+            return;
+        }
 
         if ((GameManager.mode == "select" && isCardPlayer) || (GameManager.mode == "atk" && isCardAdversaire))
         {
@@ -537,19 +542,35 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         //Debug.Log("=== [ApplyAllAttacks] Début de l'application des attaques ===");
         //Debug.Log($"Nombre d'attaques à appliquer : {attaquesDuTour.Count}");
 
-
         HashSet<CarteBoardInteraction> cartesAttaquantes = new HashSet<CarteBoardInteraction>();
+        HashSet<CarteBoardInteraction> cartesAttaquantesPlayer = new HashSet<CarteBoardInteraction>();
+        HashSet<CarteBoardInteraction> cartesAttaquantesOpponent = new HashSet<CarteBoardInteraction>();
 
-        //foreach (CarteBoardInteraction interaction in AllCardsInteractions)
-        //{
-        //}
+        bool soliciaInPlayerDeck = false;
+        bool soliciaInOpponentDeck = false;
+
+        foreach (CarteBoardInteraction interaction in AllCardsInteractions)
+        {
+            CarteUI carteUI = interaction.GetComponent<CarteUI>();
+            string cardName = carteUI?.nomText?.text ?? "NULL";
+    
+            if (cardName == "Solicia")
+            {
+                if (interaction.isCardPlayer)
+                    soliciaInPlayerDeck = true;
+                else if (interaction.isCardAdversaire)
+                    soliciaInOpponentDeck = true;
+    
+                if (soliciaInPlayerDeck && soliciaInOpponentDeck)
+                    break;
+            }   
+        }
 
         foreach (AttaqueInfo attaque in attaquesDuTour)
         {
             if (attaque.attaquant != null)
                 cartesAttaquantes.Add(attaque.attaquant);
         }
-
 
         foreach (AttaqueInfo attaque in attaquesDuTour)
         {
@@ -576,6 +597,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 {
                     attaque.cible.freeze = true;
                     Debug.Log($"[ApplyAllAttacks] {targetName} is frozen by Hiver.");
+                    PanelManager.instance.AddLog($"[ApplyAllAttacks] {targetName} is frozen by Hiver.");
                 }
                 
                 // Sinon elle prend les dégâts
@@ -723,7 +745,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         if (carteAttaquante == null) return;
         
-        int attaqueAttaquant = GetAttackValue(carteAttaquante);
+        int damage = GetAttackValue(carteAttaquante);
         int defenseCible = GetDefenseValue(this);
         
         string nomAttaquant = carteAttaquante.carteUI?.nomText?.text ?? "Attaquant";
@@ -732,8 +754,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         PanelManager.instance?.AddLog($"[ATTAQUE] {nomAttaquant} : ATK = {attaqueAttaquant}");
         PanelManager.instance?.AddLog($"[DEFENSE] {nomCible} : DEF = {defenseCible}");
         
-        roundDamage.Add($"{nomAttaquant} (ATK:{attaqueAttaquant}) → {nomCible} (DEF:{defenseCible}) = {attaqueAttaquant} dégâts");
-        attaquesDuTour.Add(new AttaqueInfo(carteAttaquante, this, attaqueAttaquant));
+        roundDamage.Add($"{nomAttaquant} → {nomCible} (DEF:{defenseCible}) = {damage} dégâts");
+        attaquesDuTour.Add(new AttaqueInfo(carteAttaquante, this, damage, this.));
     }
 
     public void ComputeAndStoreDamageIA(CarteBoardInteraction carteAttaquante, CarteBoardInteraction cible, string nomAttaquant, string nomCible)
@@ -878,26 +900,20 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         carteAttaquante = null;
         nomCible = null;
         
-        DesactivateHoverEffectOnCards();
+        ResetAllCardsPositions();
     }
     
-    // Désactive le mode hover cible sur toutes les cartes adversaires (après la sélection ou à la fin du tour).
-    public void DesactivateHoverEffectOnCards()
+    // Remet la position de toutes les cartes à leur position d'origine
+    public void ResetAllCardsPositions()
     {
         foreach (CarteBoardInteraction interaction in AllCardsInteractions)
         {
-            interaction.ResetCardPosition();
-        }
-    }
-    
-    // Remet la carte à sa position d'origine (utilisé dans le reset global ou à la fin de la sélection).
-    public void ResetCardPosition()
-    {
-        rectTransform.anchoredPosition = startPosition;
-        transform.localRotation = Quaternion.identity;
-        if (carteUI.indexHierarchieOriginal >= 0)
-        {
-            transform.SetSiblingIndex(carteUI.indexHierarchieOriginal);
+            interaction.rectTransform.anchoredPosition = interaction.startPosition;
+            // interaction.transform.localRotation = Quaternion.identity;
+            // if (interaction.carteUI.indexHierarchieOriginal >= 0)
+            // {
+            //     interaction.transform.SetSiblingIndex(interaction.carteUI.indexHierarchieOriginal);
+            // }
         }
     }
 
