@@ -7,45 +7,42 @@ using System.Linq;
 public class BoutonValider : MonoBehaviour
 {
     public string txtButton = "Valider";
-    private Button bouton;
+    private Button button;
     
     void Start()
     {        
-        bouton = GetComponent<Button>();
-        bouton.GetComponentInChildren<TMP_Text>().text = txtButton;
-        bouton.onClick.AddListener(OnBoutonClic);
+        button = GetComponent<Button>();
+        button.GetComponentInChildren<TMP_Text>().text = txtButton;
+        button.onClick.AddListener(OnButtonClick);
     }
     
-    public void OnBoutonClic()
+    public void OnButtonClick()
     {   
         GameObject.Find("TexteConsigne")?.SetActive(false);
 
-        List<CarteData> cartesSelectionnees = GameManager.Instance.GetSelectedCards(); // du joueur
-        var cartesSelectionneesIds = cartesSelectionnees.Select(c => c.idCard).ToHashSet();
-        var cartesNonSelectionnees = GameManager.Instance.mainPlayerA.Where(c => !cartesSelectionneesIds.Contains(c.idCard)).ToList();
+        List<CarteData> selectedCards = GameManager.Instance.GetSelectedCards(); // du joueur
+        HashSet<int>    selectedCardIds = selectedCards.Select(c => c.idCard).ToHashSet();
+        List<CarteData> unselectedCards = GameManager.Instance.mainPlayerA.Where(c => !selectedCardIds.Contains(c.idCard)).ToList();
         
-        // Mettre à jour la main du joueur avec les 4 cartes sélectionnées
-        GameManager.Instance.mainPlayerA = new Queue<CarteData>(cartesSelectionnees);
-        // Ajouter les cartes non sélectionnées à la pioche existante
-        foreach (var carte in cartesNonSelectionnees)
+        GameManager.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
+
+        foreach (CarteData card in unselectedCards)
         {
-            GameManager.Instance.piochePlayerA.Enqueue(carte);
+            GameManager.Instance.piochePlayerA.Enqueue(card);
         }
-        // Générer 4 cartes aléatoires pour l'adversaire
-        List<CarteData> cartesAdversaire = GenerateOpponentCards();
+        
+        // Generate 4 random cards for the opponent
+        List<CarteData> opponentCards = GenerateOpponentCards();
 
-        // Masquer toutes les cartes UI
-        //MasquerToutesLesCartes();
-
-        // Afficher les cartes sur la table via BoardManager     
-        BoardManager.Instance.ShowCardsOnTable(cartesAdversaire, cartesSelectionnees);
+        // Show the cards on the table via the BoardManager
+        BoardManager.Instance.ShowCardsOnTable(opponentCards, selectedCards);
 
         CamController.Instance.GoToBoardView();
         gameObject.SetActive(false);
 
-        GameManager.mode = "select";
+        GameManager.SetMode("select");
 
-        // Masquer le panel de la main de départ (MainUIManager)
+        // Hide the starting hand panel (MainUIManager)
         MainUIManager mainUIManager = FindFirstObjectByType<MainUIManager>();
         mainUIManager.gameObject.SetActive(false);
     }
@@ -54,6 +51,4 @@ public class BoutonValider : MonoBehaviour
     {
         return GameManager.Instance?.mainPlayerB.Take(4).ToList() ?? new List<CarteData>();
     }
-    
-    private void MasquerToutesLesCartes() => BoardManager.Instance?.GetCartesJoueur()?.ForEach(c => c.gameObject.SetActive(false));
 } 
