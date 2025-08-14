@@ -145,8 +145,6 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         
         // Remet la carte à sa position d'origine dans la hiérarchie
         transform.SetSiblingIndex(indexHierarchieOriginal);
-        
-        // Remet la rotation normale
         transform.localRotation = Quaternion.identity;
     }
 
@@ -157,20 +155,18 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
             .Count(carte => carte.isSelect);
     }
 
-    // Méthode pour masquer toutes les icônes
     public void HideAllIcons()
     {
         atk1Icon.SetActive(false);
         atk2Icon.SetActive(false);
         passedIcon.SetActive(false);
     }
-    // Méthode pour afficher l'icône "passé"
+
     public void AfficherIconePassed()
     {
         HideAllIcons();
         passedIcon.SetActive(true);
         RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
-
         swingCoroutine = StartCoroutine(SwingSablier(passedRect));
     }
 
@@ -199,8 +195,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    // Méthode pour afficher l'icône d'attaque (première ou deuxième)
-    public void ShowAttackIcon(int numeroAttaque)
+    public void ShowAttackIcon(int numberAtk)
     {
         //passedIcon.SetActive(false);
         atk1Icon.SetActive(true);
@@ -209,7 +204,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         RectTransform atkRect = atk1Icon.GetComponent<RectTransform>();
         pulseAtk1Coroutine  = StartCoroutine(Pulse(atkRect));
 
-        if (numeroAttaque == 2){
+        if (numberAtk == 2){
             atk2Icon.SetActive(true);
             RectTransform atkRect2 = atk2Icon.GetComponent<RectTransform>();
             pulseAtk2Coroutine  = StartCoroutine(Pulse(atkRect2));

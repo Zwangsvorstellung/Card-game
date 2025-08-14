@@ -118,7 +118,7 @@ public class CardAnimations : MonoBehaviour
         }
 
         Color originalColor = img.color;
-        Color glowColor = originalColor * (1f + glowIntensity); // Augmente la luminosité
+        Color glowColor = originalColor * (1f + glowIntensity);
 
         Vector3 originalScale = img.rectTransform.localScale;
 

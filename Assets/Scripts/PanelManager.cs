@@ -83,8 +83,8 @@ public class PanelManager : MonoBehaviour
 
         // Forcer la largeur du panel
         rectPanel.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, PANEL_WIDTH);
-        float hauteurPanel = canvas.GetComponent<RectTransform>().rect.height - (PANEL_MARGIN_TOP + PANEL_MARGIN_BOTTOM);
-        rectPanel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, hauteurPanel);
+        float heightPanel = canvas.GetComponent<RectTransform>().rect.height - (PANEL_MARGIN_TOP + PANEL_MARGIN_BOTTOM);
+        rectPanel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, heightPanel);
         CreateLogsArea(panelGO);
         
         panelDroit = panelGO;

@@ -28,17 +28,17 @@ public class BoardManager : MonoBehaviour
 
     public void ShowCardsOnTable(List<CarteData> cardsOpponent, List<CarteData> cardsPlayer)
     {        
-        cartesInstanciees.ForEach(go => { if (go != null) Destroy(go); });
-        cartesInstanciees.Clear();
+        instantiatedCards.ForEach(go => { if (go != null) Destroy(go); });
+        instantiatedCards.Clear();
 
         // Instancier les cartes de l'adversaire (4 premières)
         foreach (var card in cardsOpponent)
         {
             GameObject carteGO = Instantiate(cartePrefab, mainAdversaireTransform);
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
-            carteUI.isCarteAdversaire = true;
+            carteUI.isCardOpponent = true;
             carteUI.setAttributesInitCard(card);
-            cartesInstanciees.Add(carteGO);
+            instantiatedCards.Add(carteGO);
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(mainAdversaireTransform as RectTransform);
 
@@ -47,13 +47,13 @@ public class BoardManager : MonoBehaviour
         {
             GameObject carteGO = Instantiate(cartePrefab, mainJoueurTransform);
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
-            carteUI.isCartePlayer = true;
+            carteUI.isCardPlayer = true;
             carteUI.setAttributesInitCard(card);
-            cartesInstanciees.Add(carteGO);
+            instantiatedCards.Add(carteGO);
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(mainJoueurTransform as RectTransform);
         
-        foreach (var go in cartesInstanciees)
+        foreach (var go in instantiatedCards)
         {
             CarteUI carteUI = go.GetComponent<CarteUI>();
             SetCardPropertiesForGame(carteUI);
@@ -65,8 +65,8 @@ public class BoardManager : MonoBehaviour
         CarteBoardInteraction interactionBoard = carteUI.GetComponent<CarteBoardInteraction>();
         RectTransform rectTransform = carteUI.GetComponent<RectTransform>();
 
-        interactionBoard.isCardPlayer = carteUI.isCartePlayer;
-        interactionBoard.isCardOpponent = carteUI.isCarteAdversaire;
+        interactionBoard.isCardPlayer = carteUI.isCardPlayer;
+        interactionBoard.isCardOpponent = carteUI.isCardOpponent;
         interactionBoard.startPosition = (Vector3)carteUI.GetComponent<RectTransform>().anchoredPosition;
 
         Vector2 anchoredPos = carteUI.GetComponent<RectTransform>().anchoredPosition;
@@ -91,17 +91,6 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    // fonction de récupération des mains joueur
-    public List<CarteUI> GetCartesJoueur()
-    {
-        return mainJoueurTransform.GetComponentsInChildren<CarteUI>(true).ToList();
-    }
-
-    public List<CarteUI> GetCartesAdversaire()
-    {
-        return mainAdversaireTransform.GetComponentsInChildren<CarteUI>(true).ToList();
-    }
-
     public void ShowButtonNextStep(bool show)
     {
         buttonNextStep?.gameObject.SetActive(show);
@@ -118,11 +107,11 @@ public class BoardManager : MonoBehaviour
 
     private IEnumerator FadeAllCards(float fromAlpha, float toAlpha, float duration)
     {
-        var cartesJaunes = CarteBoardInteraction.AllCardsInteractions
+        var yellowCards = CarteBoardInteraction.AllCardsInteractions
         .Where(c => c.yellowCard && (c.isCardPlayer || c.isCardOpponent))
         .ToList();
 
-        foreach (var card in cartesJaunes)
+        foreach (var card in yellowCards)
         {
             var anim = card.GetComponent<CardAnimations>();
             var img = card.GetComponentInChildren<Image>();

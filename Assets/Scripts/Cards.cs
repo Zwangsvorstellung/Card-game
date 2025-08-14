@@ -33,7 +33,6 @@ public class Cards : MonoBehaviour
             lstCards.Add(lstSprites[index]);
             lstSprites.RemoveAt(index);
         }
-
     }
 
     public void CardsHide()
@@ -58,22 +57,10 @@ public class Cards : MonoBehaviour
                 child.GetComponent<EventTrigger>().enabled = true;
             }
         }
-        
     }
 
     public void AddToCardsFounds(Sprite sp)
     {
         lstFounds.Add(sp);
     }
-
-    public void UpdateProgress()
-    {
-        int pourcent = (lstFounds.Count * 100) / 9;
-
-        if (pourcent >= 100)
-        {
-            
-        }
-    }
-
 }

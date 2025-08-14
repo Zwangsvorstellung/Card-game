@@ -8,7 +8,7 @@ using System.Linq;
 
 public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    public List<IAAction.Capacite> capacites; // la liste des capacités de la carte
+    public List<IAAction.Capacity> capacites; // la liste des capacités de la carte
 
     [SerializeField] public bool isCardPlayer = false;
     [SerializeField] public bool isCardOpponent = false;
@@ -23,6 +23,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public int malusAtk;  
     [SerializeField] public int malusDfs;  
     [SerializeField] public bool freeze;  
+    [SerializeField] public string nameCard;  
 
     private Coroutine currentMoveCoroutine;
     public static readonly List<CarteBoardInteraction> AllCardsInteractions = new();
@@ -97,6 +98,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         carteUI = GetComponent<CarteUI>();
 
         img = carteUI.GetComponent<Image>();
+        nameCard = carteUI?.nomText?.text ?? "NULL";
         GameManager.numberOfAttacksUsed = 0;
 
         isAITurn = false;
@@ -211,7 +213,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         isSelected = true;
         rectTransform.anchoredPosition = newPosition;
 
-        GameManager.mode = "selectCard";
+        GameManager.SetMode("selectCard");
         
         if (layoutGroup?.enabled == true)
             layoutGroup.enabled = false;
@@ -222,7 +224,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     public void DeselectCard()
     {
-        GameManager.mode = "select";
+        GameManager.SetMode("select");
 
         isSelected = false;
         rectTransform.anchoredPosition = startPosition;
@@ -233,7 +235,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     private void DeselectAllOtherCards()
     {
-        foreach (var card in AllCardsInteractions)
+        foreach (CarteBoardInteraction card in AllCardsInteractions)
         {
             if (card.isSelected && !choiceDo)
             {
@@ -260,11 +262,11 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {        
         float offsetY = - (GetComponent<RectTransform>().sizeDelta.y + 100);
     
-        Vector2 attaquePosition = new Vector2(-50, offsetY);
-        Vector2 passerPosition = new Vector2(50, offsetY);
+        Vector2 atkPosition = new Vector2(-50, offsetY);
+        Vector2 passedPosition = new Vector2(50, offsetY);
     
-        buttonAtk = CreateButton("Attaque", OnAttaque, attaquePosition);
-        buttonPass = CreateButton("Passer", OnPasser, passerPosition);
+        buttonAtk = CreateButton("Attaque", OnAttaque, atkPosition);
+        buttonPass = CreateButton("Passer", OnPasser, passedPosition);
     
         buttonAtk.SetActive(false);
         buttonPass.SetActive(false);
@@ -317,9 +319,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     private void OnAttaque()
     {
-        GameManager.mode = "atk";
-        string nameCard = carteUI?.nomText?.text ?? "Nom inconnu";
-        
+        GameManager.SetMode("atk");
         buttonPass?.SetActive(false);    
 
         if(buttonAtk)
@@ -361,11 +361,11 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             if(availableTargets.Count > 0)
             {
                 int randomIndex = Random.Range(0, availableTargets.Count);
-                var chosenTarget  = availableTargets[randomIndex];
+                CarteBoardInteraction chosenTarget = availableTargets[randomIndex];
                 chosenTarget.SelectTarget();
 
-                PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée Par Tyroine : {chosenTarget.carteUI.nomText.text}");
-                PanelManager.instance.AddLog($"   → -1 en dfs pour : {chosenTarget.carteUI.nomText.text}");
+                PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée Par Tyroine : {chosenTarget.nameCard}");
+                PanelManager.instance.AddLog($"   → -1 en dfs pour : {chosenTarget.nameCard}");
                     
                 int currentDef = GetDefenseValue(chosenTarget);
                 Debug.Log(currentDef);
@@ -389,8 +389,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     private void OnPasser()
     {
-        string nameCard = carteUI?.nomText?.text ?? "Nom inconnu";
-
         carteUI.AfficherIconePassed();
                 
         if (!coloredCards.Contains(this))
@@ -450,10 +448,10 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             if(availableTargets.Count > 0)
             {
                 int randomIndex = Random.Range(0, availableTargets.Count);
-                var chosenTarget  = availableTargets[randomIndex];
+                CarteBoardInteraction chosenTarget  = availableTargets[randomIndex];
                 chosenTarget.freeze = true;
 
-                PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée : {chosenTarget.carteUI.nomText.text}");
+                PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée : {chosenTarget.nameCard}");
             }
             else
             {
@@ -469,7 +467,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         stateOffensif = "passed";
         isSelected = false;
         
-        GameManager.mode = "select";
+        GameManager.SetMode("select");
                 
         CheckEndOfTurn();
     }
@@ -558,15 +556,11 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
         bool soliciaInPlayerDeck = false;
         bool soliciaInOpponentDeck = false;
-
         bool zarlaPresentOnBoard = false;
 
         foreach (CarteBoardInteraction interaction in AllCardsInteractions)
-        {
-            CarteUI carteUI = interaction.GetComponent<CarteUI>();
-            string cardName = carteUI?.nomText?.text ?? "NULL";
-    
-            if (cardName == "Solicia")
+        {    
+            if (interaction.nameCard == "Solicia")
             {
                 if (interaction.isCardPlayer)
                     soliciaInPlayerDeck = true;
@@ -577,7 +571,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                     break;
             }   
 
-            if (cardName == "Zarla")
+            if (interaction.nameCard == "Zarla")
             {
                 zarlaPresentOnBoard = true;
             } 
@@ -604,28 +598,18 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 cardsTargetOpponnent.Add(attaque.target);
         }
 
-        bool zarlaPresentTarget = cardsTarget.Any(card =>
-        {
-            CarteUI carteUI = card.GetComponent<CarteUI>();
-            string cardName = carteUI?.nomText?.text ?? "NULL";
-            return cardName == "Zarla";
-        });
+        bool zarlaPresentTarget = cardsTarget.Any(card => card.nameCard == "Zarla");
 
         if (zarlaPresentTarget)
         {
-            var zarlaCard = cardsTarget.First(card =>
-                    (card.GetComponent<CarteUI>()?.nomText?.text ?? "") == "Zarla");
-                
+            CarteBoardInteraction zarlaCard = cardsTarget.First(card => card.nameCard == "Zarla");
             ApplyAttackBonus(zarlaCard, "Zarla");
         }
         else if(zarlaPresentOnBoard)
         {
             foreach (CarteBoardInteraction card in AllCardsInteractions)
             {
-                CarteUI carteUI = card.GetComponent<CarteUI>();
-                string cardName = carteUI?.nomText?.text ?? "NULL";
-        
-                if (cardName == "Zarla")
+                if (card.nameCard == "Zarla")
                 {
                     ApplyDfsBonus(card, "Zarla");
                 }   
@@ -634,8 +618,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
         foreach (AttaqueInfo attaque in attaquesDuTour)
         {
-            string attackerName = attaque.attacker?.carteUI?.nomText?.text ?? "NULL";
-            string targetName = attaque.target?.carteUI?.nomText?.text ?? "NULL";
+            string attackerName = attaque.attacker?.nameCard ?? "NULL";
+            string targetName = attaque.target?.nameCard ?? "NULL";
             //Debug.Log($"[ApplyAllAttacks] attacker : {attackerName}, target : {targetName}, Dégâts : {attaque.damage}");
 
             if (attaque.target)
@@ -651,7 +635,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                     continue;
                 }
 
-                // Apply freeze effect if attacker is "Hiver"
                 if (attackerName == "Hiver")
                 {
                     attaque.target.freeze = true;
@@ -659,7 +642,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                     PanelManager.instance.AddLog($"[ApplyAllAttacks] {targetName} is frozen by Hiver.");
                 }
                 
-                // Sinon elle prend les dégâts
                 attaque.target.ApplyDamageToTarget(attaque.damage, attackerName);
                 targetCards.Add(attaque.target);
                 CurrentTarget = attaque.target;
@@ -706,9 +688,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         // Si l'IA est active, simuler les attaques de l'IA
         if (GameManager.iaActive)
         {            
-            var cartesIA = AllCardsInteractions.Where(c => c.isCardOpponent).ToList();
-            var cartesJoueur = AllCardsInteractions.Where(c => c.isCardPlayer).ToList();
-
             PanelManager.instance?.AddLog("[IA] Lancement du tour IA");
         
             Invoke("StartAI", 0.2f);
@@ -795,8 +774,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         int damage = GetAttackValue(attackingCard);
         int defenseTarget = GetDefenseValue(this);
         
-        string nameAttacker = attackingCard.carteUI?.nomText?.text ?? "Attaquant";
-        string nameTarget = carteUI?.nomText?.text ?? "Cible";
+        string nameAttacker = attackingCard.name ?? "Attaquant";
+        string nameTarget = nameCard ?? "Cible";
                 
         PanelManager.instance?.AddLog($"[ATTAQUE] {nameAttacker} : ATK = {damage}");
         PanelManager.instance?.AddLog($"[DEFENSE] {nameTarget} : DEF = {defenseTarget}");
@@ -841,7 +820,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     private int CalculateEffectiveDefense(int baseDfs, string attackerName)
     {
         if (attackerName == "Tyroine"){
-            PanelManager.instance?.AddLog($"{carteUI?.nomText?.text ?? "Carte"} : Pertededéfense");
+            PanelManager.instance?.AddLog($"{nameCard ?? "Carte"} : Pertededéfense");
             return Mathf.Max(0, baseDfs - 1);
         }
         return baseDfs;
@@ -875,10 +854,10 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         if (GameManager.numberOfAttacksUsed == GameManager.numberOfAttacksMax)
             AutoPassLastCards();
 
-        var cartesJoueur = AllCardsInteractions.Where(c => c.isCardPlayer).ToList();
+        var cardsPlayer = AllCardsInteractions.Where(c => c.isCardPlayer).ToList();
 
         // Le tour se termine si toutes les cartes actives ont fait leur choix OU s'il n'y a plus de cartes actives
-        if (cartesJoueur.All(c => c.choiceDo))
+        if (cardsPlayer.All(c => c.choiceDo))
         {
             GameManager.isEndturnPlayer = true;
             if(GameManager.iaActive)
@@ -888,8 +867,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     public void SelectTarget()
     {
-        string nameTarget = carteUI?.nomText?.text ?? "Nom inconnu";
-        string nameAttacker = attackingCard?.carteUI?.nomText?.text ?? "Nom inconnu";
+        string nameTarget = nameCard ?? "Nom inconnu";
+        string nameAttacker = attackingCard?.nameCard ?? "Nom inconnu";
         
         GameManager.numberOfAttacksUsed++;
 
@@ -943,7 +922,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         
         CheckEndOfTurn();
         
-        GameManager.mode = "select";
+        GameManager.SetMode("select");
         attackingCard = null;
         nameTarget = null;
         
@@ -960,102 +939,102 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
     public void ReplaceOpponentYellowCards()
     {
-        var jaunesAdversaire = AllCardsInteractions.Where(c => c.yellowCard && c.isCardOpponent).ToList();
-        var jaunesPlayer = AllCardsInteractions.Where(c => c.yellowCard && c.isCardPlayer).ToList();
+        var yellowOpponent = AllCardsInteractions.Where(c => c.yellowCard && c.isCardOpponent).ToList();
+        var yellowPlayer = AllCardsInteractions.Where(c => c.yellowCard && c.isCardPlayer).ToList();
         
-        if (jaunesAdversaire.Count == 0 && jaunesPlayer.Count == 0) 
+        if (yellowOpponent.Count == 0 && yellowPlayer.Count == 0) 
             return;
         
-        var piocheAdversaire = GameManager.Instance.piochePlayerB;
-        var piocheplayer = GameManager.Instance.piochePlayerA;
+        var deckOpponent = GameManager.Instance.piochePlayerB;
+        var deckPlayer = GameManager.Instance.piochePlayerA;
 
-        var cartesSurBoardAdversaire = AllCardsInteractions.Where(c => c.isCardOpponent && c.carteUI != null)
+        var cartesIntoBoardOpponent = AllCardsInteractions.Where(c => c.isCardOpponent && c.carteUI != null)
                                            .Select(c => c.carteUI.carteID).ToHashSet();
 
-        var cartesSurBoardPlayer = AllCardsInteractions.Where(c => c.isCardPlayer && c.carteUI != null)
+        var cartesIntoBoardPlayer = AllCardsInteractions.Where(c => c.isCardPlayer && c.carteUI != null)
                                            .Select(c => c.carteUI.carteID).ToHashSet();
-        var disponiblesAdversaire = piocheAdversaire.Where(c => !cartesSurBoardAdversaire.Contains(c.idCard.ToString())).ToList();
-        var disponiblesPlayer = piocheplayer.Where(c => !cartesSurBoardPlayer.Contains(c.idCard.ToString())).ToList();
+        var availableCardsOpponent = deckOpponent.Where(c => !cartesIntoBoardOpponent.Contains(c.idCard.ToString())).ToList();
+        var availableCardsPlayer = deckPlayer.Where(c => !cartesIntoBoardPlayer.Contains(c.idCard.ToString())).ToList();
         
-        foreach (var carte in jaunesAdversaire)
+        foreach (CarteBoardInteraction card in yellowOpponent)
         {
-            if (disponiblesAdversaire.Count == 0)
+            if (availableCardsOpponent.Count == 0)
             {
                 // Plus de remplaçante : rendre invisibles tous les enfants de la carte
-                foreach (Transform child in carte.transform)
+                foreach (Transform child in card.transform)
                 {
                     child.gameObject.SetActive(false);
                 }
                 continue;
             }
-            int idx = Random.Range(0, disponiblesAdversaire.Count);
-            var nouvelleCarte = disponiblesAdversaire[idx];
-            disponiblesAdversaire.RemoveAt(idx);
+            int idx = Random.Range(0, availableCardsOpponent.Count);
+            var newCard = availableCardsOpponent[idx];
+            availableCardsOpponent.RemoveAt(idx);
         
-            var tempList = piocheAdversaire.ToList();
-            tempList.Remove(nouvelleCarte);
-            piocheAdversaire.Clear();
+            var tempList = deckOpponent.ToList();
+            tempList.Remove(newCard);
+            deckOpponent.Clear();
 
-            foreach (var c in tempList) piocheAdversaire.Enqueue(c);
+            foreach (var c in tempList) deckOpponent.Enqueue(c);
 
-            Transform parent = carte.transform.parent;
-            int siblingIndex = carte.transform.GetSiblingIndex();
+            Transform parent = card.transform.parent;
+            int siblingIndex = card.transform.GetSiblingIndex();
 
-            Vector3 anciennepositionInitiale = carte.startPosition;
+            Vector3 oldInitialPosition = card.startPosition;
 
-            GameObject.DestroyImmediate(carte.gameObject);
+            GameObject.DestroyImmediate(card.gameObject);
 
             GameObject carteGO = GameObject.Instantiate(BoardManager.Instance.cartePrefab, parent);
             carteGO.transform.SetSiblingIndex(siblingIndex);
 
             // Réappliquer la position exacte
-            RectTransform rtNouvelleCarte = carteGO.GetComponent<RectTransform>();
-            rtNouvelleCarte.anchoredPosition = anciennepositionInitiale;
+            RectTransform rtNewCard = carteGO.GetComponent<RectTransform>();
+            rtNewCard.anchoredPosition = oldInitialPosition;
 
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
-            carteUI.setAttributesInitCard(nouvelleCarte);
-            carteUI.isCarteAdversaire = true;
+            carteUI.setAttributesInitCard(newCard);
+            carteUI.isCardOpponent = true;
             BoardManager.Instance.SetCardPropertiesForGame(carteUI);
         }
         
-        foreach (var carte in jaunesPlayer)
+        foreach (var card in yellowPlayer)
         {
-            if (disponiblesPlayer.Count == 0)
+            if (availableCardsPlayer.Count == 0)
             {
                 // Plus de remplaçante : rendre invisibles tous les enfants de la carte
-                foreach (Transform child in carte.transform)
+                foreach (Transform child in card.transform)
                 {
                     child.gameObject.SetActive(false);
                 }
                 continue;
             }
-            int idx = Random.Range(0, disponiblesPlayer.Count);
-            var nouvelleCarte = disponiblesPlayer[idx];
-            disponiblesPlayer.RemoveAt(idx);
+            int idx = Random.Range(0, availableCardsPlayer.Count);
+            var newCard = availableCardsPlayer[idx];
+            availableCardsPlayer.RemoveAt(idx);
         
-            var tempList = piocheplayer.ToList();
-            tempList.Remove(nouvelleCarte);
-            piocheplayer.Clear();
+            var tempList = deckPlayer.ToList();
+            tempList.Remove(newCard);
+            deckPlayer.Clear();
 
-            foreach (var c in tempList) piocheplayer.Enqueue(c);
+            foreach (var c in tempList) deckPlayer.Enqueue(c);
 
-            Transform parent = carte.transform.parent;
-            int siblingIndex = carte.transform.GetSiblingIndex();
+            Transform parent = card.transform.parent;
+            int siblingIndex = card.transform.GetSiblingIndex();
 
-            Vector3 anciennepositionInitiale = carte.startPosition;
+            Vector3 oldPositionInitial = card.startPosition;
 
-            GameObject.DestroyImmediate(carte.gameObject);
+            GameObject.DestroyImmediate(card.gameObject);
 
             GameObject carteGO = GameObject.Instantiate(BoardManager.Instance.cartePrefab, parent);
             carteGO.transform.SetSiblingIndex(siblingIndex);
 
             // Réappliquer la position exacte
-            RectTransform rtNouvelleCarte = carteGO.GetComponent<RectTransform>();
-            rtNouvelleCarte.anchoredPosition = anciennepositionInitiale;
+            RectTransform rtNewCard = carteGO.GetComponent<RectTransform>();
+            rtNewCard.anchoredPosition = oldPositionInitial;
 
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
-            carteUI.setAttributesInitCard(nouvelleCarte);
-            carteUI.isCartePlayer = true;
+            carteUI.setAttributesInitCard(newCard);
+            carteUI.isCardPlayer = true;
             BoardManager.Instance.SetCardPropertiesForGame(carteUI);
         }
         CheckGameOver();
@@ -1065,10 +1044,10 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         if (BoardManager.Instance != null && BoardManager.Instance.mainAdversaireTransform != null)
         {
-            var cartesAdversaire = BoardManager.Instance.mainAdversaireTransform.GetComponentsInChildren<CarteUI>(true)
+            var cardsOpponent = BoardManager.Instance.mainAdversaireTransform.GetComponentsInChildren<CarteUI>(true)
                 .Where(c => c.gameObject.activeInHierarchy && c.transform.Cast<Transform>().Any(child => child.gameObject.activeSelf))
                 .ToArray();
-            if (cartesAdversaire.Length == 0)
+            if (cardsOpponent.Length == 0)
                 TriggerVictory();
         }
     }
@@ -1081,7 +1060,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         PanelManager.instance.ShowVictory(GameManager.playerScore);
     }
 
-    public bool HasCapacite(IAAction.Capacite cap)
+    public bool HasCapacity(IAAction.Capacity cap)
     {
         return capacites != null && capacites.Contains(cap);
     }

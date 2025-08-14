@@ -10,7 +10,7 @@ public class IA : MonoBehaviour
     private static IA instance;
     public static IA Instance => instance;
     
-    private float delaiAction = 0.5f; // Délai entre chaque action de l'IA
+    private float delayAction = 0.5f;
     
     void Awake()
     {
@@ -31,10 +31,10 @@ public class IA : MonoBehaviour
 
         GameManager.numberOfAttacksUsedIA = 0;
 
-        List<CarteBoardInteraction> cartesIA = GetCartesAdversaire();
-        List<CarteBoardInteraction> cardsPlayer = GetCartesPlayer();
+        List<CarteBoardInteraction> cardsIA = GetCardOpponent();
+        List<CarteBoardInteraction> cardsPlayer = GetCardsPlayer();
 
-        if (cartesIA.Count == 0)
+        if (cardsIA.Count == 0)
         {
             Debug.Log("[IA] Aucune carte adverse trouvée");
             yield break;
@@ -43,46 +43,45 @@ public class IA : MonoBehaviour
         const int maxAttaques = 2;
         const int seuilMinAttaque = 2; // seuil minimal pour qu'une attaque soit envisagée
 
-        int attaquesEffectuees = 0;
+        int attacksExecuted = 0;
 
         // On crée une liste temporaire pour gérer les cartes IA pouvant attaquer
-        List<CarteBoardInteraction> cartesIADisponibles = new List<CarteBoardInteraction>(cartesIA);
-        List<CarteBoardInteraction> cartesAAttaque = new List<CarteBoardInteraction>();
+        List<CarteBoardInteraction> cardsIADisponibles = new List<CarteBoardInteraction>(cardsIA);
+        List<CarteBoardInteraction> cardsAAttaque = new List<CarteBoardInteraction>();
 
-        while (attaquesEffectuees < maxAttaques && cartesIADisponibles.Count > 0)
+        while (attacksExecuted < maxAttaques && cardsIADisponibles.Count > 0)
         {
-            int meilleureScore = 0;
-            CarteBoardInteraction meilleurAttaquant = null;
-            CarteBoardInteraction meilleureCible = null;
+            int bestScoring = 0;
+            CarteBoardInteraction bestAttacker = null;
+            CarteBoardInteraction bestTarget = null;
 
             // Pour chaque carte IA disponible, on décide l'action
-            foreach (var carteIA in cartesIADisponibles)
+            foreach (var cardsIADispo in cardsIADisponibles)
             {
-                var decision = IAAction.DecideAction(carteIA, cartesIA, cardsPlayer);
-                Debug.Log($"[IA] Carte {carteIA.name} : attack={decision.attack}, score={decision.score}, target={(decision.target != null ? decision.target.name : "null")}");
+                var decision = IAAction.DecideAction(cardsIADispo, cardsIA, cardsPlayer);
+                Debug.Log($"[IA] Carte {cardsIADispo.name} : attack={decision.attack}, score={decision.score}, target={(decision.target != null ? decision.target.name : "null")}");
 
-                if (decision.attack && decision.score > meilleureScore && decision.score >= seuilMinAttaque)
+                if (decision.attack && decision.score > bestScoring && decision.score >= seuilMinAttaque)
                 {
-                    meilleureScore = decision.score;
-                    meilleurAttaquant = carteIA;
-                    meilleureCible = decision.target;
+                    bestScoring = decision.score;
+                    bestAttacker = cardsIADispo;
+                    bestTarget = decision.target;
                 }
             }
 
-            if (meilleurAttaquant != null && meilleureCible != null)
+            if (bestAttacker != null && bestTarget != null)
             {
-                Debug.Log($"[IA] {meilleurAttaquant.name} attaque la cible {meilleureCible} avec un score {meilleureScore}");
-                ExecuteAttack(meilleurAttaquant, meilleureCible);
+                Debug.Log($"[IA] {bestAttacker.name} attaque la cible {bestTarget} avec un score {bestScoring}");
+                ExecuteAttack(bestAttacker, bestTarget);
 
-                attaquesEffectuees++;
-                cartesAAttaque.Add(meilleurAttaquant);
+                attacksExecuted++;
+                cardsAAttaque.Add(bestAttacker);
                 // On retire le meilleur attaquant de la liste pour qu'il n'attaque qu'une fois
-                cartesIADisponibles.Remove(meilleurAttaquant);
+                cardsIADisponibles.Remove(bestAttacker);
 
-                // On peut aussi retirer la cible si tu veux éviter qu'elle soit attaquée plusieurs fois
-                cardsPlayer.Remove(meilleureCible);
+                cardsPlayer.Remove(bestTarget);
 
-                yield return new WaitForSeconds(delaiAction);
+                yield return new WaitForSeconds(delayAction);
             }
             else
             {
@@ -90,19 +89,18 @@ public class IA : MonoBehaviour
             } 
         }
 
-        foreach (var carteIA in cartesIA)
+        foreach (var cardIA in cardsIA)
         {
-            if (!cartesAAttaque.Contains(carteIA))
+            if (!cardsAAttaque.Contains(cardIA))
             {
-                Debug.Log($"[IA] {carteIA.name} : PASSER");
-                ExecutePass(carteIA);
-                yield return new WaitForSeconds(delaiAction);
+                Debug.Log($"[IA] {cardIA.name} : PASSER");
+                ExecutePass(cardIA);
+                yield return new WaitForSeconds(delayAction);
             }
         }
 
         //Debug.Log("[IA] Tour IA terminé");
 
-        // Appliquer toutes les attaques
         CarteBoardInteraction instance = FindAnyObjectByType<CarteBoardInteraction>();
         if (instance != null)
             instance.ApplyAllAttacks();
@@ -111,37 +109,35 @@ public class IA : MonoBehaviour
         CarteBoardInteraction.EndAITurn();
     }
     
-    private List<CarteBoardInteraction> GetCartesAdversaire()
+    private List<CarteBoardInteraction> GetCardOpponent()
     {
         return CarteBoardInteraction.AllCardsInteractions
             .Where(c => c.isCardOpponent)
             .ToList();
     }
 
-    private List<CarteBoardInteraction> GetCartesPlayer()
+    private List<CarteBoardInteraction> GetCardsPlayer()
     {
         return CarteBoardInteraction.AllCardsInteractions
             .Where(c => c.isCardPlayer)
             .ToList();
     }
     
-    private void ExecuteAttack(CarteBoardInteraction attaquant, CarteBoardInteraction cible)
+    private void ExecuteAttack(CarteBoardInteraction attacker, CarteBoardInteraction target)
     {        
-        ApplyIAAttackVisualEffect(attaquant);
-        SimulateAIAttack(attaquant, cible);
+        ApplyIAAttackVisualEffect(attacker);
+        SimulateAIAttack(attacker, target);
     }
     
-    private void SimulateAIAttack(CarteBoardInteraction attaquant, CarteBoardInteraction cible)
+    private void SimulateAIAttack(CarteBoardInteraction attacker, CarteBoardInteraction target)
     {
-        string nameCard = attaquant.GetComponent<CarteUI>()?.nomText?.text ?? "Carte IA";
-
         GameManager.numberOfAttacksUsedIA++;
 
-        attaquant.choiceDo = true;
-        attaquant.stateOffensif = "atk";
+        attacker.choiceDo = true;
+        attacker.stateOffensif = "atk";
         PanelManager.instance.AddLog($"ATTAQUE IA ({GameManager.numberOfAttacksUsedIA}/{GameManager.numberOfAttacksMax})");
 
-        ApplyAttack(nameCard, cible);
+        ApplyAttack(attacker.nameCard, target);
     }
 
     private void SelectRandomTarget(string nameAttacker, int numberAtk)
@@ -162,7 +158,7 @@ public class IA : MonoBehaviour
         if (target == null) return;
         
         CarteBoardInteraction cardAttacker = CarteBoardInteraction.AllCardsInteractions
-        .FirstOrDefault(c => c.carteUI?.nomText?.text == nameAttacker);
+        .FirstOrDefault(c => c.nameCard == nameAttacker);
 
         if (cardAttacker == null) return;
     
@@ -172,7 +168,7 @@ public class IA : MonoBehaviour
         target.targetCount++;
         carteUI.ShowAttackIcon(target.targetCount);
 
-        PanelManager.instance.AddLog($"{nameAttacker} : ATQ -> {carteUI.nomText.text}");
+        PanelManager.instance.AddLog($"{nameAttacker} : ATQ -> {target.nameCard}");
         
         CarteScriptableObject so = Resources.LoadAll<CarteScriptableObject>("CartesGenerees").FirstOrDefault(c => c.nom == nameAttacker);
         
@@ -192,11 +188,9 @@ public class IA : MonoBehaviour
             }
         }
 
-        // État de la carte cible
         target.stateDefensif = "isAttacked";
 
-        // Calcul des dégâts
-        target.ComputeAndStoreDamageIA(cardAttacker, target, nameAttacker, carteUI.nomText.text);
+        target.ComputeAndStoreDamageIA(cardAttacker, target, nameAttacker, target.nameCard);
     }
 
     private void ExecutePass(CarteBoardInteraction card)
@@ -212,19 +206,18 @@ public class IA : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
 
-        Image imageCarte = card.GetComponent<Image>() ?? card.GetComponentInChildren<Image>();
-        imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+        Image imgCard = card.GetComponent<Image>() ?? card.GetComponentInChildren<Image>();
+        imgCard.color = new Color(0.4f, 0.4f, 0.4f, 1f);
         
-        Button boutonPass = card.transform.Find("boutonPass")?.GetComponent<Button>();
-        if (boutonPass != null && boutonPass.interactable)
+        Button buttonPass = card.transform.Find("boutonPass")?.GetComponent<Button>();
+        if (buttonPass != null && buttonPass.interactable)
         {          
-            boutonPass.onClick.Invoke();
+            buttonPass.onClick.Invoke();
         }
         card.choiceDo = true;        
         card.stateOffensif = "passed";
     }
     
-    // Méthode pour démarrer l'IA au début du jeu
     public IEnumerator StartAITurnCoroutine()
     {
         yield return new WaitForSeconds(1f);
@@ -237,11 +230,8 @@ public class IA : MonoBehaviour
                 
         card.startPosition = rectTransform.anchoredPosition;
         
-        // Désactiver le LayoutElement pour que la carte ne soit plus affectée par le GridLayout
         LayoutElement layoutElement = card.GetComponent<LayoutElement>();
-        //layoutElement.ignoreLayout = true;
         
-        // Déplacer la carte vers le bas de 50 pixels
         Vector3 newPosition = card.startPosition + new Vector3(0, -50, 0);
         rectTransform.anchoredPosition = newPosition;
     }

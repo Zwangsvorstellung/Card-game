@@ -11,22 +11,21 @@ public class GameManager : MonoBehaviour
     public Queue<CarteData> piochePlayerA;
     public Queue<CarteData> piochePlayerB;
     
-    private List<int> cartesSelectionnees = new List<int>(); // Index des cartes sélectionnées
+    private List<int> selectedCards = new List<int>(); // Index des cartes sélectionnées
     private List<CarteData> cartesPlacees = new List<CarteData>(); // Cartes placées sur le tapis
     public const int MAX_CARTES_TAPIS = 4;
 
     public static GameManager Instance { get; private set; }
 
-    private string mode;
+    public static string mode;
     public static bool iaActive = true;
     public static int playerScore;
-    public static int scoreAdversaire;
+    public static int scoreOpponent;
     public static int currentRound;
     public static int numberOfAttacksUsed;
     public static int numberOfAttacksUsedIA;
     public static int numberOfAttacksMax = 2;
     public static bool isEndturnPlayer = false;
-
 
     [SerializeField] private bool isEndturnPlayerdebug = false;
     [SerializeField] private string debugMode;
@@ -45,7 +44,7 @@ public class GameManager : MonoBehaviour
         mode = "selectDeck";
 
         playerScore = 10;
-        scoreAdversaire = 10;
+        scoreOpponent = 10;
         
         // CarteBoardInteraction.ShowScore(); // Désactivé pour ne pas afficher le score au lancement
         // faire 2 decks complets pour joueur A et joueur B
@@ -115,7 +114,6 @@ public class GameManager : MonoBehaviour
             piochePlayerB.Enqueue(deckPlayerB[i]);
         }
 
-        // afficher les mains avec leurs positions
         mainUIManager.ShowHand(mainPlayerA.ToList());
     }
     void Update()
@@ -126,12 +124,12 @@ public class GameManager : MonoBehaviour
     }
     private void SelectCard(int indexCard)
     {
-        cartesSelectionnees.Add(indexCard);
+        selectedCards.Add(indexCard);
     }
 
     private void DeselectCard(int indexCard)
     {
-        cartesSelectionnees.Remove(indexCard);
+        selectedCards.Remove(indexCard);
     }
 
     private void Shuffle(List<CarteData> deck)
