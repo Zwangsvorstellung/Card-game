@@ -39,21 +39,22 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     public RectTransform rectTransform;
     public bool isSelect = false;
     public int indexHierarchieOriginal;
-    private Color couleurNormale;
-    private Color couleurAssombrie;
+    private Color colorDefault;
+    private Color colorDimmed;
 
     public MainUIManager mainUIManager;
 
-    public bool isCartePlayer = false;
-    public bool isCarteAdversaire = false;
+    public bool isCardPlayer = false;
+    public bool isCardOpponent = false;
+    public string nameCard = "";
 
     void Awake()
     {
         imageCarte ??= GetComponent<Image>();
 
-        couleurNormale = imageCarte.color;
-        couleurAssombrie = couleurNormale * 0.7f;
-        couleurAssombrie.a = couleurNormale.a;
+        colorDefault = imageCarte.color;
+        colorDimmed = colorDefault * 0.7f;
+        colorDimmed.a = colorDefault.a;
         
         Transform atk1Transform = transform.Find("atk1");
         atk1Icon = atk1Transform.gameObject;
@@ -78,6 +79,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     public void setAttributesInitCard(CarteData data)
     {
         imageCarte.sprite = data.image;
+        nameCard = data.nom;
         nomText?.SetText(data.nom);
         attaqueText?.SetText(data.attaque.ToString());
         defenseText?.SetText(data.defense.ToString());
@@ -114,8 +116,8 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
                 DeselectCard();
             }
 
-            int nombreCartesSelectionnees = CountSelectedCards();
-            mainUIManager.ShowValidateButton(nombreCartesSelectionnees >= GameManager.MAX_CARTES_TAPIS);
+            int numberCardsSelect = CountSelectedCards();
+            mainUIManager.ShowValidateButton(numberCardsSelect >= GameManager.MAX_CARTES_TAPIS);
         }
     }
 
