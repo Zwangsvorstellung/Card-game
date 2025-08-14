@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
 
-    public static string mode;
+    private string mode;
     public static bool iaActive = true;
     public static int playerScore;
     public static int scoreAdversaire;
@@ -157,5 +157,11 @@ public class GameManager : MonoBehaviour
             .Select(carteUI => mainList.FirstOrDefault(c => c.idCard.ToString() == carteUI.carteID))
             .Where(carteData => carteData != null)
             .ToList();
+    }
+
+    public static void SetMode(string newMode)
+    {
+        mode = newMode;
+        Debug.Log("Mode changé en : " + mode);
     }
 }
