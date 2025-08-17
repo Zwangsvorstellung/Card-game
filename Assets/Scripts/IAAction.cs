@@ -165,7 +165,7 @@ public static class IAAction
             scoring--;
 
 
-        Debug.Log(scoring);
+        //Debug.Log(scoring);
         // ---------------------------
         // 10) Clamp final, score minimum 0
         // ---------------------------

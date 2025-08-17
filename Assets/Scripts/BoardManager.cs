@@ -10,9 +10,9 @@ public class BoardManager : MonoBehaviour
     public static BoardManager Instance => instance ??= FindFirstObjectByType<BoardManager>();
 
     public GameObject cartePrefab;
-    private List<GameObject> cartesInstanciees = new List<GameObject>();
-    public Transform mainJoueurTransform;
-    public Transform mainAdversaireTransform;
+    private List<GameObject> instantiatedCards = new List<GameObject>();
+    public Transform handPlayerTransform;
+    public Transform handOpponentTransform;
     private CarteBoardInteraction interactionMain;
 
 
@@ -34,24 +34,24 @@ public class BoardManager : MonoBehaviour
         // Instancier les cartes de l'adversaire (4 premières)
         foreach (var card in cardsOpponent)
         {
-            GameObject carteGO = Instantiate(cartePrefab, mainAdversaireTransform);
+            GameObject carteGO = Instantiate(cartePrefab, handOpponentTransform);
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
             carteUI.isCardOpponent = true;
             carteUI.setAttributesInitCard(card);
             instantiatedCards.Add(carteGO);
         }
-        LayoutRebuilder.ForceRebuildLayoutImmediate(mainAdversaireTransform as RectTransform);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(handOpponentTransform as RectTransform);
 
         // Instancier les cartes du joueur (4 dernières)
         foreach (var card in cardsPlayer)
         {
-            GameObject carteGO = Instantiate(cartePrefab, mainJoueurTransform);
+            GameObject carteGO = Instantiate(cartePrefab, handPlayerTransform);
             CarteUI carteUI = carteGO.GetComponent<CarteUI>();
             carteUI.isCardPlayer = true;
             carteUI.setAttributesInitCard(card);
             instantiatedCards.Add(carteGO);
         }
-        LayoutRebuilder.ForceRebuildLayoutImmediate(mainJoueurTransform as RectTransform);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(handPlayerTransform as RectTransform);
         
         foreach (var go in instantiatedCards)
         {
@@ -134,7 +134,6 @@ public class BoardManager : MonoBehaviour
         CarteBoardInteraction interactionBoard = FindFirstObjectByType<CarteBoardInteraction>();
         interactionBoard.ReplaceOpponentYellowCards();
 
-        // 3) Préparation du prochain tour (pas de fade ici)
         PrepareNextTurn();
     }
     
@@ -153,8 +152,12 @@ public class BoardManager : MonoBehaviour
             card.stateOffensif = "waitOrder";
             card.choiceDo = false;
             card.isSelected = false;
-            card.freeze = false;
+            card.lastTarget = card.currentTargetString;
+            card.currentTargetString = "";
             card.layoutGroup.enabled = true;
+
+            // reset des bonus/malus
+            card.ResetAllBonusMalus(card);
         }
         
         PanelManager.instance.AddLog($"=== TOUR {GameManager.currentRound} ===");

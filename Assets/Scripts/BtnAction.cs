@@ -34,6 +34,4 @@ public class BtnAction : MonoBehaviour
     {
         audioHoverButton.Play();
     }
-
-
 }

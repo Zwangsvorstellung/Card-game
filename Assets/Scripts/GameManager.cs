@@ -160,6 +160,5 @@ public class GameManager : MonoBehaviour
     public static void SetMode(string newMode)
     {
         mode = newMode;
-        Debug.Log("Mode changé en : " + mode);
     }
 }
