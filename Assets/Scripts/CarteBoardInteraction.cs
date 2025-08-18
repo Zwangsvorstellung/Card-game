@@ -579,183 +579,136 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     public void ApplyAllAttacks()
     {
-        //Debug.Log("=== [ApplyAllAttacks] Début de l'application des attaques ===");
-        //Debug.Log($"Nombre d'attaques à appliquer : {attaquesDuTour.Count}");
-
-        HashSet<CarteBoardInteraction> cardsAttacking = new HashSet<CarteBoardInteraction>();
-        HashSet<CarteBoardInteraction> cardsAttackingPlayer = new HashSet<CarteBoardInteraction>();
-        HashSet<CarteBoardInteraction> cardsAttackingOpponent = new HashSet<CarteBoardInteraction>();
-
-        HashSet<CarteBoardInteraction> cardsTarget = new HashSet<CarteBoardInteraction>();
-        HashSet<CarteBoardInteraction> cardsTargetPlayer = new HashSet<CarteBoardInteraction>();
-        HashSet<CarteBoardInteraction> cardsTargetOpponnent = new HashSet<CarteBoardInteraction>();
-
-        CarteBoardInteraction leftCard = null;
-        CarteBoardInteraction rightCard = null;
-
-        bool soliciaInPlayerDeck = false;
-        bool soliciaInOpponentDeck = false;
-        bool zarlaPresentOnBoard = false;
-        bool BelindraPresentOnBoardPassedActifOpponent = false;
-        bool BelindraPresentOnBoardPassedActifPlayer = false;
-
         int indexBelindraOpponent = -1;
         int indexBelindraPlayer = -1;
+        CarteBoardInteraction belindraOpponent = null;
+        CarteBoardInteraction belindraPlayer = null;
+        CarteBoardInteraction zarlaCard = null;
 
-        // si "présent"
-        foreach (CarteBoardInteraction interaction in AllCardsInteractions)
-        {    
-            if (interaction.nameCard == "Solicia")
+        // Préparer dictionnaires par camp
+        var playerCards = AllCardsInteractions.Where(c => c.isCardPlayer).ToList();
+        var opponentCards = AllCardsInteractions.Where(c => c.isCardOpponent).ToList();
+
+        // Identifier Zarla et Belindra
+        foreach (var card in AllCardsInteractions)
+        {
+            switch (card.nameCard)
             {
-                if (interaction.isCardPlayer)
-                    soliciaInPlayerDeck = true;
-                else if (interaction.isCardOpponent)
-                    soliciaInOpponentDeck = true;
-    
-                if (soliciaInPlayerDeck && soliciaInOpponentDeck)
+                case "Zarla":
+                    zarlaCard ??= card;
                     break;
-            }   
-
-            if (interaction.nameCard == "Zarla")
-            {
-                zarlaPresentOnBoard = true;
-            }
-            
-            if (interaction.nameCard == "Belindra" && interaction.stateOffensif == "passed")
-            {
-                CarteUI carteUI = interaction.GetComponent<CarteUI>();
-                if(interaction.isCardPlayer){
-                    BelindraPresentOnBoardPassedActifPlayer = true;
-                    indexBelindraPlayer = carteUI.indexHierarchieOriginal;
-                }
-                if(interaction.isCardOpponent){
-                    BelindraPresentOnBoardPassedActifOpponent = true;
-                    indexBelindraOpponent = carteUI.indexHierarchieOriginal;
-                }
-            } 
-        }
-
-        foreach (AttaqueInfo attaque in attaquesDuTour)
-        {
-            // tous les attaquants
-            if (attaque.attacker)
-                cardsAttacking.Add(attaque.attacker);
-
-            // attaquants joueur
-            if (attaque.attacker && attaque.attacker.isCardPlayer)
-                cardsAttackingPlayer.Add(attaque.attacker);
-
-            // attaquants adversaire
-            if (attaque.attacker && attaque.attacker.isCardOpponent)
-                cardsAttackingOpponent.Add(attaque.attacker);
-
-            // les cibles
-            if (attaque.target)
-                cardsTarget.Add(attaque.target);
-
-            // cibles joueurs
-            if (attaque.target && attaque.target.isCardPlayer)
-                cardsTargetPlayer.Add(attaque.target);
-
-            // cibles adversaires
-            if (attaque.target && attaque.target.isCardOpponent)
-                cardsTargetOpponnent.Add(attaque.target);
-        }
-
-        // vérif ciblage (est ciblée)
-        bool zarlaPresentTarget = cardsTarget.Any(card => card.nameCard == "Zarla");
-
-        if (zarlaPresentTarget)
-        {
-            CarteBoardInteraction zarlaCard = cardsTarget.First(card => card.nameCard == "Zarla");
-            ApplyAttackBonus(zarlaCard, "Zarla");
-        }
-        else if(zarlaPresentOnBoard)
-        {
-            foreach (CarteBoardInteraction card in AllCardsInteractions)
-            {
-                if (card.nameCard == "Zarla")
-                {
-                    ApplyDfsBonus(card, "Zarla");
-                }   
+                case "Belindra" when card.stateOffensif == "passed":
+                    var index = card.GetComponent<CarteUI>().indexHierarchieOriginal;
+                    if (card.isCardPlayer)
+                    {
+                        belindraPlayer = card;
+                        indexBelindraPlayer = index;
+                    }
+                    else
+                    {
+                        belindraOpponent = card;
+                        indexBelindraOpponent = index;
+                    }
+                    break;
             }
         }
 
-        foreach (AttaqueInfo attaque in attaquesDuTour)
+        foreach (var attaque in attaquesDuTour)
         {
-            string attackerName = attaque.attacker?.nameCard ?? "NULL";
-            string targetName = attaque.target?.nameCard ?? "NULL";
-            //Debug.Log($"[ApplyAllAttacks] attacker : {attackerName}, target : {targetName}, Dégâts : {attaque.damage}");
+            if (attaque.target == null) continue;
 
-            if (attaque.target)
+            var target = attaque.target;
+            var attacker = attaque.attacker;
+            var attackerName = attacker?.nameCard ?? "NULL";
+            var targetName = target.nameCard ?? "NULL";
+
+            // --- Minoson ---
+            var minoson = (target.isCardPlayer ? playerCards : opponentCards)
+                .FirstOrDefault(c => c.nameCard == "Minoson");
+            if (minoson != null && targetName != "Minoson" && UnityEngine.Random.value < 0.5f)
             {
-                bool targetIsAttack = cardsAttacking.Contains(attaque.target);
-                bool isZao = targetName == "Zao";
-                bool isJaycota = targetName == "Jaycota";
+                target = minoson;
+                targetName = minoson.nameCard;
+                Debug.Log($"[ApplyAllAttacks] {minoson.nameCard} intercepte l'attaque destinée à {attaque.target.nameCard}.");
+            }
 
+            // --- Belindra ---
+            CarteBoardInteraction leftCard = null, rightCard = null;
+            if ((belindraOpponent != null && target.isCardOpponent) || (belindraPlayer != null && target.isCardPlayer))
+            {
+                var indexBelindra = target.isCardPlayer ? indexBelindraPlayer : indexBelindraOpponent;
+                (leftCard, rightCard) = GetAdjacentCards(indexBelindra, AllCardsInteractions, target.isCardPlayer ? "player" : "opponent");
+                if (leftCard != null) ApplyAttackMalus(leftCard, leftCard.nameCard);
+                if (rightCard != null) ApplyAttackMalus(rightCard, rightCard.nameCard);
+                PanelManager.instance.AddLog("Présence de Belindra");
+            }
 
-                bool shouldDodge = targetIsAttack && !isZao;
-                bool malusDfsJay = targetIsAttack && isJaycota;
-                bool malusAtkOpponent = BelindraPresentOnBoardPassedActifOpponent && attaque.target.isCardOpponent;
-                bool malusAtkPlayer = BelindraPresentOnBoardPassedActifPlayer && attaque.target.isCardPlayer;
-                bool bonusAtk = attackerName == "Neo" && targetName != attaque.attacker.lastTarget && attaque.attacker.lastTarget != "";
+            // --- Zarla ---
+            if (zarlaCard != null && target.nameCard == "Zarla") ApplyAttackBonus(target, "Zarla");
 
-                if (malusDfsJay)
+            // --- Jaycota ---
+            if (targetName == "Jaycota") 
+            { 
+                target.malusDfs++; 
+                Debug.Log($"[ApplyAllAttacks] {targetName} malus défense appliqué."); 
+            }
+
+            // --- Neo ---
+            if (attackerName == "Neo" && targetName != attacker.lastTarget && !string.IsNullOrEmpty(attacker.lastTarget))
+            {
+                ApplyAttackBonus(attacker, targetName);
+                attacker.resetBonusAtk = false;
+                Debug.Log($"[ApplyAllAttacks] {targetName} nouvelle cible bonus attaque pour {attackerName}.");
+            }
+
+            // --- Esquive ---
+            if ((playerCards.Contains(target) || opponentCards.Contains(target)) && targetName != "Zao")
+            {
+                Debug.Log($"[ApplyAllAttacks] {target.nameCard} esquive l'attaque de {attackerName}.");
+                continue;
+            }
+
+            // --- Hiver ---
+            if (attackerName == "Hiver") 
+            { 
+                target.freeze = true; 
+                Debug.Log($"[ApplyAllAttacks] {target.nameCard} is frozen by Hiver."); 
+            }
+
+            // --- Anaxagore ---
+            if (attackerName == "Anaxagore") 
+            { 
+                target.malusDfs = Mathf.Max(0, target.malusDfs - 1); 
+                Debug.Log($"[ApplyAllAttacks] {targetName} défense réduite par Anaxagore."); 
+            }
+
+            // --- Dégâts ---
+            target.ApplyDamageToTarget(attaque.damage, attackerName);
+
+            // --- Ruby : inflige 1 dégât aux ennemis adjacents si elle inflige des dégâts ---
+            if (attackerName == "Ruby" && attaque.damage > 0)
+            {
+                int targetIndex = target.GetComponent<CarteUI>().indexHierarchieOriginal;
+                (leftCard, rightCard) = GetAdjacentCards(targetIndex, AllCardsInteractions, target.isCardPlayer ? "opponent" : "player");
+
+                if (leftCard != null)
                 {
-                    attaque.target.malusDfs++;
-                    Debug.Log($"[ApplyAllAttacks] {targetName} malus atk pour {attackerName}.");
+                    leftCard.ApplyDamageToTarget(1, attackerName);
+                    PanelManager.instance.AddLog($"{attackerName} inflige 1 dégât supplémentaire à {leftCard.nameCard} !");
                 }
-
-                if (bonusAtk)
+                if (rightCard != null)
                 {
-                    ApplyAttackBonus(attaque.attacker, targetName);
-                    attaque.attacker.resetBonusAtk = false;
-                    Debug.Log($"[ApplyAllAttacks] {targetName} cible différente bonus atk pour {attackerName}.");
-                }else
-                    resetBonusAtk = true;
-
-                if (malusAtkOpponent || malusAtkPlayer)
-                {
-                    Debug.Log(malusAtkOpponent);
-                    Debug.Log(malusAtkPlayer);
-                    if(malusAtkOpponent)
-                        (leftCard, rightCard) = GetAdjacentCards(indexBelindraOpponent, AllCardsInteractions,"opponent");
-
-                    if(malusAtkPlayer)
-                        (leftCard, rightCard) = GetAdjacentCards(indexBelindraPlayer, AllCardsInteractions,"player");
-
-                    PanelManager.instance.AddLog($"Présence de Belindra");
-
-                    if(leftCard != null)
-                        ApplyAttackMalus(leftCard, leftCard.nameCard);
-                    if(rightCard != null)
-                        ApplyAttackMalus(rightCard, rightCard.nameCard);
-
-                    Debug.Log($"[ApplyAllAttacks->ApplyAttackMalus] {targetName} malus atk pour {attackerName}.");
+                    rightCard.ApplyDamageToTarget(1, attackerName);
+                    PanelManager.instance.AddLog($"{attackerName} inflige 1 dégât supplémentaire à {rightCard.nameCard} !");
                 }
-
-                if (shouldDodge)
-                {
-                    Debug.Log($"[ApplyAllAttacks] {targetName} esquive l'attaque de {attackerName}.");
-                    continue;
-                }
-
-                if (attackerName == "Hiver")
-                {
-                    attaque.target.freeze = true;
-                    Debug.Log($"[ApplyAllAttacks] {targetName} is frozen by Hiver.");
-                    PanelManager.instance.AddLog($"[ApplyAllAttacks] {targetName} is frozen by Hiver.");
-                }
-                
-                attaque.target.ApplyDamageToTarget(attaque.damage, attackerName);
-                targetCards.Add(attaque.target);
-                CurrentTarget = attaque.target;
-                currentTargetString = targetName;
             }
         }
 
         attaquesDuTour.Clear();
     }
+
+
+
 
     public (CarteBoardInteraction leftCard, CarteBoardInteraction rightCard) GetAdjacentCards(
         int index, 
@@ -996,6 +949,17 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         ColorCard(this, colorAtk);
         if (!coloredCards.Contains(this))
             coloredCards.Add(this);
+
+        // --- Appliquer malus Anaxagore ---
+        if (attackingCard != null && attackingCard.nameCard == "Anaxagore")
+        {
+            int currentDef = GetDefenseValue(this);
+            this.malusDfs = 1;
+            int newDef = currentDef - this.malusDfs;
+            this.carteUI?.defenseText?.SetText(newDef.ToString());
+            SetDefenseValue(newDef);
+            Debug.Log($"[SelectTarget] Malus défense appliqué par {attackingCard.nameCard} par  {this.nameCard}");
+        }
                     
         ComputeAndStoreDamage();
         
@@ -1169,7 +1133,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             ApplyDfsMalus(this, attackerName);
         }
 
-        if (attackerName == "Tyroine" || attackerName == "Xiang"){
+        if (attackerName == "Tyroine" || attackerName == "Xiang"  || attackerName == "Anaxagore"){
             PanelManager.instance?.AddLog($"{nameCard ?? "Carte"} : Pertededéfense par {attackerName}");
             return Mathf.Max(0, baseDfs - 1);
         }

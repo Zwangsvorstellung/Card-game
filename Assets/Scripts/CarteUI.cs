@@ -26,6 +26,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     public GameObject atk1Icon; // Icône première attaque
     public GameObject atk2Icon; // Icône deuxième attaque
     public GameObject passedIcon; // Icône "passé"
+    public GameObject freezeIcon; // Icône "freeze"
 
     [Header("Identification")]
     public string carteID; // ID unique de la carte
@@ -60,6 +61,8 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         atk1Icon = atk1Transform.gameObject;
         Transform atk2Transform = transform.Find("atk2");
         atk2Icon = atk2Transform.gameObject;
+        Transform freezeTransform = transform.Find("frozen");
+        freezeIcon = freezeTransform.gameObject;
         Transform passedTransform = transform.Find("passed");
         passedIcon = passedTransform.gameObject;
 
@@ -160,6 +163,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         atk1Icon.SetActive(false);
         atk2Icon.SetActive(false);
         passedIcon.SetActive(false);
+        freezeIcon.SetActive(false);
     }
 
     public void AfficherIconePassed()
