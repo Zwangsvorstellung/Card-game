@@ -389,7 +389,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             else
             {
                 PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
-            }
+            }s
         }
         else if(nameCard == "Ondine"){
 
@@ -691,24 +691,21 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 int targetIndex = target.GetComponent<CarteUI>().indexHierarchieOriginal;
                 (leftCard, rightCard) = GetAdjacentCards(targetIndex, AllCardsInteractions, target.isCardPlayer ? "opponent" : "player");
 
-                if (leftCard != null)
+                // Crée une liste des cartes adjacentes disponibles
+                var adjacentEnemies = new List<Carte>(2);
+                if (leftCard != null) adjacentEnemies.Add(leftCard);
+                if (rightCard != null) adjacentEnemies.Add(rightCard);
+
+                if (adjacentEnemies.Count > 0)
                 {
-                    leftCard.ApplyDamageToTarget(1, attackerName);
-                    PanelManager.instance.AddLog($"{attackerName} inflige 1 dégât supplémentaire à {leftCard.nameCard} !");
-                }
-                if (rightCard != null)
-                {
-                    rightCard.ApplyDamageToTarget(1, attackerName);
-                    PanelManager.instance.AddLog($"{attackerName} inflige 1 dégât supplémentaire à {rightCard.nameCard} !");
+                    var chosenTarget = adjacentEnemies[UnityEngine.Random.Range(0, adjacentEnemies.Count)];
+                    chosenTarget.ApplyDamageToTarget(1, attackerName);
+                    PanelManager.instance.AddLog($"{attackerName} inflige 1 dégât supplémentaire à {chosenTarget.nameCard} !");
                 }
             }
+            attaquesDuTour.Clear();
         }
-
-        attaquesDuTour.Clear();
     }
-
-
-
 
     public (CarteBoardInteraction leftCard, CarteBoardInteraction rightCard) GetAdjacentCards(
         int index, 
