@@ -214,7 +214,7 @@ public static class IAAction
             int nbOpponentPassifs = 0;
             if (opponents != null)
             {
-                nbOpponentPassifs = opponents.Count(e => !e.HasAttackedThisTurn);
+                nbOpponentPassifs = opponents.Count(e => e.stateOffensif == "passed");
             }
             scoring += nbOpponentPassifs; // Bonus proportionnel au nombre d'ennemis affaiblis
         }

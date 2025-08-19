@@ -26,6 +26,8 @@ public class GameManager : MonoBehaviour
     public static int numberOfAttacksUsedIA;
     public static int numberOfAttacksMax = 2;
     public static bool isEndturnPlayer = false;
+    public static bool ambroiseEffectPending = false;
+    public static bool trahisonEffectPending = false;
 
     [SerializeField] private bool isEndturnPlayerdebug = false;
     [SerializeField] private string debugMode;
