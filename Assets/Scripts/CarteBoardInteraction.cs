@@ -796,7 +796,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 (leftCard, rightCard) = GetAdjacentCards(targetIndex, AllCardsInteractions, target.isCardPlayer ? "opponent" : "player");
 
                 // Crée une liste des cartes adjacentes disponibles
-                var adjacentEnemies = new List<Carte>(2);
+                var adjacentEnemies = new List<CarteBoardInteraction>(2);
                 if (leftCard != null) adjacentEnemies.Add(leftCard);
                 if (rightCard != null) adjacentEnemies.Add(rightCard);
 
