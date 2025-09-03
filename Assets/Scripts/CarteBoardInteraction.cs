@@ -550,17 +550,21 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         {
             // Marquer qu'Ambroise veut appliquer son effet plus tard
             GameManager.ambroiseEffectPending = true;
-            PanelManager.instance?.AddLog($"{nameCard} : Onde de Choc Passive en attente...");
+            PanelManager.instance?.AddLog($"{nameCard} : Onde de Choc Passive en attente.");
         }
         else if(nameCard == "Trahison")
         {
             // Marquer que Trahison veut appliquer son effet plus tard
             GameManager.trahisonEffectPending = true;
-            PanelManager.instance?.AddLog($"{nameCard} : Terreur Sélective en attente...");
+            PanelManager.instance?.AddLog($"{nameCard} : Terreur Sélective en attente.");
+        }
+        else if(nameCard == "Belindra")
+        {
+            PanelManager.instance?.AddLog($"{nameCard} : Belindra active Bouclier collectif.");
         }
         else
         {
-            PanelManager.instance?.AddLog($"{nameCard} : PASSER sélectionné");
+            PanelManager.instance?.AddLog($"{nameCard} : passe son tour");
         }
         
         choiceDo = true;
