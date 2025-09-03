@@ -16,7 +16,7 @@ public class PanelManager : MonoBehaviour
     private const float PANEL_MARGIN_BOTTOM = 25f;
     private const float PANEL_MARGIN_RIGHT = 60f;
     private const float LOGS_MARGIN = 20f;
-    private const float LOGS_FONT_SIZE = 18f;
+    private const float LOGS_FONT_SIZE = 16f;
     
     // Configuration du panel de victoire
     private const float VICTORY_PANEL_WIDTH = 400f;
