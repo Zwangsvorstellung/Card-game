@@ -15,8 +15,8 @@ MonoBehaviour:
   idCard: 15
   nom: Ambroise
   nameCapacity: Onde de Choc Passive
-  descriptionCapacity: "Si Ambroise n\u2019attaque pas ce tour, inflige 1 d\xE9g\xE2t
-    \xE0 un ennemie al\xE9atoire passif"
+  descriptionCapacity: "Si Ambroise n\u2019attaque pas, inflige -1 DF \xE0 un adversaire
+    al\xE9atoire passif"
   atk: 3
   def: 4
   capacityId: 15

@@ -15,7 +15,8 @@ MonoBehaviour:
   idCard: 5
   nom: Triomphe
   nameCapacity: Frappe Puissante
-  descriptionCapacity: "Inflige +1 d\xE9g\xE2t quand Triomphe attaque"
+  descriptionCapacity: "1 chance sur 2 d'acqu\xE9rir un malus ou bonus de DF de 1
+    \xE0 l'attaque"
   atk: 4
   def: 5
   capacityId: 5

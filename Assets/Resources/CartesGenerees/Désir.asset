@@ -15,8 +15,8 @@ MonoBehaviour:
   idCard: 6
   nom: "D\xE9sir"
   nameCapacity: Tentation
-  descriptionCapacity: "Lorsque D\xE9sir attaque un adversaire, celui-ci ne peut
-    pas attaquer au tour suivant"
+  descriptionCapacity: "Lorsque D\xE9sir passe son tour, un adversaire au hasard
+    ne peut pas attaquer au tour suivant"
   atk: 3
   def: 4
   capacityId: 6

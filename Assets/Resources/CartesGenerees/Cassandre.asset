@@ -15,7 +15,7 @@ MonoBehaviour:
   idCard: 3
   nom: Cassandre
   nameCapacity: Aura de Force
-  descriptionCapacity: "+1 d'ATK aux alli\xE9s adjacents si Cassandre n'attaque pas"
+  descriptionCapacity: "+1 d'ATQ aux alli\xE9s adjacents si Cassandre passe son tour"
   atk: 4
   def: 4
   capacityId: 3

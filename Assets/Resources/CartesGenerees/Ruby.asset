@@ -15,8 +15,8 @@ MonoBehaviour:
   idCard: 19
   nom: Ruby
   nameCapacity: Combo
-  descriptionCapacity: "Inflige +1 d\xE9g\xE2t si un alli\xE9 attaque la m\xEAme
-    cible que Ruby"
+  descriptionCapacity: "Si inflige des d\xE9g\xE2ts, inflige aussi 1 d\xE9g\xE2t
+    \xE0 un ennemi adjacent \xE0 la cible."
   atk: 4
   def: 4
   capacityId: 19

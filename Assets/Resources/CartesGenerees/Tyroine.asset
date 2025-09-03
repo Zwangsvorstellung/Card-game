@@ -15,8 +15,7 @@ MonoBehaviour:
   idCard: 17
   nom: Tyroine
   nameCapacity: "Al\xE9atoire"
-  descriptionCapacity: "Vise un ennemi al\xE9atoirement et ignore 1 point de d\xE9fense
-    de la cible"
+  descriptionCapacity: "Vise un adversaire al\xE9atoirement et ignore 1 point DF"
   atk: 4
   def: 5
   capacityId: 17

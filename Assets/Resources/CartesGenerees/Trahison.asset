@@ -15,8 +15,8 @@ MonoBehaviour:
   idCard: 13
   nom: Trahison
   nameCapacity: "Terreur S\xE9lective"
-  descriptionCapacity: "Si n\u2019attaque pas, toutes les cartes ennemies passives
-    subissent -1 DFS"
+  descriptionCapacity: "Si n\u2019attaque pas, les adversaires passifs subissent
+    -1 DF"
   atk: 4
   def: 4
   capacityId: 13

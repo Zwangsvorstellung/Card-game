@@ -15,8 +15,8 @@ MonoBehaviour:
   idCard: 9
   nom: Neo
   nameCapacity: Attaque Surprise
-  descriptionCapacity: "Augmente de 1 d\xE9g\xE2t \xE0 chaque attaque si Neo vise
-    une cible diff\xE9rente"
+  descriptionCapacity: "Augmentation de l'ATQ de 1 \xE0 chaque tour si Neo vise une
+    cible diff\xE9rente"
   atk: 4
   def: 4
   capacityId: 9

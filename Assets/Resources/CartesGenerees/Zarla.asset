@@ -15,8 +15,8 @@ MonoBehaviour:
   idCard: 16
   nom: Zarla
   nameCapacity: Aubaine
-  descriptionCapacity: "Si Zarla n\u2019est pas cibl\xE9e, elle gagne +1 DFS. Si
-    elle est attaqu\xE9e, elle gagne +1 ATK"
+  descriptionCapacity: "Si pas cibl\xE9e, elle gagne +1 DF. Si attaqu\xE9e, elle
+    gagne +1 ATK"
   atk: 4
   def: 3
   capacityId: 16

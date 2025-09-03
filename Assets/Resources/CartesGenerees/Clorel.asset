@@ -15,8 +15,7 @@ MonoBehaviour:
   idCard: 11
   nom: Clorel
   nameCapacity: "R\xE9g\xE9n\xE9ration"
-  descriptionCapacity: "R\xE9g\xE9n\xE8re 1 point de d\xE9fense si il n\u2019attaque
-    pas ce tour"
+  descriptionCapacity: "Gagne 1 point de d\xE9fense si il n\u2019attaque pas"
   atk: 5
   def: 4
   capacityId: 11

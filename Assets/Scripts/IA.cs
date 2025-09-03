@@ -58,6 +58,11 @@ public class IA : MonoBehaviour
             // Pour chaque carte IA disponible, on décide l'action
             foreach (var cardsIADispo in cardsIADisponibles)
             {
+                if(cardsIADispo.freeze){
+                    Debug.Log($"[IA] Carte {cardsIADispo.name} : freeze");
+                    PanelManager.instance?.AddLog($"{cardsIADispo.name} : freeze");
+                    continue;
+                }
                 var decision = IAAction.DecideAction(cardsIADispo, cardsIA, cardsPlayer);
                 Debug.Log($"[IA] Carte {cardsIADispo.name} : attack={decision.attack}, score={decision.score}, target={(decision.target != null ? decision.target.name : "null")}");
 

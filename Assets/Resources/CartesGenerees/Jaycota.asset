@@ -15,8 +15,8 @@ MonoBehaviour:
   idCard: 8
   nom: Jaycota
   nameCapacity: Attaque de Provocation
-  descriptionCapacity: "Quand Jaycota est attaqu\xE9e, elle inflige 1 d\xE9g\xE2t
-    \xE0 l\u2019attaquant"
+  descriptionCapacity: "Si attaqu\xE9e, inflige 1 d\xE9g\xE2t \xE0 l\u2019attaquant
+    en repr\xE9saille"
   atk: 2
   def: 6
   capacityId: 8

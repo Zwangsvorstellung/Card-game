@@ -15,8 +15,8 @@ MonoBehaviour:
   idCard: 12
   nom: Belindra
   nameCapacity: Bouclier collectif
-  descriptionCapacity: "R\xE9duit les d\xE9g\xE2ts re\xE7us par tous alli\xE9s adjacents
-    de 1 ce tour si elle n\u2019attaque pas"
+  descriptionCapacity: "R\xE9duction des d\xE9g\xE2ts re\xE7us d'1 point des alli\xE9s
+    adjacents si n\u2019attaque pas"
   atk: 3
   def: 7
   capacityId: 12

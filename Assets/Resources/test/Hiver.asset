@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
-  m_Name: Anaxagore
+  m_Name: Hiver
   m_EditorClassIdentifier: 
-  idCard: 10
-  nom: Anaxagore
-  nameCapacity: "Perc\xE9e D\xE9fensive"
-  descriptionCapacity: "R\xE9duit la d\xE9fense de la cible de 1 \xE0 l'attaque"
-  atk: 4
-  def: 5
-  capacityId: 10
-  image: {fileID: 21300000, guid: a1b2e57a594badd498292382541b376e, type: 3}
-  color: 3b4d65
+  idCard: 2
+  nom: Hiver
+  nameCapacity: "Frappe Gel\xE9e"
+  descriptionCapacity: Quand Hiver attaque, la cible ne peut attaquer au tour suivant
+  atk: 3
+  def: 4
+  capacityId: 2
+  image: {fileID: 21300000, guid: 66df7e9f3a6bcac4ebc20eb80ee78b8b, type: 3}
+  color: dedfdf

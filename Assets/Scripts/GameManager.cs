@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
     
     private List<int> selectedCards = new List<int>(); // Index des cartes sélectionnées
     private List<CarteData> cartesPlacees = new List<CarteData>(); // Cartes placées sur le tapis
-    public const int MAX_CARTES_TAPIS = 4;
+    public const int MAX_CARTES_TAPIS = 2;
 
     public static GameManager Instance { get; private set; }
 
@@ -54,7 +54,7 @@ public class GameManager : MonoBehaviour
         List<CarteData> deckPlayerB = new List<CarteData>();
 
         // Charger toutes les cartes .asset dans Resources/CartesGenerees
-        CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
+        CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("test");
         
         // Mélanger toutes les cartes et les répartir entre les deux joueurs (deck partagé)
         List<CarteData> allCards = new List<CarteData>();

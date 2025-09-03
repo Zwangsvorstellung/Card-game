@@ -22,7 +22,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public int bonusDfs;  
     [SerializeField] public int malusAtk;  
     [SerializeField] public int malusDfs;  
-    [SerializeField] public bool freeze;  
+    [SerializeField] public bool freeze; 
+    [SerializeField] public int freezeNumberLoop = 0;   
     [SerializeField] public bool resetBonusAtk = true;  
     [SerializeField] public string nameCard;  
 
@@ -121,25 +122,15 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         }
         if(malusDfs > 0){
             UpdateMalusDefenseColor(this);
-        }else{
-            UpdateResetMalusDefenseColor(this);
         }
-
         if(bonusDfs > 0){
             UpdateBonusDefenseColor(this);
-        }else{
-            UpdateResetBonusDefenseColor(this);
         }
-
         if(malusAtk > 0){
             UpdateMalusAtqColor(this);
-        }else{
-            UpdateResetMalusAtqColor(this);
         }
         if(bonusAtk > 0){
             UpdateBonusAtqColor(this);
-        }else{
-            UpdateResetBonusAtqColor(this);
         }
     }
 
@@ -408,15 +399,16 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
             if(availableTargets.Count > 0)
             {
-                // Déterminer combien de cibles on va prendre : 1 à 3, mais pas plus que le nombre disponible
-                int numberOfTargets = Mathf.Min(Random.Range(1, 4), availableTargets.Count);
+                // Déterminer combien de cibles on va prendre : 1 à 2 mais pas plus que le nombre disponible
+                int numberOfTargets = Mathf.Min(Random.Range(1, 3), availableTargets.Count);
 
                 // Mélanger la liste et prendre les 'numberOfTargets' premières
                 var shuffledTargets = availableTargets.OrderBy(x => Random.value).Take(numberOfTargets).ToList();
 
+                Debug.Log($"[OnAttaque] Nombre de cibles sélectionnées : {numberOfTargets}");
+
                 PanelManager.instance.AddLog($"   → Nombre de cibles sélectionnées : {numberOfTargets}");
 
-                // Répartir les dégâts
                 List<int> damages;
                 switch(numberOfTargets)
                 {
@@ -437,13 +429,14 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                     var target = shuffledTargets[i];
                     int dmg = damages[i];
 
-                    target.SelectTarget();
+                    Debug.Log($"[OnAttaque] Cible {target.nameCard} prend {dmg} de dégâts");
+
+                    SelectTarget();
                     PanelManager.instance.AddLog($"   → {target.nameCard} prend {dmg} de dégâts");
 
                     int currentDef = GetDefenseValue(target);
                     int newDef = Mathf.Max(0, currentDef - dmg);
                     target.carteUI?.defenseText?.SetText(newDef.ToString());
-                    SetDefenseValue(newDef);
                 }
             }
         }
@@ -525,6 +518,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 int randomIndex = Random.Range(0, availableTargetsOpponent.Count);
                 CarteBoardInteraction chosenTarget  = availableTargetsOpponent[randomIndex];
                 chosenTarget.freeze = true;
+                chosenTarget.freezeNumberLoop = GameManager.currentRound+1;
 
                 PanelManager.instance.AddLog($"   → Cible aléatoire opponent sélectionnée : {chosenTarget.nameCard}");
             }
@@ -533,6 +527,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 int randomIndex = Random.Range(0, availableTargetsPlayer.Count);
                 CarteBoardInteraction chosenTarget  = availableTargetsPlayer[randomIndex];
                 chosenTarget.freeze = true;
+                chosenTarget.freezeNumberLoop = GameManager.currentRound+1;
 
                 PanelManager.instance.AddLog($"   → Cible aléatoire player sélectionnée : {chosenTarget.nameCard}");
             }
@@ -561,6 +556,10 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         else if(nameCard == "Belindra")
         {
             PanelManager.instance?.AddLog($"{nameCard} : Belindra active Bouclier collectif.");
+        }
+        else if(nameCard == "Zao")
+        {
+            PanelManager.instance?.AddLog($"{nameCard} : Zao passe son tour. Elle est intouchable.");
         }
         else
         {
@@ -702,11 +701,13 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             }
 
             // --- Hiver ---
-            if (attackerName == "Hiver" && freezeIcon != null && !freezeIcon.activeSelf)
+            //if (attackerName == "Hiver" && freezeIcon != null && !freezeIcon.activeSelf)
+            if (attackerName == "Hiver")
             { 
                 target.freeze = true; 
                 PanelManager.instance?.AddLog($"{target.nameCard} est gelée et ne pourra pas attaquer au tour prochain");
                 Debug.Log($"[ApplyAllAttacks] {target.nameCard} is frozen by Hiver."); 
+                target.freezeNumberLoop = GameManager.currentRound+1;
             }
 
             // --- Anaxagore ---
@@ -968,6 +969,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {        
         int damage = GetAttackValue(attackingCard);
         int defenseTarget = GetDefenseValue(target);
+
+        if(nameTarget == "Zao" && target.stateOffensif == "passed")
+        {
+           PanelManager.instance?.AddLog($"[ATTAQUEAI] {nameAttacker} : ATK = {damage}Echec de l'attaque, Zao est intouchable");
+           return;
+        }
          
         PanelManager.instance?.AddLog($"[ATTAQUEAI] {nameAttacker} : ATK = {damage}");
         PanelManager.instance?.AddLog($"[DEFENSEAI] {nameTarget} : DEF = {defenseTarget}");
@@ -1020,6 +1027,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         string nameTarget = nameCard ?? "Nom inconnu";
         string nameAttacker = attackingCard?.nameCard ?? "Nom inconnu";
+
+        Debug.Log($"[SelectTarget] Cible {nameTarget} attaque {nameAttacker}");
         
         GameManager.numberOfAttacksUsed++;
 
@@ -1050,6 +1059,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 }
             }
         }
+
+        Debug.Log($"[SelectTarget] Cible {attackingCard} ");
         
         ColorCard(attackingCard, colorAtk);
         if (!coloredCards.Contains(attackingCard))
@@ -1358,7 +1369,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
         atk -= card.malusAtk;
         dfs += card.malusDfs;
-        dfs += card.bonusDfs;
+        dfs -= card.bonusDfs;
 
         if(card.resetBonusAtk)
             card.bonusAtk = 0;
@@ -1367,7 +1378,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         card.malusAtk = 0;
         card.malusDfs = 0;
         card.bonusDfs = 0;
-        card.freeze = false;
+        if(card.freezeNumberLoop != GameManager.currentRound)
+            card.freeze = false;
 
         // Réappliquer les valeurs recalculées
         if (card.carteUI.attaqueText != null)
