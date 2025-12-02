@@ -32,6 +32,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool isEndturnPlayerdebug = false;
     [SerializeField] private string debugMode;
     [SerializeField] private int numberOfAttacksUseddebug;
+    [SerializeField] private int currentRounddebug;
 
     void Awake()
     {
@@ -118,12 +119,15 @@ public class GameManager : MonoBehaviour
 
         mainUIManager.ShowHand(mainPlayerA.ToList());
     }
+    
     void Update()
     {
         debugMode = mode;
         numberOfAttacksUseddebug = numberOfAttacksUsed;
         isEndturnPlayerdebug = isEndturnPlayer;
+        currentRounddebug = currentRound;
     }
+    
     private void SelectCard(int indexCard)
     {
         selectedCards.Add(indexCard);

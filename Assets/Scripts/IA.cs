@@ -59,12 +59,12 @@ public class IA : MonoBehaviour
             foreach (var cardsIADispo in cardsIADisponibles)
             {
                 if(cardsIADispo.freeze){
-                    Debug.Log($"[IA] Carte {cardsIADispo.name} : freeze");
-                    PanelManager.instance?.AddLog($"{cardsIADispo.name} : freeze");
+                    Debug.Log($"[IA] Carte {cardsIADispo.nameCard} : freeze");
+                    PanelManager.instance?.AddLog($"{cardsIADispo.nameCard} : freeze");
                     continue;
                 }
                 var decision = IAAction.DecideAction(cardsIADispo, cardsIA, cardsPlayer);
-                Debug.Log($"[IA] Carte {cardsIADispo.name} : attack={decision.attack}, score={decision.score}, target={(decision.target != null ? decision.target.name : "null")}");
+                Debug.Log($"[IA] Carte {cardsIADispo.nameCard} : attack={decision.attack}, score={decision.score}, target={(decision.target != null ? decision.target.nameCard : "null")}");
 
                 if (decision.attack && decision.score > bestScoring && decision.score >= seuilMinAttaque)
                 {
@@ -170,8 +170,8 @@ public class IA : MonoBehaviour
         CarteUI carteUI = target.GetComponent<CarteUI>();
         if (carteUI == null) return;
         
-        target.targetCount++;
-        carteUI.ShowAttackIcon(target.targetCount);
+        target.isCibledCount++;
+        carteUI.ShowAttackIcon(target.isCibledCount);
 
         PanelManager.instance.AddLog($"{nameAttacker} : ATQ -> {target.nameCard}");
         
@@ -179,7 +179,7 @@ public class IA : MonoBehaviour
         
         if (so != null && !string.IsNullOrEmpty(so.color))
         {
-            switch (target.targetCount)
+            switch (target.isCibledCount)
             {
                 case 1:
                     carteUI.SetAtk1IconColor(so.color);

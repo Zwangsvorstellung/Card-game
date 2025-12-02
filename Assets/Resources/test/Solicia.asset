@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
-  m_Name: Hiver
+  m_Name: Solicia
   m_EditorClassIdentifier: 
-  idCard: 2
-  nom: Hiver
-  nameCapacity: "Frappe Gel\xE9e"
-  descriptionCapacity: Quand Hiver attaque, la cible ne peut attaquer au tour suivant
+  idCard: 4
+  nom: Solicia
+  nameCapacity: "R\xE9flexion partielle"
+  descriptionCapacity: "Quand un alli\xE9 est attaqu\xE9, inflige 1 d\xE9g\xE2t \xE0
+    l\u2019attaquant."
   atk: 3
-  def: 4
-  capacityId: 2
-  image: {fileID: 21300000, guid: 66df7e9f3a6bcac4ebc20eb80ee78b8b, type: 3}
-  color: dedfdf
+  def: 6
+  capacityId: 4
+  image: {fileID: 21300000, guid: d73e7409523043344923f2943ffe631f, type: 3}
+  color: 47a658

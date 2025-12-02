@@ -63,6 +63,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         atk2Icon = atk2Transform.gameObject;
         Transform freezeTransform = transform.Find("freezeIcon");
         freezeIcon = freezeTransform.gameObject;
+        freezeIcon.GetComponent<Image>().color = Color.red;
         Transform passedTransform = transform.Find("passed");
         passedIcon = passedTransform.gameObject;
 

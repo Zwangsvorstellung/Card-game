@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
-  m_Name: Ondine
+  m_Name: Zao
   m_EditorClassIdentifier: 
-  idCard: 18
-  nom: Ondine
-  nameCapacity: "Vague l\xE9tale"
-  descriptionCapacity: "Inflige les 3 points de d\xE9g\xE2ts al\xE9atoirement"
-  atk: 3
-  def: 5
-  capacityId: 18
-  image: {fileID: 21300000, guid: 8ac2a9beb33d8394fac2e880447f710a, type: 3}
-  color: 91c6da
+  idCard: 1
+  nom: Zao
+  nameCapacity: "Agilit\xE9 Risqu\xE9e"
+  descriptionCapacity: Si Zao attaque, elle ne peut esquiver. Si passive, elle est
+    intouchable
+  atk: 4
+  def: 3
+  capacityId: 1
+  image: {fileID: 21300000, guid: ed7f972b5d75205489aecb5cb3f3d948, type: 3}
+  color: ad0e0e

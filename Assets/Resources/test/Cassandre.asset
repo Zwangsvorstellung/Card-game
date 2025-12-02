@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
-  m_Name: Anaxagore
+  m_Name: Cassandre
   m_EditorClassIdentifier: 
-  idCard: 10
-  nom: Anaxagore
-  nameCapacity: "Perc\xE9e D\xE9fensive"
-  descriptionCapacity: "R\xE9duit la d\xE9fense de la cible de 1 \xE0 l'attaque"
+  idCard: 3
+  nom: Cassandre
+  nameCapacity: Aura de Force
+  descriptionCapacity: "+1 d'ATQ aux alli\xE9s adjacents si Cassandre passe son tour"
   atk: 4
-  def: 5
-  capacityId: 10
-  image: {fileID: 21300000, guid: a1b2e57a594badd498292382541b376e, type: 3}
-  color: 3b4d65
+  def: 4
+  capacityId: 3
+  image: {fileID: 21300000, guid: 4479c191c2e6b2d47a9adb530dc545ed, type: 3}
+  color: d9af4e

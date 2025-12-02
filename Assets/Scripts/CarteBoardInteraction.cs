@@ -13,7 +13,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public bool isCardPlayer = false;
     [SerializeField] public bool isCardOpponent = false;
     [SerializeField] public bool isSelected = false;
-    [SerializeField] public int targetCount = 0; 
+    [SerializeField] public int isCibledCount = 0; 
     [SerializeField] public string stateOffensif = "";
     [SerializeField] public string stateDefensif = "";  
     [SerializeField] public string lastTarget = "";
@@ -21,11 +21,17 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public int bonusAtk;  
     [SerializeField] public int bonusDfs;  
     [SerializeField] public int malusAtk;  
-    [SerializeField] public int malusDfs;  
+    [SerializeField] public int malusDfs; 
+
     [SerializeField] public bool freeze; 
     [SerializeField] public int freezeNumberLoop = 0;   
     [SerializeField] public bool resetBonusAtk = true;  
     [SerializeField] public string nameCard;  
+
+    [SerializeField] public int defenseValueMax; 
+    [SerializeField] public int attackValueMax;
+    [SerializeField] public int defenseValueCurrent; 
+    [SerializeField] public int attackValueCurrent;
 
     private Coroutine currentMoveCoroutine;
     public static readonly List<CarteBoardInteraction> AllCardsInteractions = new();
@@ -92,6 +98,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         bonusDfs = 0;
         malusAtk = 0;
         malusDfs = 0;
+
         freeze = false;
     }
     
@@ -99,6 +106,11 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         GameManager.currentRound = 1;
         carteUI = GetComponent<CarteUI>();
+
+        defenseValueMax = int.Parse(carteUI.defenseText.text);
+        attackValueMax = int.Parse(carteUI.attaqueText.text);
+        defenseValueCurrent = int.Parse(carteUI.defenseText.text);
+        attackValueCurrent = int.Parse(carteUI.attaqueText.text);
 
         img = carteUI.GetComponent<Image>();
         nameCard = carteUI?.nomText?.text ?? "NULL";
@@ -111,26 +123,36 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
     void Update()
     {
+        Transform freezeTransform = carteUI.transform.Find("freezeIcon");
+        freezeIcon = freezeTransform.gameObject;
+
         if(freeze){
-            Transform freezeTransform = carteUI.transform.Find("freezeIcon");
-            freezeIcon = freezeTransform.gameObject;
             freezeIcon.SetActive(true);
+        }else{
+            freezeIcon.SetActive(false);
         }
+
         if(GameManager.isEndturnPlayer){
             this.Invoke("MarkEndOfTurn", 0.5f);
             GameManager.isEndturnPlayer = false;
         }
-        if(malusDfs > 0){
+        
+        if((malusDfs > 0 && bonusDfs == 0)){
             UpdateMalusDefenseColor(this);
-        }
-        if(bonusDfs > 0){
+        }else if(bonusDfs > 0 && malusDfs == 0){
             UpdateBonusDefenseColor(this);
         }
-        if(malusAtk > 0){
-            UpdateMalusAtqColor(this);
+        else{
+            resetColorDefense(this);
         }
-        if(bonusAtk > 0){
+
+        if((malusAtk > 0 && bonusAtk == 0)){
+            UpdateMalusAtqColor(this);
+        }else if(bonusAtk > 0 && malusAtk == 0){
             UpdateBonusAtqColor(this);
+        }
+        else{
+            resetColorAtk(this);
         }
     }
 
@@ -272,7 +294,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         if (buttonAtk == null || buttonPass == null)
             CreateButtonsUnderCard();
             
-        bool canAttack = GameManager.numberOfAttacksUsed < GameManager.numberOfAttacksMax;
+        bool canAttack = GameManager.numberOfAttacksUsed < GameManager.numberOfAttacksMax && !freeze;
 
         buttonAtk?.SetActive(canAttack);
         buttonPass?.SetActive(true);
@@ -431,7 +453,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
                     Debug.Log($"[OnAttaque] Cible {target.nameCard} prend {dmg} de dégâts");
 
-                    SelectTarget();
+                    attackingCard = this;
+                    t​arget.SelectTarget();
                     PanelManager.instance.AddLog($"   → {target.nameCard} prend {dmg} de dégâts");
 
                     int currentDef = GetDefenseValue(target);
@@ -707,7 +730,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 target.freeze = true; 
                 PanelManager.instance?.AddLog($"{target.nameCard} est gelée et ne pourra pas attaquer au tour prochain");
                 Debug.Log($"[ApplyAllAttacks] {target.nameCard} is frozen by Hiver."); 
-                target.freezeNumberLoop = GameManager.currentRound+1;
+                target.freezeNumberLoop = GameManager.currentRound;
+                Debug.Log($"[currentRound] {target.freezeNumberLoop}"); 
             }
 
             // --- Anaxagore ---
@@ -869,7 +893,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         // Si l'IA est active, simuler les attaques de l'IA
         if (GameManager.iaActive)
         {            
-            PanelManager.instance?.AddLog("[IA] Lancement du tour IA");
+            PanelManager.instance?.AddLog("[IA] Lancement");
         
             Invoke("StartAI", 0.2f);
             
@@ -881,7 +905,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             }
             roundDamage.Clear();
             
-            PanelManager.instance.AddLog($"--- SCORE ACTUEL: {GameManager.playerScore} points ---");
+            PanelManager.instance.AddLog($"--- SCORE : {GameManager.playerScore} points ---");
         }
         else
         {            
@@ -1025,20 +1049,25 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     public void SelectTarget()
     {
+        if (attackingCard == null)
+        {
+            Debug.LogError("[SelectTarget] attackingCard est null ! Le mode 'atk' n’a pas été préparé.");
+            return;
+        }
         string nameTarget = nameCard ?? "Nom inconnu";
         string nameAttacker = attackingCard?.nameCard ?? "Nom inconnu";
 
-        Debug.Log($"[SelectTarget] Cible {nameTarget} attaque {nameAttacker}");
+        Debug.Log($"[SelectTarget] Attaquant {nameAttacker} Cible {nameTarget}");
         
         GameManager.numberOfAttacksUsed++;
 
         Color colorAtk = GameManager.numberOfAttacksUsed == 1 ? colorAtk1 : colorAtk2;        
-        targetCount++;
+        isCibledCount++;
         
         CarteUI carteUIComponent = GetComponent<CarteUI>();
         
         // Afficher atk1 pour le premier ciblage, atk2 pour le deuxième
-        carteUIComponent.ShowAttackIcon(targetCount);
+        carteUIComponent.ShowAttackIcon(isCibledCount);
         // Appliquer la couleur de l'attaquant sur l'icône d'attaque
         if (attackingCard != null && attackingCard.carteUI != null)
         {
@@ -1047,12 +1076,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
   
             if (so != null && !string.IsNullOrEmpty(so.color))
             {
-                if (targetCount == 1)
+                if (isCibledCount == 1)
                 {
                     carteUIComponent.SetAtk1IconColor(so.color);
                     carteUIComponent.SetAtk1IconTooltip(so.nom, so.atk);
                 }
-                else if (targetCount == 2)
+                else if (isCibledCount == 2)
                 {
                     carteUIComponent.SetAtk2IconColor(so.color);
                     carteUIComponent.SetAtk2IconTooltip(so.nom, so.atk);
@@ -1398,6 +1427,13 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
 
     // color
+    public void UpdateBonusAtqColor(CarteBoardInteraction card)
+    {
+        if (card?.carteUI?.attaqueText)
+        {
+            card.carteUI.attaqueText.color = Color.green;
+        }
+    }
     public void UpdateBonusDefenseColor(CarteBoardInteraction card)
     {
         if (card?.carteUI?.defenseText)
@@ -1412,13 +1448,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             card.carteUI.defenseText.color = Color.red;
         }
     }
-    public void UpdateBonusAtqColor(CarteBoardInteraction card)
-    {
-        if (card?.carteUI?.attaqueText)
-        {
-            card.carteUI.attaqueText.color = Color.green;
-        }
-    }
     public void UpdateMalusAtqColor(CarteBoardInteraction card)
     {
         if (card?.carteUI?.attaqueText)
@@ -1427,32 +1456,39 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         }
     }
 
-    public void UpdateResetBonusDefenseColor(CarteBoardInteraction card)
+    public void resetColorAtk(CarteBoardInteraction card)
     {
-        if (card?.carteUI?.defenseText)
-        {   
-            card.carteUI.defenseText.color = Color.black;
-        }
+        card.carteUI.attaqueText.color = Color.black;
     }
-    public void UpdateResetMalusDefenseColor(CarteBoardInteraction card)
+    public void resetColorDefense(CarteBoardInteraction card)
     {
-        if (card?.carteUI?.defenseText)
-        {
-            card.carteUI.defenseText.color = Color.black;
-        }
-    }
-    public void UpdateResetBonusAtqColor(CarteBoardInteraction card)
-    {
-        if (card?.carteUI?.attaqueText)
-        {
-            card.carteUI.attaqueText.color = Color.black;
-        }
-    }
-    public void UpdateResetMalusAtqColor(CarteBoardInteraction card)
-    {
-        if (card?.carteUI?.attaqueText)
-        {
-            card.carteUI.attaqueText.color = Color.black;
-        }
+        card.carteUI.defenseText.color = Color.black;
     }
 } 
+
+
+/*
+est une carte joueur
+est une carte adversaire
+est selectionné
+nombre de fois ciblée
+état offensif
+état defensif
+derniere cible
+cible actuelle
+bonus atk
+malus atk
+bonus defense
+malus defense
+est freeze
+freeze sur le tour numéro
+reset bonus atk (?)
+nom de la carte
+defense max
+attaque max
+defense courante
+attaque courante
+a fait son action du tour
+est une carte jaune
+va attaquer ce tour
+*/

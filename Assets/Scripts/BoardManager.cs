@@ -147,7 +147,7 @@ public class BoardManager : MonoBehaviour
             card.RestoreCardColor(card);
             card.ResetPosition();
             card.DestroyButton();
-            card.targetCount = 0;
+            card.isCibledCount = 0;
             card.stateDefensif = "notCibled";
             card.stateOffensif = "waitOrder";
             card.choiceDo = false;
