@@ -234,12 +234,12 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     }
     public void SetAtk1IconTooltip(string attackerName, int atk)
     {
-        AttackIconTooltip tooltip = atk1Icon.GetComponent<AttackIconTooltip>();
+        TooltipTrigger tooltip = atk1Icon.GetComponent<TooltipTrigger>();
         tooltip.attackName = attackerName + " -" + atk;
     }
     public void SetAtk2IconTooltip(string attackerName, int atk)
     {
-        AttackIconTooltip tooltip = atk2Icon.GetComponent<AttackIconTooltip>();
+        TooltipTrigger tooltip = atk2Icon.GetComponent<TooltipTrigger>();
         tooltip.attackName = attackerName + " -" + atk;
     }
 }

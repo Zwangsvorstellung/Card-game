@@ -17,13 +17,13 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public string stateOffensif = "";
     [SerializeField] public string stateDefensif = "";  
     [SerializeField] public string lastTarget = "";
-    [SerializeField] public string currentTargetString = "";  
+    [SerializeField] public string currentTarget = "";  
     [SerializeField] public int bonusAtk;  
     [SerializeField] public int bonusDfs;  
     [SerializeField] public int malusAtk;  
     [SerializeField] public int malusDfs; 
 
-    [SerializeField] public bool freeze; 
+    [SerializeField] public bool isFreeze; 
     [SerializeField] public int freezeNumberLoop = 0;   
     [SerializeField] public bool resetBonusAtk = true;  
     [SerializeField] public string nameCard;  
@@ -99,7 +99,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         malusAtk = 0;
         malusDfs = 0;
 
-        freeze = false;
+        isFreeze = false;
     }
     
     void Start()
@@ -126,7 +126,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         Transform freezeTransform = carteUI.transform.Find("freezeIcon");
         freezeIcon = freezeTransform.gameObject;
 
-        if(freeze){
+        if(isFreeze){
             freezeIcon.SetActive(true);
         }else{
             freezeIcon.SetActive(false);
@@ -203,7 +203,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         if (ignorePointer || choiceDo) return;
 
-        if (GameManager.mode == "select" && freeze){
+        if (GameManager.mode == "select" && isFreeze){
             return;
         }
 
@@ -286,7 +286,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         }
     }
     
-    // Button
     private void ShowActionButtons()
     {
         if (!isCardPlayer) return;
@@ -294,7 +293,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         if (buttonAtk == null || buttonPass == null)
             CreateButtonsUnderCard();
             
-        bool canAttack = GameManager.numberOfAttacksUsed < GameManager.numberOfAttacksMax && !freeze;
+        bool canAttack = GameManager.numberOfAttacksUsed < GameManager.numberOfAttacksMax && !isFreeze;
 
         buttonAtk?.SetActive(canAttack);
         buttonPass?.SetActive(true);
@@ -385,7 +384,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         
         attackingCard = this; 
 
-        PanelManager.instance.AddLog($"{nameCard} : ATTAQUE sélectionnée ({GameManager.numberOfAttacksUsed}/{GameManager.numberOfAttacksMax})");
+        //PanelManager.instance.AddLog($"{nameCard} : ATTAQUE sélectionnée ({GameManager.numberOfAttacksUsed}/{GameManager.numberOfAttacksMax})");
         
         var availableTargets = CarteBoardInteraction.AllCardsInteractions
             .Where(c => c.isCardOpponent && c.stateDefensif != "isAttacked")
@@ -393,7 +392,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
         if(nameCard == "Tyroine")
         {
-            PanelManager.instance.AddLog("   → Sélection aléatoire");
+            //PanelManager.instance.AddLog("   → Sélection aléatoire");
 
             if(availableTargets.Count > 0)
             {
@@ -401,23 +400,17 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 CarteBoardInteraction chosenTarget = availableTargets[randomIndex];
                 chosenTarget.SelectTarget();
 
-                PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée Par Tyroine : {chosenTarget.nameCard}");
-                PanelManager.instance.AddLog($"   → -1 en dfs pour : {chosenTarget.nameCard}");
-                    
-                int currentDef = GetDefenseValue(chosenTarget);
-                chosenTarget.malusDfs = 1;
-                int newDef = currentDef - chosenTarget.malusDfs;
-                chosenTarget.carteUI?.defenseText?.SetText(newDef.ToString());
-                SetDefenseValue(newDef);
+                //PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée Par Tyroine : {chosenTarget.nameCard}");
+                //PanelManager.instance.AddLog($"   → -1 en dfs pour : {chosenTarget.nameCard} (sera appliqué en fin de tour)");
             }
             else
             {
-                PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
+                //PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
             }
         }
         else if(nameCard == "Ondine"){
 
-            PanelManager.instance.AddLog("   → Sélection aléatoire des cibles");
+            //PanelManager.instance.AddLog("   → Sélection aléatoire des cibles");
 
             if(availableTargets.Count > 0)
             {
@@ -427,9 +420,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 // Mélanger la liste et prendre les 'numberOfTargets' premières
                 var shuffledTargets = availableTargets.OrderBy(x => Random.value).Take(numberOfTargets).ToList();
 
-                Debug.Log($"[OnAttaque] Nombre de cibles sélectionnées : {numberOfTargets}");
-
-                PanelManager.instance.AddLog($"   → Nombre de cibles sélectionnées : {numberOfTargets}");
+                //PanelManager.instance.AddLog($"   → Nombre de cibles sélectionnées : {numberOfTargets}");
 
                 List<int> damages;
                 switch(numberOfTargets)
@@ -451,21 +442,29 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                     var target = shuffledTargets[i];
                     int dmg = damages[i];
 
-                    Debug.Log($"[OnAttaque] Cible {target.nameCard} prend {dmg} de dégâts");
-
-                    attackingCard = this;
-                    t​arget.SelectTarget();
-                    PanelManager.instance.AddLog($"   → {target.nameCard} prend {dmg} de dégâts");
-
-                    int currentDef = GetDefenseValue(target);
-                    int newDef = Mathf.Max(0, currentDef - dmg);
-                    target.carteUI?.defenseText?.SetText(newDef.ToString());
+                    target.isCibledCount++;
+                    target.carteUI?.ShowAttackIcon(target.isCibledCount);
+                    target.stateDefensif = "isAttacked";
+                    
+                    string nameAttacker = this.nameCard ?? "Ondine";
+                    string nameTarget = target.nameCard ?? "Cible";
+                    
+                    //PanelManager.instance?.AddLog($"{nameAttacker} : ATK : {dmg}");
+                    //PanelManager.instance?.AddLog($"{nameTarget} : DEF : {target.GetDefenseValue(target)}");
+                    //PanelManager.instance.AddLog($"   → {target.nameCard} prend {dmg} de dégâts (sera appliqué en fin de tour)");
+                    
+                    roundDamage.Add($"{nameAttacker} → {nameTarget} (DEF:{target.GetDefenseValue(target)}) = {dmg} dégâts");
+                    attaquesDuTour.Add(new AttaqueInfo(this, target, dmg));
+                    
+                    // Marquer la carte comme ayant fait son choix
+                    this.choiceDo = true;
+                    this.stateOffensif = "atk";
                 }
             }
         }
         else
         {
-            PanelManager.instance.AddLog("   → Sélectionnez une cible adverse");
+            //PanelManager.instance.AddLog("   → Sélectionnez une cible adverse");
         }
         
         CheckEndOfTurn();
@@ -510,14 +509,14 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             int newDef = currentDef + bonusDfs;
             carteUI?.defenseText?.SetText(newDef.ToString());
             SetDefenseValue(newDef);
-            PanelManager.instance?.AddLog($"{nameCard} : PASSER sélectionné (+1 défense)");
+            //PanelManager.instance?.AddLog($"{nameCard} : PASSER sélectionné (+1 défense)");
         }
         else if(nameCard == "Cassandre"){
             int index = carteUI.indexHierarchieOriginal;
             string team = isCardOpponent ? "opponent": "player";
 
             var (leftCard, rightCard) = GetAdjacentCards(index, AllCardsInteractions,team);
-            PanelManager.instance.AddLog($"Cassandre passe son tour");
+            //PanelManager.instance.AddLog($"Cassandre passe son tour");
 
             if(leftCard != null)
                 ApplyAttackBonus(leftCard, leftCard.nameCard);
@@ -526,7 +525,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         }
         else if(nameCard == "Désir"){
 
-            PanelManager.instance.AddLog("   → Sélection aléatoire Désir");
+            //PanelManager.instance.AddLog("   → Sélection aléatoire Désir");
 
             var availableTargetsOpponent = CarteBoardInteraction.AllCardsInteractions
                 .Where(c => c.isCardOpponent)
@@ -540,23 +539,23 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             {
                 int randomIndex = Random.Range(0, availableTargetsOpponent.Count);
                 CarteBoardInteraction chosenTarget  = availableTargetsOpponent[randomIndex];
-                chosenTarget.freeze = true;
+                chosenTarget.isFreeze = true;
                 chosenTarget.freezeNumberLoop = GameManager.currentRound+1;
 
-                PanelManager.instance.AddLog($"   → Cible aléatoire opponent sélectionnée : {chosenTarget.nameCard}");
+                //PanelManager.instance.AddLog($"   → Cible aléatoire opponent sélectionnée : {chosenTarget.nameCard}");
             }
             else if(availableTargetsPlayer.Count > 0){
 
                 int randomIndex = Random.Range(0, availableTargetsPlayer.Count);
                 CarteBoardInteraction chosenTarget  = availableTargetsPlayer[randomIndex];
-                chosenTarget.freeze = true;
+                chosenTarget.isFreeze = true;
                 chosenTarget.freezeNumberLoop = GameManager.currentRound+1;
 
-                PanelManager.instance.AddLog($"   → Cible aléatoire player sélectionnée : {chosenTarget.nameCard}");
+                //PanelManager.instance.AddLog($"   → Cible aléatoire player sélectionnée : {chosenTarget.nameCard}");
             }
             else
             {
-                PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
+                //PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
             }
         }
         else if(nameCard == "Neo")
@@ -568,25 +567,25 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         {
             // Marquer qu'Ambroise veut appliquer son effet plus tard
             GameManager.ambroiseEffectPending = true;
-            PanelManager.instance?.AddLog($"{nameCard} : Onde de Choc Passive en attente.");
+            //PanelManager.instance?.AddLog($"{nameCard} : Onde de Choc Passive en attente.");
         }
         else if(nameCard == "Trahison")
         {
             // Marquer que Trahison veut appliquer son effet plus tard
             GameManager.trahisonEffectPending = true;
-            PanelManager.instance?.AddLog($"{nameCard} : Terreur Sélective en attente.");
+            //PanelManager.instance?.AddLog($"{nameCard} : Terreur Sélective en attente.");
         }
         else if(nameCard == "Belindra")
         {
-            PanelManager.instance?.AddLog($"{nameCard} : Belindra active Bouclier collectif.");
+            //PanelManager.instance?.AddLog($"{nameCard} : Belindra active Bouclier collectif.");
         }
         else if(nameCard == "Zao")
         {
-            PanelManager.instance?.AddLog($"{nameCard} : Zao passe son tour. Elle est intouchable.");
+            //PanelManager.instance?.AddLog($"{nameCard} : Zao passe son tour. Elle est intouchable.");
         }
         else
         {
-            PanelManager.instance?.AddLog($"{nameCard} : passe son tour");
+            //PanelManager.instance?.AddLog($"{nameCard} : passe son tour");
         }
         
         choiceDo = true;
@@ -606,7 +605,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     public static void ShowScore()
     {
-        PanelManager.instance?.AddLog($"SCORE: {GameManager.playerScore} points");
+        //PanelManager.instance?.AddLog($"SCORE: {GameManager.playerScore} points");
     }
     
     private void ColorCard(CarteBoardInteraction card, Color color)
@@ -702,7 +701,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 (leftCard, rightCard) = GetAdjacentCards(indexBelindra, AllCardsInteractions, target.isCardPlayer ? "player" : "opponent");
                 if (leftCard != null) ApplyAttackMalus(leftCard, leftCard.nameCard);
                 if (rightCard != null) ApplyAttackMalus(rightCard, rightCard.nameCard);
-                PanelManager.instance.AddLog("Présence de Belindra");
+                //PanelManager.instance.AddLog("Présence de Belindra");
             }
 
             // --- Zarla ---
@@ -713,6 +712,17 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             { 
                 target.malusDfs++; 
                 Debug.Log($"[ApplyAllAttacks] {targetName} malus défense appliqué."); 
+            }
+
+            // --- Tyroine ---
+            if (attackerName == "Tyroine")
+            {
+                target.malusDfs++;
+                int currentDef = target.GetDefenseValue(target);
+                int newDef = Mathf.Max(0, currentDef - 1);
+                target.carteUI?.defenseText?.SetText(newDef.ToString());
+                target.SetDefenseValue(newDef);
+                Debug.Log($"[ApplyAllAttacks] {targetName} défense réduite par Tyroine (-1 DF).");
             }
 
             // --- Neo ---
@@ -727,8 +737,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             //if (attackerName == "Hiver" && freezeIcon != null && !freezeIcon.activeSelf)
             if (attackerName == "Hiver")
             { 
-                target.freeze = true; 
-                PanelManager.instance?.AddLog($"{target.nameCard} est gelée et ne pourra pas attaquer au tour prochain");
+                target.isFreeze = true; 
+                //PanelManager.instance?.AddLog($"{target.nameCard} est gelée et ne pourra pas attaquer au tour prochain");
                 Debug.Log($"[ApplyAllAttacks] {target.nameCard} is frozen by Hiver."); 
                 target.freezeNumberLoop = GameManager.currentRound;
                 Debug.Log($"[currentRound] {target.freezeNumberLoop}"); 
@@ -737,8 +747,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             // --- Anaxagore ---
             if (attackerName == "Anaxagore") 
             { 
-                target.malusDfs = Mathf.Max(0, target.malusDfs - 1); 
-                Debug.Log($"[ApplyAllAttacks] {targetName} défense réduite par Anaxagore."); 
+                target.malusDfs++;
+                int currentDef = target.GetDefenseValue(target);
+                int newDef = Mathf.Max(0, currentDef - 1);
+                target.carteUI?.defenseText?.SetText(newDef.ToString());
+                target.SetDefenseValue(newDef);
+                Debug.Log($"[ApplyAllAttacks] {targetName} défense réduite par Anaxagore (-1 DF)."); 
             }
 
             // --- Ambroise (effet différé) ---
@@ -758,7 +772,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                     randomTarget.SetDefenseValue(newDef);
                     
                     randomTarget.UpdateMalusDefenseColor(randomTarget);
-                    PanelManager.instance?.AddLog($"   → Onde de Choc Passive d'Ambroise : -1 DF à {randomTarget.nameCard}");
+                    //PanelManager.instance?.AddLog($"   → Onde de Choc Passive d'Ambroise : -1 DF à {randomTarget.nameCard}");
                 }
                 
                 GameManager.ambroiseEffectPending = false;
@@ -782,10 +796,10 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                         passiveOpponent.SetDefenseValue(newDef);
                         
                         passiveOpponent.UpdateMalusDefenseColor(passiveOpponent);
-                        PanelManager.instance?.AddLog($"   → Terreur Sélective de Trahison : -1 DF à {passiveOpponent.nameCard}");
+                        //PanelManager.instance?.AddLog($"   → Terreur Sélective de Trahison : -1 DF à {passiveOpponent.nameCard}");
                     }
                     
-                    PanelManager.instance?.AddLog($"   → Terreur Sélective de Trahison inflige -1 DF à {passedOpponents.Count} adversaire(s) passif(s)");
+                    //PanelManager.instance?.AddLog($"   → Terreur Sélective de Trahison inflige -1 DF à {passedOpponents.Count} adversaire(s) passif(s)");
                 }
                 
                 GameManager.trahisonEffectPending = false;
@@ -801,20 +815,29 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 target.SetAttaqueValue(newAtkValue);
                 
                 target.UpdateMalusAtqColor(target);
-                PanelManager.instance?.AddLog($"{attackerName} : Malus d'attaque inflige -1 ATK à {target.nameCard}");
+                //PanelManager.instance?.AddLog($"{attackerName} : Malus d'attaque inflige -1 ATK à {target.nameCard}");
             }
 
             if (targetName == "Solicia") 
             { 
                 // Réflexion partielle : inflige 1 dégât à l'attaquant
                 attacker.ApplyDamageToTarget(1, targetName);
-                PanelManager.instance?.AddLog($"{targetName} : Réflexion partielle inflige 1 dégât à {attackerName}");
+                //PanelManager.instance?.AddLog($"{targetName} : Réflexion partielle inflige 1 dégât à {attackerName}");
             }
 
-            // --- Esquive ---
-            if ((playerCards.Contains(target) || opponentCards.Contains(target)) && targetName != "Zao")
+            // --- Zao : intouchable si a passé son tour ---
+            if (targetName == "Zao" && target.stateOffensif == "passed")
             {
-                Debug.Log($"[ApplyAllAttacks] {target.nameCard} esquive l'attaque de {attackerName}.");
+                Debug.Log($"[ApplyAllAttacks] {target.nameCard} esquive l'attaque de {attackerName} (Zao - mode passé).");
+                //PanelManager.instance?.AddLog($"{targetName} : Zao est intouchable (mode passé)");
+                continue;
+            }
+
+            // --- Esquive : une carte en mode attaque esquive les attaques --- (sauf ZAO)
+            if (target.stateOffensif == "atk" && targetName != "Zao")
+            {
+                Debug.Log($"[ApplyAllAttacks] {target.nameCard} esquive l'attaque de {attackerName} (mode attaque).");
+                //PanelManager.instance?.AddLog($"{targetName} : Esquive (mode attaque)");
                 continue;
             }
 
@@ -833,7 +856,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 {
                     var chosenTarget = adjacentEnemies[UnityEngine.Random.Range(0, adjacentEnemies.Count)];
                     chosenTarget.ApplyDamageToTarget(1, attackerName);
-                    PanelManager.instance.AddLog($"{attackerName} inflige 1 dégât supplémentaire à {chosenTarget.nameCard} !");
+                    //PanelManager.instance.AddLog($"{attackerName} inflige 1 dégât supplémentaire à {chosenTarget.nameCard} !");
                 }
             }
 
@@ -891,21 +914,23 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     private void MarkEndOfTurn()
     {
         // Si l'IA est active, simuler les attaques de l'IA
+        // Les attaques du joueur sont stockées dans attaquesDuTour et seront appliquées
+        // avec les attaques de l'IA à la fin du tour complet dans ExecuteAITurn()
         if (GameManager.iaActive)
         {            
-            PanelManager.instance?.AddLog("[IA] Lancement");
+            //PanelManager.instance?.AddLog("[IA] Lancement");
         
             Invoke("StartAI", 0.2f);
             
             if (roundDamage.Count > 0)
             {
-                PanelManager.instance.AddLog("--- RÉSUMÉ DES DÉGÂTS ---");
-                foreach (string calcul in roundDamage)
-                    PanelManager.instance.AddLog(calcul);
+                //PanelManager.instance.AddLog("------");
+                //foreach (string calcul in roundDamage)
+                    //PanelManager.instance.AddLog(calcul);
             }
             roundDamage.Clear();
             
-            PanelManager.instance.AddLog($"--- SCORE : {GameManager.playerScore} points ---");
+            //PanelManager.instance.AddLog($"--- SCORE : {GameManager.playerScore} points ---");
         }
         else
         {            
@@ -920,6 +945,11 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     }
     
     public static void EndAITurn()
+    {
+        //PanelManager.instance.AddLog($"[IA] Tour IA terminé");
+    }
+
+    public static void EndTurn()
     {
         Debug.Log("[IA] Tour IA terminé, passage au tour suivant");
         BoardManager.Instance.ShowButtonNextStep(true);
@@ -982,8 +1012,8 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         string nameAttacker = attackingCard.nameCard ?? "Attaquant";
         string nameTarget = nameCard ?? "Cible";
                 
-        PanelManager.instance?.AddLog($"[ATTAQUE] {nameAttacker} : ATK = {damage}");
-        PanelManager.instance?.AddLog($"[DEFENSE] {nameTarget} : DEF = {defenseTarget}");
+        //PanelManager.instance?.AddLog($"{nameAttacker} : ATK : {damage}");
+       // PanelManager.instance?.AddLog($"{nameTarget} : DEF : {defenseTarget}");
         
         roundDamage.Add($"{nameAttacker} → {nameTarget} (DEF:{defenseTarget}) = {damage} dégâts");
         attaquesDuTour.Add(new AttaqueInfo(attackingCard, this, damage));
@@ -996,12 +1026,12 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
 
         if(nameTarget == "Zao" && target.stateOffensif == "passed")
         {
-           PanelManager.instance?.AddLog($"[ATTAQUEAI] {nameAttacker} : ATK = {damage}Echec de l'attaque, Zao est intouchable");
+           //PanelManager.instance?.AddLog($"[ATTAQUEAI] {nameAttacker} : ATK = {damage} Echec de l'attaque, Zao est intouchable");
            return;
         }
          
-        PanelManager.instance?.AddLog($"[ATTAQUEAI] {nameAttacker} : ATK = {damage}");
-        PanelManager.instance?.AddLog($"[DEFENSEAI] {nameTarget} : DEF = {defenseTarget}");
+       // PanelManager.instance?.AddLog($"[ATTAQUEAI] {nameAttacker} : ATK = {damage}");
+       // PanelManager.instance?.AddLog($"[DEFENSEAI] {nameTarget} : DEF = {defenseTarget}");
         
         roundDamage.Add($"{nameAttacker} (ATK:{damage}) → {nameTarget} (DEF:{defenseTarget}) = {attackingCard} dégâts");
         attaquesDuTour.Add(new AttaqueInfo(attackingCard, target, damage));
@@ -1017,6 +1047,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         
         carteUI?.defenseText?.SetText(newDfs.ToString());
         carteUI?.attaqueText?.SetText(atqValue.ToString());
+        SetDefenseValue(newDfs);
         
         if (newDfs <= 0 && !yellowCard)
         {
@@ -1024,10 +1055,19 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             if (carteUI?.imageCarte)
                 carteUI.imageCarte.color = Color.yellow;
             
-            GameManager.playerScore = Mathf.Max(0, GameManager.playerScore - 1);
-            ShowScore();
-            
-            PanelManager.instance?.AddLog($"{carteUI?.nomText?.text ?? "Carte"} : DÉFENSE À 0 - Score: {GameManager.playerScore}");
+            // Déduire les points de vie uniquement si c'est une carte du joueur qui est détruite
+            if (isCardPlayer)
+            {
+                GameManager.playerScore = Mathf.Max(0, GameManager.playerScore - 1);
+                ShowScore();
+                //PanelManager.instance?.AddLog($"{carteUI?.nomText?.text ?? "Carte"} : DÉFENSE À 0 - Score Joueur: {GameManager.playerScore}");
+            }
+            else if (isCardOpponent)
+            {
+                GameManager.scoreOpponent = Mathf.Max(0, GameManager.scoreOpponent - 1);
+                ShowScore();
+                //PanelManager.instance?.AddLog($"{carteUI?.nomText?.text ?? "Carte"} : DÉFENSE À 0 - Score IA: {GameManager.scoreOpponent}");
+            }
         }
     }
     
@@ -1098,17 +1138,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         ColorCard(this, colorAtk);
         if (!coloredCards.Contains(this))
             coloredCards.Add(this);
-
-        // --- Appliquer malus Anaxagore ---
-        if (attackingCard != null && attackingCard.nameCard == "Anaxagore")
-        {
-            int currentDef = GetDefenseValue(this);
-            this.malusDfs = 1;
-            int newDef = currentDef - this.malusDfs;
-            this.carteUI?.defenseText?.SetText(newDef.ToString());
-            SetDefenseValue(newDef);
-            Debug.Log($"[SelectTarget] Malus défense appliqué par {attackingCard.nameCard} par  {this.nameCard}");
-        }
                     
         ComputeAndStoreDamage();
         
@@ -1117,9 +1146,9 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         attackingCard.isSelected = false;
         stateDefensif = "isAttacked";
 
-        attackingCard.currentTargetString = nameTarget;
+        attackingCard.currentTarget = nameTarget;
         
-        PanelManager.instance?.AddLog($"{nameAttacker} attaque {nameTarget} !");
+        //PanelManager.instance?.AddLog($"{nameAttacker} attaque {nameTarget} !");
         
         CheckEndOfTurn();
         
@@ -1258,7 +1287,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         Debug.Log("VICTOIRE ! L'adversaire n'a plus de cartes.");
         
         GameManager.playerScore++;
-        PanelManager.instance.ShowVictory(GameManager.playerScore);
+        //PanelManager.instance.ShowVictory(GameManager.playerScore);
     }
 
     public bool HasCapacity(IAAction.Capacity cap)
@@ -1283,7 +1312,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         }
 
         if (attackerName == "Tyroine" || attackerName == "Xiang"  || attackerName == "Anaxagore"){
-            PanelManager.instance?.AddLog($"{nameCard ?? "Carte"} : Pertededéfense par {attackerName}");
+            //PanelManager.instance?.AddLog($"{nameCard ?? "Carte"} : Pertededéfense par {attackerName}");
             return Mathf.Max(0, baseDfs - 1);
         }
 
@@ -1292,7 +1321,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     private int CalculateEffectiveAttaque(int baseAtq, string attackerName)
     {
         if (attackerName == "Triomphe"){
-            PanelManager.instance?.AddLog($"{nameCard ?? "Carte"} : GainAttaque par {attackerName}");
+            //PanelManager.instance?.AddLog($"{nameCard ?? "Carte"} : GainAttaque par {attackerName}");
             return Mathf.Max(0, baseAtq + 1);
         }
 
@@ -1337,7 +1366,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         int newAtkValue = currentAttaqueValue + 1;
         card.SetAttaqueValue(newAtkValue);
         Debug.Log($"{nameCard} : +1 atk");
-        PanelManager.instance.AddLog($"{nameCard} : Bonus +1 atk");
+        //PanelManager.instance.AddLog($"{nameCard} : Bonus +1 atk");
 
     }
     private void UnsetAttackBonus(CarteBoardInteraction card, string nameCard)
@@ -1347,7 +1376,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         bonusAtk = 0;
         card.SetAttaqueValue(newAtkValue);
         Debug.Log($"{nameCard} : unset atk");
-        PanelManager.instance.AddLog($"{nameCard} : Bonus unset atk");
+        //PanelManager.instance.AddLog($"{nameCard} : Bonus unset atk");
     }
     private void ApplyDfsBonus(CarteBoardInteraction card, string nameCard)
     {
@@ -1356,7 +1385,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         int newDfsValue = currentDfsValue + 1;
         card.SetDefenseValue(newDfsValue);
         Debug.Log($"{nameCard} : +1 dfs");
-        PanelManager.instance.AddLog($"{nameCard} : Bonus +1 dfs");
+        //PanelManager.instance.AddLog($"{nameCard} : Bonus +1 dfs");
     }
     private void ApplyAttackMalus(CarteBoardInteraction card, string nameCard)
     {
@@ -1365,7 +1394,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         int newAtkValue = currentAttaqueValue - 1;
         card.SetAttaqueValue(newAtkValue);
         Debug.Log($"{nameCard} : -1 atk");
-        PanelManager.instance.AddLog($"{nameCard} : Malus -1 atk");
+        //PanelManager.instance.AddLog($"{nameCard} : Malus -1 atk");
     }
     private void ApplyDfsMalus(CarteBoardInteraction card, string nameCard)
     {
@@ -1374,7 +1403,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         int newDfsValue = currentDfsValue - 1;
         card.SetDefenseValue(newDfsValue);
         Debug.Log($"{nameCard} : -1 dfs");
-        PanelManager.instance.AddLog($"{nameCard} : Malus -1 dfs");
+        //PanelManager.instance.AddLog($"{nameCard} : Malus -1 dfs");
     }
 
     public void ResetAllBonusMalus(CarteBoardInteraction card)
@@ -1408,7 +1437,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         card.malusDfs = 0;
         card.bonusDfs = 0;
         if(card.freezeNumberLoop != GameManager.currentRound)
-            card.freeze = false;
+            card.isFreeze = false;
 
         // Réappliquer les valeurs recalculées
         if (card.carteUI.attaqueText != null)
@@ -1491,4 +1520,53 @@ attaque courante
 a fait son action du tour
 est une carte jaune
 va attaquer ce tour
+*/
+/*
+Cycle de vie des actions — joueur
+
+Joueur sélectionne une carte → OnPointerClick() → OnAttaque()
+Joueur sélectionne une cible → SelectTarget() (ligne 1060)
+Incrémente numberOfAttacksUsed
+Affiche les icônes d'attaque
+Appelle ComputeAndStoreDamage() (ligne 1123)
+Calcule les dégâts (ATK de l'attaquant)
+Stocke l'attaque dans attaquesDuTour (ligne 989)
+N'applique pas encore les dégâts
+Vérifie la fin de tour → CheckEndOfTurn() (ligne 1134)
+Si toutes les cartes ont fait leur choix → isEndturnPlayer = true
+Update() détecte isEndturnPlayer → MarkEndOfTurn() (ligne 135-136)
+Affiche le résumé des dégâts
+Lance le tour de l'IA si active
+N'appelle pas ApplyAllAttacks()
+Les attaques restent dans attaquesDuTour et ne sont pas appliquées
+
+
+
+Cycle de vie des actions — IA
+
+Début du tour IA → StartAITurn() → ExecuteAITurn() (ligne 28)
+IA décide les actions → IAAction.DecideAction() (ligne 66)
+Évalue chaque carte IA
+Choisit attaquer ou passer
+IA exécute les attaques → ExecuteAttack() → SimulateAIAttack() → ApplyAttack() (ligne 161)
+Appelle ComputeAndStoreDamageIA() (ligne 198)
+Calcule les dégâts
+Stocke dans attaquesDuTour (ligne 1007)
+N'applique pas encore les dégâts
+IA passe les autres cartes → ExecutePass() (ligne 201)
+Fin du tour IA → ApplyAllAttacks() (ligne 111)
+Parcourt attaquesDuTour
+Applique les effets spéciaux (Minoson, Belindra, Zarla, etc.)
+Vérifie l'esquive (ligne 815)
+Condition : (playerCards.Contains(target) || opponentCards.Contains(target)) && targetName != "Zao"
+Cette condition est toujours vraie (sauf pour Zao)
+Toutes les attaques sont esquivées → continue (ligne 818)
+Les dégâts ne sont jamais appliqués
+Vide attaquesDuTour (ligne 844)
+EndAITurn() (ligne 114)
+Constat
+Joueur : les attaques sont stockées dans attaquesDuTour mais ApplyAllAttacks() n'est jamais appelé, donc les dégâts ne sont pas appliqués.
+IA : ApplyAllAttacks() est appelé, mais la condition d'esquive (ligne 815) bloque toutes les attaques, donc les dégâts ne sont pas appliqués.
+Dans les deux cas, les dégâts ne sont pas appliqués, mais pour des raisons différentes.
+
 */

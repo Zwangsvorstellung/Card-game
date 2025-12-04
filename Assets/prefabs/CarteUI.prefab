@@ -372,7 +372,7 @@ GameObject:
   - component: {fileID: 2760778179266733789}
   - component: {fileID: 5268973707846108917}
   - component: {fileID: 8031967578674935240}
-  - component: {fileID: 1852704952752948018}
+  - component: {fileID: 2183127286810116459}
   m_Layer: 0
   m_Name: atk1
   m_TagString: Untagged
@@ -437,7 +437,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &1852704952752948018
+--- !u!114 &2183127286810116459
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -446,7 +446,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2536538780285529986}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bc3b564de414c4468a988b193b91646, type: 3}
+  m_Script: {fileID: 11500000, guid: abe64e74139e80e47857057811413a7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   attackName: 
@@ -972,18 +972,23 @@ MonoBehaviour:
   isCardPlayer: 0
   isCardOpponent: 0
   isSelected: 0
-  targetCount: 0
+  isCibledCount: 0
   stateOffensif: 
   stateDefensif: 
   lastTarget: 
-  currentTargetString: 
+  currentTarget: 
   bonusAtk: 0
   bonusDfs: 0
   malusAtk: 0
   malusDfs: 0
-  freeze: 0
+  isFreeze: 0
+  freezeNumberLoop: 0
   resetBonusAtk: 1
   nameCard: 
+  defenseValueMax: 0
+  attackValueMax: 0
+  defenseValueCurrent: 0
+  attackValueCurrent: 0
   choiceDo: 0
   carteUI: {fileID: 0}
   layoutGroup: {fileID: 0}
@@ -1227,7 +1232,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8690512137884744385}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bc3b564de414c4468a988b193b91646, type: 3}
+  m_Script: {fileID: 11500000, guid: abe64e74139e80e47857057811413a7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   attackName: 

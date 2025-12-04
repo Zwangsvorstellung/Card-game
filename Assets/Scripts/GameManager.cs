@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
     
     private List<int> selectedCards = new List<int>(); // Index des cartes sélectionnées
     private List<CarteData> cartesPlacees = new List<CarteData>(); // Cartes placées sur le tapis
-    public const int MAX_CARTES_TAPIS = 2;
+    public const int MAX_CARTES_TAPIS = 4;
 
     public static GameManager Instance { get; private set; }
 
@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
     public static int numberOfAttacksUsedIA;
     public static int numberOfAttacksMax = 2;
     public static bool isEndturnPlayer = false;
+    public static bool isEndturnAI = false;
     public static bool ambroiseEffectPending = false;
     public static bool trahisonEffectPending = false;
 

@@ -27,8 +27,6 @@ public class IA : MonoBehaviour
     
     private IEnumerator ExecuteAITurn()
     {
-       // Debug.Log("[IA] Début du tour IA");
-
         GameManager.numberOfAttacksUsedIA = 0;
 
         List<CarteBoardInteraction> cardsIA = GetCardOpponent();
@@ -58,9 +56,9 @@ public class IA : MonoBehaviour
             // Pour chaque carte IA disponible, on décide l'action
             foreach (var cardsIADispo in cardsIADisponibles)
             {
-                if(cardsIADispo.freeze){
+                if(cardsIADispo.isFreeze){
                     Debug.Log($"[IA] Carte {cardsIADispo.nameCard} : freeze");
-                    PanelManager.instance?.AddLog($"{cardsIADispo.nameCard} : freeze");
+                    //PanelManager.instance?.AddLog($"{cardsIADispo.nameCard} : freeze");
                     continue;
                 }
                 var decision = IAAction.DecideAction(cardsIADispo, cardsIA, cardsPlayer);
@@ -76,7 +74,7 @@ public class IA : MonoBehaviour
 
             if (bestAttacker != null && bestTarget != null)
             {
-                Debug.Log($"[IA] {bestAttacker.name} attaque la cible {bestTarget} avec un score {bestScoring}");
+                Debug.Log($"[IA] {bestAttacker.nameCard} attaque la cible {bestTarget.nameCard} avec un score {bestScoring}");
                 ExecuteAttack(bestAttacker, bestTarget);
 
                 attacksExecuted++;
@@ -104,7 +102,6 @@ public class IA : MonoBehaviour
             }
         }
 
-        //Debug.Log("[IA] Tour IA terminé");
 
         CarteBoardInteraction instance = FindAnyObjectByType<CarteBoardInteraction>();
         if (instance != null)
@@ -140,7 +137,7 @@ public class IA : MonoBehaviour
 
         attacker.choiceDo = true;
         attacker.stateOffensif = "atk";
-        PanelManager.instance.AddLog($"ATTAQUE IA ({GameManager.numberOfAttacksUsedIA}/{GameManager.numberOfAttacksMax})");
+        //PanelManager.instance.AddLog($"ATTAQUE IA ({GameManager.numberOfAttacksUsedIA}/{GameManager.numberOfAttacksMax})");
 
         ApplyAttack(attacker.nameCard, target);
     }
@@ -173,7 +170,7 @@ public class IA : MonoBehaviour
         target.isCibledCount++;
         carteUI.ShowAttackIcon(target.isCibledCount);
 
-        PanelManager.instance.AddLog($"{nameAttacker} : ATQ -> {target.nameCard}");
+        //PanelManager.instance.AddLog($"{nameAttacker} : ATQ -> {target.nameCard}");
         
         CarteScriptableObject so = Resources.LoadAll<CarteScriptableObject>("CartesGenerees").FirstOrDefault(c => c.nom == nameAttacker);
         

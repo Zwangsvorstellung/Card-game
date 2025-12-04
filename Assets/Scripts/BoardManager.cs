@@ -121,6 +121,7 @@ public class BoardManager : MonoBehaviour
                 anim.targetImage = img;
                 yield return StartCoroutine(anim.Fade(card.GetComponent<CarteUI>(), fromAlpha, toAlpha, duration));
             }
+
         }
     }
 
@@ -152,8 +153,8 @@ public class BoardManager : MonoBehaviour
             card.stateOffensif = "waitOrder";
             card.choiceDo = false;
             card.isSelected = false;
-            card.lastTarget = card.currentTargetString;
-            card.currentTargetString = "";
+            card.lastTarget = card.currentTarget;
+            card.currentTarget = "";
             card.layoutGroup.enabled = true;
 
             // reset des bonus/malus

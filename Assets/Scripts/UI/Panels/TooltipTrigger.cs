@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class AttackIconTooltip : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     public string attackName;
     [SerializeField] private Vector3 tooltipOffset = new Vector3(0, 0, 0);

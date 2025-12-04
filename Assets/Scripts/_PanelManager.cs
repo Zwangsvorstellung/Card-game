@@ -4,29 +4,9 @@ using TMPro;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
-public class PanelManager : MonoBehaviour
+public class _PanelManager : MonoBehaviour
 {
-    public static PanelManager instance;
-    
-    // Configuration du panel
-    private const int MAX_LOGS = 150;
-    private const float PANEL_OPACITY = 0.85f;  
-    private const float PANEL_WIDTH = 400f;
-    private const float PANEL_MARGIN_TOP = 125f;
-    private const float PANEL_MARGIN_BOTTOM = 25f;
-    private const float PANEL_MARGIN_RIGHT = 60f;
-    private const float LOGS_MARGIN = 20f;
-    private const float LOGS_FONT_SIZE = 16f;
-    
-    // Configuration du panel de victoire
-    private const float VICTORY_PANEL_WIDTH = 400f;
-    private const float VICTORY_PANEL_HEIGHT = 300f;
-    private const float VICTORY_PANEL_OPACITY = 0.8f;
-    private const float VICTORY_TEXT_SIZE = 36f;
-    private const float SCORE_TEXT_SIZE = 24f;
-    private const float BUTTON_WIDTH = 150f;
-    private const float BUTTON_HEIGHT = 40f;
-    private const float BUTTON_TEXT_SIZE = 18f;
+    public static _PanelManager instance;
     
     private GameObject panelDroit;
     private TMP_Text zoneLogs;
@@ -53,43 +33,7 @@ public class PanelManager : MonoBehaviour
             panelDroit?.SetActive(nouvelleVueBoard);
         }
     }
-    
-    private void CreateRightPanel()
-    {
-        // Chercher le Canvas dans la scène
-        Canvas canvas = FindFirstObjectByType<Canvas>();
-        
-        // Créer le panel droit
-        GameObject panelGO = new GameObject("PanelDroit");
 
-        Transform boardRoot = GameObject.Find("BoardManager")?.transform;
-        if (boardRoot != null)
-            panelGO.transform.SetParent(boardRoot, false);
-        else
-            panelGO.transform.SetParent(canvas.transform, false); // Fallback
-
-        
-        // Ajouter les composants UI
-        Image imagePanel = panelGO.AddComponent<Image>();
-        imagePanel.color = new Color(0, 0, 0, PANEL_OPACITY);
-        
-        RectTransform rectPanel = panelGO.GetComponent<RectTransform>();
-        
-        rectPanel.anchorMin = new Vector2(1, 0.5f);
-        rectPanel.anchorMax = new Vector2(1, 0.5f);
-        rectPanel.pivot = new Vector2(1, 0.5f);
-        rectPanel.anchoredPosition = new Vector2(-PANEL_MARGIN_RIGHT, 0);
-        rectPanel.sizeDelta = new Vector2(PANEL_WIDTH, 0);
-
-        // Forcer la largeur du panel
-        rectPanel.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, PANEL_WIDTH);
-        float heightPanel = canvas.GetComponent<RectTransform>().rect.height - (PANEL_MARGIN_TOP + PANEL_MARGIN_BOTTOM);
-        rectPanel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, heightPanel);
-        CreateLogsArea(panelGO);
-        
-        panelDroit = panelGO;
-        panelDroit.SetActive(false);
-    }
 
     private void CreateLogsArea(GameObject panelParent)
     {
@@ -174,8 +118,8 @@ public class PanelManager : MonoBehaviour
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         // Zone de texte
-        zoneLogs = CreateUIText(contentGO, "ZoneLogs", "Choisissez une action pour chaque carte en la sélectionnant.",
-                                LOGS_FONT_SIZE, Color.white, TextAlignmentOptions.TopLeft);
+       // zoneLogs = CreateUIText(contentGO, "ZoneLogs", "Choisissez une action pour chaque carte en la sélectionnant.",
+                           //     LOGS_FONT_SIZE, Color.white, TextAlignmentOptions.TopLeft);
 
         TMP_FontAsset poppinsFont = Resources.Load<TMP_FontAsset>("Fonts/Poppins-Regular SDF");
         if (poppinsFont)
@@ -237,7 +181,7 @@ public class PanelManager : MonoBehaviour
         rectTexte.sizeDelta = new Vector2(350, 50);
         rectTexte.anchoredPosition = Vector2.zero;
         
-        CreateUIText(texteVictoire, "TexteVictoire", "VICTOIRE !", VICTORY_TEXT_SIZE, Color.yellow, TextAlignmentOptions.Center);
+        //CreateUIText(texteVictoire, "TexteVictoire", "VICTOIRE !", VICTORY_TEXT_SIZE, Color.yellow, TextAlignmentOptions.Center);
         
         // Créer le texte du score
         GameObject txtScore = new GameObject("txtScore");
@@ -249,7 +193,7 @@ public class PanelManager : MonoBehaviour
         rectScore.sizeDelta = new Vector2(350, 30);
         rectScore.anchoredPosition = Vector2.zero;
         
-        CreateUIText(txtScore, "txtScore", $"Score : {score}", SCORE_TEXT_SIZE, Color.white, TextAlignmentOptions.Center);
+        //CreateUIText(txtScore, "txtScore", $"Score : {score}", SCORE_TEXT_SIZE, Color.white, TextAlignmentOptions.Center);
         
         // Créer le bouton de relance
         GameObject retryButton = new GameObject("retryButton");
@@ -267,29 +211,9 @@ public class PanelManager : MonoBehaviour
         Button button = retryButton.AddComponent<Button>();
         button.onClick.AddListener(RestartGame);
         
-        CreateUIText(retryButton, "TexteBouton", "Rejouer", BUTTON_TEXT_SIZE, Color.white, TextAlignmentOptions.Center);
+        //CreateUIText(retryButton, "TexteBouton", "Rejouer", BUTTON_TEXT_SIZE, Color.white, TextAlignmentOptions.Center);
     }
 
     public void RestartGame() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
-    // Méthodes utilitaires pour la création d'UI
-    private TMP_Text CreateUIText(GameObject parent, string name, string txt, float size, Color color, TextAlignmentOptions align)
-    {
-        GameObject txtGO = new GameObject(name);
-        txtGO.transform.SetParent(parent.transform, false);
-        
-        RectTransform rectTexte = txtGO.AddComponent<RectTransform>();
-        rectTexte.anchorMin = Vector2.zero;
-        rectTexte.anchorMax = Vector2.one;
-        rectTexte.offsetMin = Vector2.zero;
-        rectTexte.offsetMax = Vector2.zero;
-        
-        TMP_Text tmpTxt = txtGO.AddComponent<TextMeshProUGUI>();
-        tmpTxt.text = txt;
-        tmpTxt.fontSize = size;
-        tmpTxt.color = color;
-        tmpTxt.alignment = align;
-        
-        return tmpTxt;
-    }
 } 
