@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
 
 public class PanelManager : MonoBehaviour
 {
@@ -10,7 +11,14 @@ public class PanelManager : MonoBehaviour
 
     public GameObject turnLogPanel;   
     public TMP_Text logPanel;
-  
+    private List<string> logs = new List<string>();
+
+    public GameObject endGamePanel;   
+    public TMP_Text logResultEndGame;
+
+    public GameObject validateDeck;   
+    public GameObject nextStep;   
+
 
     void Awake()
     {
@@ -24,19 +32,34 @@ public class PanelManager : MonoBehaviour
         // DontDestroyOnLoad(gameObject);
     }
 
-    public void ShowInstructionText()
-    {
-        if (instructionText != null)
-            instructionText.SetActive(true);
-    }
-
-    public void HideInstructionText()
-    {
-        if (instructionText != null)
-            instructionText.SetActive(false);
-    }
+    public void ShowInstructionText() => instructionText?.SetActive(true);
+    public void HideInstructionText() => instructionText?.SetActive(false);
 
     public void ShowTurnLogPanel() => turnLogPanel?.SetActive(true);
     public void HideTurnLogPanel() => turnLogPanel?.SetActive(false);
+
+    public void ShowValidateDeck() => validateDeck?.SetActive(true);
+    public void HideValidateDeck() => validateDeck?.SetActive(false);
+
+    public void ShowButtonNextStep() => nextStep?.SetActive(true);
+    public void HideButtonNextStep() => nextStep?.SetActive(false);
+
+       /* public void AddLog(string message)
+    {
+        logs.Add(message);
+        
+       // if (logs.Count > MAX_LOGS)
+           // logs.RemoveAt(0);
+        
+        zoneLogs?.SetText(string.Join("\n", logs));
+
+        // ➤ Forcer le scroll tout en bas
+        ScrollRect scroll = zoneLogs?.GetComponentInParent<ScrollRect>();
+        if (scroll)
+        {
+            Canvas.ForceUpdateCanvases(); // Important pour forcer le layout à se mettre à jour
+            scroll.verticalNormalizedPosition = 0f;
+        }
+        */
     
 }

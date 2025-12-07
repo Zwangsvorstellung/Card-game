@@ -99,6 +99,7 @@ public class GameManager : MonoBehaviour
         // Distribuer les cartes dans les mains
         int nombreCartesMain = Mathf.Min(7, deckPlayerA.Count);
         int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS, deckPlayerB.Count);
+
         for (int i = 0; i < nombreCartesMain; i++)
         {
             mainPlayerA.Enqueue(deckPlayerA[i]);
@@ -168,4 +169,25 @@ public class GameManager : MonoBehaviour
     {
         mode = newMode;
     }
+
+    public void CheckGameOver()
+    {
+        if (BoardManager.Instance != null && BoardManager.Instance.handOpponentTransform != null)
+        {
+            var cardsOpponent = BoardManager.Instance.handOpponentTransform.GetComponentsInChildren<CarteUI>(true)
+                .Where(c => c.gameObject.activeInHierarchy && c.transform.Cast<Transform>().Any(child => child.gameObject.activeSelf))
+                .ToArray();
+            if (cardsOpponent.Length == 0)
+                TriggerVictory();
+        }
+    }
+
+    private void TriggerVictory()
+    {
+        Debug.Log("VICTOIRE ! L'adversaire n'a plus de cartes.");
+        
+        playerScore++;
+        //PanelManager.instance.ShowVictory(GameManager.playerScore);
+    }
+    
 }

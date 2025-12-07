@@ -80,7 +80,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 0}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &747957135626112345
 GameObject:
   m_ObjectHideFlags: 0
@@ -965,9 +977,9 @@ GameObject:
   - component: {fileID: 1717872437429368769}
   - component: {fileID: -4982608492103844277}
   - component: {fileID: -4120611104239028314}
-  - component: {fileID: 5085649666382560066}
+  - component: {fileID: 347962613626030302}
   m_Layer: 0
-  m_Name: CarteUI
+  m_Name: CardUI
   m_TagString: cards
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1040,7 +1052,7 @@ MonoBehaviour:
   defenseValueCurrent: 0
   attackValueCurrent: 0
   choiceDo: 0
-  carteUI: {fileID: 0}
+  cardUI: {fileID: 0}
   layoutGroup: {fileID: 0}
   freezeIcon: {fileID: 0}
   startPosition: {x: 0, y: 0, z: 0}
@@ -1064,7 +1076,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetImage: {fileID: 5574901643102631080, guid: 66e57aab964ca904382a3eb2564c98d5, type: 3}
---- !u!114 &5085649666382560066
+--- !u!114 &347962613626030302
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1073,7 +1085,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5769904588811141156}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc595dcf23b01294392fbe7b3344f7fa, type: 3}
+  m_Script: {fileID: 11500000, guid: bfcbab1344bf77545ad05bf677446f34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   imageCarte: {fileID: 6931552072611007483}
@@ -1086,17 +1098,14 @@ MonoBehaviour:
   atk2Icon: {fileID: 8690512137884744385}
   passedIcon: {fileID: 747957135626112345}
   freezeIcon: {fileID: 4250109045803645063}
-  carteID: 
-  indexCarte: 0
-  offsetHover: {x: 0, y: 50, z: 0}
-  rotationMax: 8
-  rectTransform: {fileID: 0}
-  isSelect: 0
-  indexHierarchieOriginal: 0
-  mainUIManager: {fileID: 0}
+  rectTransform: {fileID: 1717872437429368769}
+  newPosition: {x: 0, y: 0, z: 0}
   isCardPlayer: 0
   isCardOpponent: 0
+  isSelect: 0
   nameCard: 
+  carteID: 
+  indexCarte: 0
 --- !u!1 &7690427643014583751
 GameObject:
   m_ObjectHideFlags: 0

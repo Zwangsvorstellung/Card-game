@@ -3,9 +3,9 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using System.Linq;
 
-public class InteractionManager : MonoBehaviour
+public class PlayerActionManager : MonoBehaviour
 {
-    public static InteractionManager Instance;
+    public static PlayerActionManager Instance { get; private set; }
 
     void Awake()
     {
@@ -35,6 +35,7 @@ public class InteractionManager : MonoBehaviour
     public void ConfirmSelection(GameObject buttonObject)
     {
         PanelManager.Instance.HideInstructionText();
+        PanelManager.Instance.HideValidateDeck();
 
         List<CarteData> selectedCards = GameManager.Instance.GetSelectedCards();
         HashSet<int> selectedCardIds = selectedCards.Select(c => c.idCard).ToHashSet();
@@ -49,16 +50,22 @@ public class InteractionManager : MonoBehaviour
         // Génère 4 cartes aléatoires pour l’opposant
         List<CarteData> opponentCards = GameManager.Instance?.mainPlayerB.Take(4).ToList() ?? new List<CarteData>();
 
-        BoardManager.Instance.ShowCardsOnTable(opponentCards, selectedCards);
+        BoardManager.Instance.SetupBoardCards(opponentCards, selectedCards);
         CamController.Instance.GoToBoardView();
 
-        if (buttonObject != null)
-            buttonObject.SetActive(false);
+        buttonObject.SetActive(false);
 
         GameManager.SetMode("select");
 
         MainUIManager mainUIManager = FindFirstObjectByType<MainUIManager>();
         mainUIManager?.gameObject.SetActive(false);
+    }
+
+    public void GetNextStep()
+    {
+        PanelManager.Instance.HideButtonNextStep();
+        //BoardManager.Instance.StartCoroutine(BoardManager.Instance.HandleNextTurnTransition());
+        CarteBoardInteraction.isAITurn = false;
     }
 
     public void PlayHoverSound(AudioSource audio) => audio?.Play();

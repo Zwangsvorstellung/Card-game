@@ -19,14 +19,18 @@ public class ButtonTrigger : MonoBehaviour
     }
 
     // ==================== Board / cartes ====================
-    public void OnClickConfirm() => InteractionManager.Instance.ConfirmSelection(gameObject);
+    public void OnClickConfirm() => PlayerActionManager.Instance.ConfirmSelection(gameObject);
+    public void OnClickNextStep() => PlayerActionManager.Instance.GetNextStep();
+
+    public void OnClickPassed() => BoardManager.Instance.OnPassed(gameObject);
+    public void OnClickAttack() => BoardManager.Instance.OnAttack(gameObject);
 
     // ==================== Menu / navigation ====================
-    public void OnClickHome() => InteractionManager.Instance.LoadMenu();
-    public void OnClickMemoryGame() => InteractionManager.Instance.LoadMemoryGame();
-    public void OnClickCardGame() => InteractionManager.Instance.LoadCardGame();
-    public void OnClickQuit() => InteractionManager.Instance.QuitGame();
+    public void OnClickHome() => PlayerActionManager.Instance.LoadMenu();
+    public void OnClickMemoryGame() => PlayerActionManager.Instance.LoadMemoryGame();
+    public void OnClickCardGame() => PlayerActionManager.Instance.LoadCardGame();
+    public void OnClickQuit() => PlayerActionManager.Instance.QuitGame();
 
     // ==================== Sons ====================
-    public void OnHoverSound() => InteractionManager.Instance.PlayHoverSound(hoverAudio);
+    public void OnHoverSound() => PlayerActionManager.Instance.PlayHoverSound(hoverAudio);
 }

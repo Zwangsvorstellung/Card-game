@@ -108,7 +108,6 @@ public class IA : MonoBehaviour
             instance.ApplyAllAttacks();
 
         yield return new WaitForSeconds(1f);
-        CarteBoardInteraction.EndAITurn();
     }
     
     private List<CarteBoardInteraction> GetCardOpponent()

@@ -21,7 +21,6 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     private Coroutine pulseAtk1Coroutine;
     private Coroutine pulseAtk2Coroutine;
 
-
     [Header("Icônes d'état")]
     public GameObject atk1Icon; // Icône première attaque
     public GameObject atk2Icon; // Icône deuxième attaque
@@ -98,31 +97,32 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if(GameManager.mode == "deck"){
+       // if(GameManager.mode == "deck"){
 
-            if (!isSelect)
-            {
-                if (CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
+           // if (!isSelect)
+           // {
+               /* if (CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
                     SelectCard();
                     //if (pulseCoroutine == null)
                     //    pulseCoroutine = StartCoroutine(cardAnimations.Pulse(0.7f, 0.95f, 1f));
     
                 }
-            }
-            else{
+                */
+           // }
+           // else{
 
-                if (pulseCoroutine != null)
-                {
+             //   if (pulseCoroutine != null)
+               // {
                     //StopCoroutine(pulseCoroutine);
                    // pulseCoroutine = null;
                     //rectTransform.localScale = new Vector3(0.8f, 0.8f, 1f);
-                }
-                DeselectCard();
-            }
+               // }
+               // DeselectCard();
+          //  }
 
-            int numberCardsSelect = CountSelectedCards();
-            mainUIManager.ShowValidateButton(numberCardsSelect >= GameManager.MAX_CARTES_TAPIS);
-        }
+            //int numberCardsSelect = CountSelectedCards();
+            //mainUIManager.ShowValidateButton(numberCardsSelect >= GameManager.MAX_CARTES_TAPIS);
+       // }
     }
 
     private void SelectCard()
@@ -152,12 +152,13 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         transform.localRotation = Quaternion.identity;
     }
 
-    private int CountSelectedCards()
+    /*private int CountSelectedCards()
     {
         Transform parentPanel = transform.parent;
         return parentPanel.GetComponentsInChildren<CarteUI>(true)
             .Count(carte => carte.isSelect);
     }
+    */
 
     public void HideAllIcons()
     {
@@ -172,32 +173,7 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         HideAllIcons();
         passedIcon.SetActive(true);
         RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
-        swingCoroutine = StartCoroutine(SwingSablier(passedRect));
-    }
-
-    private IEnumerator SwingSablier(RectTransform passedRect, float angleMax = 10f, float speed = 2f)
-    {
-        float elapsed = 0f;
-        while (true)
-        {
-            // oscillation entre -angleMax et +angleMax (en degrés)
-            float angle = Mathf.Sin(elapsed * speed) * angleMax;
-            passedRect.localRotation = Quaternion.Euler(0, 0, angle);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-    }
-
-    private IEnumerator Pulse(RectTransform rectTransform, float minScale = 0.9f, float maxScale = 1.1f, float speed = 2f)
-    {
-        float elapsed = 0f;
-        while (true)
-        {
-            float scale = Mathf.Lerp(minScale, maxScale, (Mathf.Sin(elapsed * speed) + 1f) / 2f);
-            rectTransform.localScale = new Vector3(scale, scale, 1f);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
+        //swingCoroutine = StartCoroutine(SwingSablier(passedRect));
     }
 
     public void ShowAttackIcon(int numberAtk)
@@ -207,12 +183,12 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         atk2Icon.SetActive(false);
     
         RectTransform atkRect = atk1Icon.GetComponent<RectTransform>();
-        pulseAtk1Coroutine  = StartCoroutine(Pulse(atkRect));
+        //pulseAtk1Coroutine  = StartCoroutine(Pulse(atkRect));
 
         if (numberAtk == 2){
             atk2Icon.SetActive(true);
             RectTransform atkRect2 = atk2Icon.GetComponent<RectTransform>();
-            pulseAtk2Coroutine  = StartCoroutine(Pulse(atkRect2));
+            //pulseAtk2Coroutine  = StartCoroutine(Pulse(atkRect2));
         }
     }
     public void SetAtk1IconColor(string hexColor)

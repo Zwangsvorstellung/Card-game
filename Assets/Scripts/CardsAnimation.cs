@@ -157,15 +157,20 @@ public class CardAnimations : MonoBehaviour
 
     public IEnumerator Fade(CarteUI carteUI, float startAlpha, float endAlpha, float duration = 0.5f)
     {
+        if (carteUI == null) yield break;
+        
         CanvasGroup canvasGroup = carteUI.GetComponent<CanvasGroup>();
-        if (canvasGroup == null) yield break;
+        if (canvasGroup == null) 
+                canvasGroup = carteUI.gameObject.AddComponent<CanvasGroup>();
+
+        canvasGroup.interactable = true;
+        canvasGroup.blocksRaycasts = true;
 
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
-            float alpha = Mathf.Lerp(startAlpha, endAlpha, elapsed / duration);
-            canvasGroup.alpha = alpha;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, elapsed / duration);
             elapsed += Time.deltaTime;
             yield return null;
         }
@@ -186,5 +191,63 @@ public class CardAnimations : MonoBehaviour
             yield return null;
         }
         rectTransform.rotation = startRot;
+    }
+
+    public IEnumerator Shake(float duration = 0.3f, float magnitude = 5f)
+    {
+        Vector3 originalPos = rectTransform.anchoredPosition;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float x = UnityEngine.Random.Range(-1f, 1f) * magnitude;
+            float y = UnityEngine.Random.Range(-1f, 1f) * magnitude;
+
+            rectTransform.anchoredPosition = originalPos + new Vector3(x, y, 0);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        rectTransform.anchoredPosition = originalPos;
+    }
+
+    public IEnumerator ChangeColorSmoothly(Image image, Color targetColor, float duration)
+    {
+        Color startColor = image.color;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            image.color = Color.Lerp(startColor, targetColor, elapsed / duration);
+            yield return null;
+        }
+        image.color = targetColor;
+    }
+
+    private IEnumerator SwingSablier(RectTransform passedRect, float angleMax = 10f, float speed = 2f)
+    {
+        float elapsed = 0f;
+        while (true)
+        {
+            // oscillation entre -angleMax et +angleMax (en degrés)
+            float angle = Mathf.Sin(elapsed * speed) * angleMax;
+            passedRect.localRotation = Quaternion.Euler(0, 0, angle);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator Pulse(RectTransform rectTransform, float minScale = 0.9f, float maxScale = 1.1f, float speed = 2f)
+    {
+        float elapsed = 0f;
+        while (true)
+        {
+            float scale = Mathf.Lerp(minScale, maxScale, (Mathf.Sin(elapsed * speed) + 1f) / 2f);
+            rectTransform.localScale = new Vector3(scale, scale, 1f);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
     }
 }

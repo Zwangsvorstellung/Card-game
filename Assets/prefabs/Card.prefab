@@ -172,9 +172,9 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 7117862350587532534}
+        - m_Target: {fileID: 5824941092988023968}
           m_TargetAssemblyTypeName: Selection, Assembly-CSharp
-          m_MethodName: SelectCard
+          m_MethodName: 
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -193,9 +193,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 5824941092988023968}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4bd35821dd91283429dc6ff845439432, type: 3}
+  m_Script: {fileID: 11500000, guid: ec2aaab1aef4dc54b9be9c3349824294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cardPrefab: {fileID: 5824941092988023968}
+  lstItems: []
+  lstCards: []
+  lstFounds: []
 --- !u!82 &1762503560799115931
 AudioSource:
   m_ObjectHideFlags: 0
