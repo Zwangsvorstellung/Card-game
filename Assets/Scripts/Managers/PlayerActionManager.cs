@@ -37,25 +37,25 @@ public class PlayerActionManager : MonoBehaviour
         PanelManager.Instance.HideInstructionText();
         PanelManager.Instance.HideValidateDeck();
 
-        List<CarteData> selectedCards = GameManager.Instance.GetSelectedCards();
+        List<CarteData> selectedCards = GameManager2.Instance.GetSelectedCards();
         HashSet<int> selectedCardIds = selectedCards.Select(c => c.idCard).ToHashSet();
-        List<CarteData> unselectedCards = GameManager.Instance.mainPlayerA
+        List<CarteData> unselectedCards = GameManager2.Instance.mainPlayerA
             .Where(c => !selectedCardIds.Contains(c.idCard)).ToList();
 
-        GameManager.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
+        GameManager2.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
 
         foreach (var card in unselectedCards)
-            GameManager.Instance.piochePlayerA.Enqueue(card);
+            GameManager2.Instance.piochePlayerA.Enqueue(card);
 
         // Génère 4 cartes aléatoires pour l’opposant
-        List<CarteData> opponentCards = GameManager.Instance?.mainPlayerB.Take(4).ToList() ?? new List<CarteData>();
+        List<CarteData> opponentCards = GameManager2.Instance?.mainPlayerB.Take(4).ToList() ?? new List<CarteData>();
 
         BoardManager.Instance.SetupBoardCards(opponentCards, selectedCards);
         CamController.Instance.GoToBoardView();
 
         buttonObject.SetActive(false);
 
-        GameManager.SetMode("select");
+        GameManager2.SetMode("select");
 
         MainUIManager.Instance.gameObject.SetActive(false);
     }

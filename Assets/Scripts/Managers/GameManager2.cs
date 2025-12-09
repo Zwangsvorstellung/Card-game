@@ -6,6 +6,15 @@ using System.Collections;
 public class GameManager2 : MonoBehaviour
 {
     public static GameManager2 Instance { get; private set; }
+
+    public Queue<CarteData> mainPlayerA;
+    public Queue<CarteData> mainPlayerB;
+    public Queue<CarteData> piochePlayerA;
+    public Queue<CarteData> piochePlayerB;
+
+
+
+
     public static string mode;
 
     void Awake()
@@ -28,6 +37,11 @@ public class GameManager2 : MonoBehaviour
             .Select(cardMain => mainList.FirstOrDefault(c => c.idCard.ToString() == cardMain.carteID))
             .Where(carteData => carteData != null)
             .ToList();
+    }
+
+    public static void SetMode(string newMode)
+    {
+        mode = newMode;
     }
 
 }
