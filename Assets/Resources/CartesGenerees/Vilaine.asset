@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
+  m_Script: {fileID: 11500000, guid: aba3d4dbf47703840bc23af5e8fd957b, type: 3}
   m_Name: Vilaine
   m_EditorClassIdentifier: 
   idCard: 7
   nom: Vilaine
   nameCapacity: "Malus d\u2019attaque"
-  descriptionCapacity: "Inflige -1 d'attaque \xE0 sa cible sur le tour courant"
+  descriptionCapacity: "Inflige -1 d'ATQ \xE0 sa cible sur le tour courant"
   atk: 5
   def: 3
   capacityId: 7

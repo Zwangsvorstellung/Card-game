@@ -57,8 +57,7 @@ public class PlayerActionManager : MonoBehaviour
 
         GameManager.SetMode("select");
 
-        MainUIManager mainUIManager = FindFirstObjectByType<MainUIManager>();
-        mainUIManager?.gameObject.SetActive(false);
+        MainUIManager.Instance.gameObject.SetActive(false);
     }
 
     public void GetNextStep()
@@ -67,6 +66,42 @@ public class PlayerActionManager : MonoBehaviour
         //BoardManager.Instance.StartCoroutine(BoardManager.Instance.HandleNextTurnTransition());
         CarteBoardInteraction.isAITurn = false;
     }
+
+    public void ClickOnPassed()
+    {
+    }
+
+    public void ClickOnAttack()
+    {
+    }
+
+    public void ClickOnMainCard(CardMain cardMain)
+    {
+        if(GameManager.mode == "deck"){
+
+            if(!cardMain.isSelect)
+            {
+                if (MainUIManager.Instance.CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
+                    cardMain.SelectCardMain();
+                    //if (pulseCoroutine == null) pulseCoroutine = StartCoroutine(cardAnimations.Pulse(0.7f, 0.95f, 1f));
+                }
+            }
+            else{
+               /* if (pulseCoroutine != null)
+                {
+                    //StopCoroutine(pulseCoroutine);
+                   // pulseCoroutine = null;
+                    //rectTransform.localScale = new Vector3(0.8f, 0.8f, 1f);
+                }
+                */
+                cardMain.DeselectCardMain();
+            }
+
+            int numberCardsSelect = MainUIManager.Instance.CountSelectedCards();
+            MainUIManager.Instance.ShowValidateButton(numberCardsSelect >= GameManager.MAX_CARTES_TAPIS);
+        }
+    }
+
 
     public void PlayHoverSound(AudioSource audio) => audio?.Play();
 }

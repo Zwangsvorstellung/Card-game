@@ -1,10 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 
-[RequireComponent(typeof(Button))]
-public class ButtonTrigger : MonoBehaviour
-{
+public class ButtonTrigger : MonoBehaviour{
     public string buttonText = "Button";
     public AudioSource hoverAudio;
 
@@ -22,8 +21,8 @@ public class ButtonTrigger : MonoBehaviour
     public void OnClickConfirm() => PlayerActionManager.Instance.ConfirmSelection(gameObject);
     public void OnClickNextStep() => PlayerActionManager.Instance.GetNextStep();
 
-    public void OnClickPassed() => BoardManager.Instance.OnPassed(gameObject);
-    public void OnClickAttack() => BoardManager.Instance.OnAttack(gameObject);
+    public void OnClickPassed() => PlayerActionManager.Instance.ClickOnPassed();
+    public void OnClickAttack() => PlayerActionManager.Instance.ClickOnAttack();
 
     // ==================== Menu / navigation ====================
     public void OnClickHome() => PlayerActionManager.Instance.LoadMenu();

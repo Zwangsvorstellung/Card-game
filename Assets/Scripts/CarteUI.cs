@@ -6,7 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 
-public class CarteUI : MonoBehaviour, IPointerClickHandler
+public class CarteUI : MonoBehaviour
 {
     [Header("Composants UI")]
     public Image imageCarte;
@@ -30,10 +30,6 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
     [Header("Identification")]
     public string carteID; // ID unique de la carte
     public int indexCarte; // Index dans la collection
-
-    [Header("Effets visuels")]
-    public Vector3 offsetHover = new Vector3(0, 450, 0);
-    public float rotationMax = 8f;
     
     private Vector3 startPosition;
     public RectTransform rectTransform;
@@ -93,63 +89,6 @@ public class CarteUI : MonoBehaviour, IPointerClickHandler
         gameObject.name = $"CarteUI_{data.nom}_id{data.idCard}_inst{data.instanceId}";
         
         HideAllIcons();
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-       // if(GameManager.mode == "deck"){
-
-           // if (!isSelect)
-           // {
-               /* if (CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
-                    SelectCard();
-                    //if (pulseCoroutine == null)
-                    //    pulseCoroutine = StartCoroutine(cardAnimations.Pulse(0.7f, 0.95f, 1f));
-    
-                }
-                */
-           // }
-           // else{
-
-             //   if (pulseCoroutine != null)
-               // {
-                    //StopCoroutine(pulseCoroutine);
-                   // pulseCoroutine = null;
-                    //rectTransform.localScale = new Vector3(0.8f, 0.8f, 1f);
-               // }
-               // DeselectCard();
-          //  }
-
-            //int numberCardsSelect = CountSelectedCards();
-            //mainUIManager.ShowValidateButton(numberCardsSelect >= GameManager.MAX_CARTES_TAPIS);
-       // }
-    }
-
-    private void SelectCard()
-    {
-        // Désactiver le LayoutGroup du parent au premier clic (pour le board)
-        HorizontalLayoutGroup layoutGroup = transform.parent?.GetComponent<HorizontalLayoutGroup>();
-        layoutGroup.enabled = false;
-        
-        // Enregistre la position initiale à la première sélection, après le layout
-        startPosition = rectTransform.anchoredPosition;
-        
-        isSelect = true;
-        rectTransform.anchoredPosition = startPosition + offsetHover;
-        
-        // Met la carte au premier plan et applique la rotation
-        transform.SetAsLastSibling();
-        transform.localRotation = Quaternion.Euler(0, 0, Random.Range(-rotationMax, rotationMax));
-    }
-
-    private void DeselectCard()
-    {
-        isSelect = false;
-        rectTransform.anchoredPosition = startPosition;
-        
-        // Remet la carte à sa position d'origine dans la hiérarchie
-        transform.SetSiblingIndex(indexHierarchieOriginal);
-        transform.localRotation = Quaternion.identity;
     }
 
     /*private int CountSelectedCards()

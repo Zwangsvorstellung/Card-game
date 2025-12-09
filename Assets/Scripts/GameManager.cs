@@ -56,7 +56,7 @@ public class GameManager : MonoBehaviour
         List<CarteData> deckPlayerB = new List<CarteData>();
 
         // Charger toutes les cartes .asset dans Resources/CartesGenerees
-        CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("test");
+        CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
         
         // Mélanger toutes les cartes et les répartir entre les deux joueurs (deck partagé)
         List<CarteData> allCards = new List<CarteData>();
@@ -157,10 +157,10 @@ public class GameManager : MonoBehaviour
         MainUIManager mainUIManager = GameObject.Find("MainUIManager").GetComponent<MainUIManager>();
         List<CarteData> mainList = mainPlayerA.ToList();
         
-        return mainUIManager.transform.GetComponentsInChildren<CarteUI>(true)
+        return mainUIManager.transform.GetComponentsInChildren<CardMain>(true)
             .Where(card => card.isSelect)
             .OrderBy(card => card.transform.GetSiblingIndex())
-            .Select(carteUI => mainList.FirstOrDefault(c => c.idCard.ToString() == carteUI.carteID))
+            .Select(cardMain => mainList.FirstOrDefault(c => c.idCard.ToString() == cardMain.carteID))
             .Where(carteData => carteData != null)
             .ToList();
     }

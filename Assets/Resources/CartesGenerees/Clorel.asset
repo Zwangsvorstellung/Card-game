@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
+  m_Script: {fileID: 11500000, guid: aba3d4dbf47703840bc23af5e8fd957b, type: 3}
   m_Name: Clorel
   m_EditorClassIdentifier: 
   idCard: 11
   nom: Clorel
   nameCapacity: "R\xE9g\xE9n\xE9ration"
-  descriptionCapacity: "Gagne 1 point de d\xE9fense si il n\u2019attaque pas"
+  descriptionCapacity: "Gagne 1 point de DF s'il n\u2019attaque pas"
   atk: 5
   def: 4
   capacityId: 11

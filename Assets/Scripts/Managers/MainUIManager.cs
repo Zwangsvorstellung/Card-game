@@ -12,20 +12,21 @@ public class MainUIManager : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        if (Instance != null && Instance != this) Destroy(gameObject);
+        else Instance = this;
     }
 
     public void ShowHand(List<CarteData> cards)
     {
-        GameManager.mode = "deck";
+        GameManager2.mode = "deck";
         if (cards?.Count > 0)
         {
             foreach (var card in cards)
             {
                 GameObject cardGO = Instantiate(cartePrefab, transform);
-                if(cardGO.TryGetComponent<CardUI>(out var cardUI))
+                if(cardGO.TryGetComponent<CardMain>(out var cardMain))
                 {
-                    cardUI.setAttributesInitCard(card);
+                    cardMain.setAttributesInitCard(card);
                 }
             }
         }
@@ -38,7 +39,7 @@ public class MainUIManager : MonoBehaviour
 
     public int CountSelectedCards()
     {
-        return GetComponentsInChildren<CardUI>(true)
+        return GetComponentsInChildren<CardMain>(true)
             .Count(card => card.isSelect);
     }
 

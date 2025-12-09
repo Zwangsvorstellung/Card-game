@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
+  m_Script: {fileID: 11500000, guid: aba3d4dbf47703840bc23af5e8fd957b, type: 3}
   m_Name: Ondine
   m_EditorClassIdentifier: 
   idCard: 18
   nom: Ondine
   nameCapacity: "Vague l\xE9tale"
-  descriptionCapacity: "Inflige les 3 points de d\xE9g\xE2ts al\xE9atoirement"
+  descriptionCapacity: "Inflige les 3 points de d\xE9g\xE2ts \xE0 des cibles al\xE9atoire"
   atk: 3
   def: 5
   capacityId: 18

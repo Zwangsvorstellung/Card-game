@@ -965,7 +965,6 @@ GameObject:
   - component: {fileID: 1717872437429368769}
   - component: {fileID: -4982608492103844277}
   - component: {fileID: -4120611104239028314}
-  - component: {fileID: 5085649666382560066}
   m_Layer: 0
   m_Name: CarteUI
   m_TagString: cards
@@ -1040,7 +1039,7 @@ MonoBehaviour:
   defenseValueCurrent: 0
   attackValueCurrent: 0
   choiceDo: 0
-  carteUI: {fileID: 0}
+  cardUI: {fileID: 0}
   layoutGroup: {fileID: 0}
   freezeIcon: {fileID: 0}
   startPosition: {x: 0, y: 0, z: 0}
@@ -1052,19 +1051,6 @@ MonoBehaviour:
   CurrentTarget: {fileID: 0}
   WillAttackThisTurn: 0
 --- !u!114 &-4120611104239028314
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5769904588811141156}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 828b89999ab9d444ab7f6c45588f2a71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetImage: {fileID: 5574901643102631080, guid: 66e57aab964ca904382a3eb2564c98d5, type: 3}
---- !u!114 &5085649666382560066
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1088,7 +1074,7 @@ MonoBehaviour:
   freezeIcon: {fileID: 4250109045803645063}
   carteID: 
   indexCarte: 0
-  offsetHover: {x: 0, y: 50, z: 0}
+  offsetHover: {x: 0, y: 450, z: 0}
   rotationMax: 8
   rectTransform: {fileID: 0}
   isSelect: 0

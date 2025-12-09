@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0a95b52c14487642b93972e635f9383, type: 3}
+  m_Script: {fileID: 11500000, guid: aba3d4dbf47703840bc23af5e8fd957b, type: 3}
   m_Name: Anaxagore
   m_EditorClassIdentifier: 
   idCard: 10
   nom: Anaxagore
   nameCapacity: "Perc\xE9e D\xE9fensive"
-  descriptionCapacity: "R\xE9duit la d\xE9fense de la cible de 1 \xE0 l'attaque"
+  descriptionCapacity: "R\xE9duit la DF de la cible de 1 \xE0 l'attaque"
   atk: 4
   def: 5
   capacityId: 10
