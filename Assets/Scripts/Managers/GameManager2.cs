@@ -6,14 +6,17 @@ using System.Collections;
 public class GameManager2 : MonoBehaviour
 {
     public static GameManager2 Instance { get; private set; }
+    public const int MAX_CARTES_TAPIS_SELECT_DECK = 7;
+    public const int MAX_CARTES_TAPIS = 4;
 
+    public MainUIManager mainUIManager;
     public Queue<CarteData> mainPlayerA;
     public Queue<CarteData> mainPlayerB;
     public Queue<CarteData> piochePlayerA;
     public Queue<CarteData> piochePlayerB;
 
-
-
+    public static int playerScore;
+    public static int scoreOpponent;
 
     public static string mode;
 
@@ -23,6 +26,84 @@ public class GameManager2 : MonoBehaviour
             Instance = this;
         else if (Instance != this)
             Destroy(gameObject);
+    }
+
+    void Start()
+    {
+        mode = "selectDeck";
+
+        playerScore = 10;
+        scoreOpponent = 10;
+        
+        // faire 2 decks complets pour joueur A et joueur B
+        List<CarteData> deckPlayerA = new List<CarteData>();
+        List<CarteData> deckPlayerB = new List<CarteData>();
+
+        // Charger toutes les cartes .asset dans Resources/CartesGenerees
+        CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
+        
+        // Mélanger toutes les cartes et les répartir entre les deux joueurs (deck partagé)
+        List<CarteData> allCards = new List<CarteData>();
+        foreach (var asset in cartesAssets)
+        {
+            // Une instance pour A
+            CarteData dataA = new CarteData(
+                asset.idCard,
+                asset.nom,
+                asset.nameCapacity,
+                asset.descriptionCapacity,
+                asset.atk,
+                asset.def,
+                asset.capacityId,
+                asset.image           
+            );
+            // Une instance pour B
+            CarteData dataB = new CarteData(
+                asset.idCard,
+                asset.nom,
+                asset.nameCapacity,
+                asset.descriptionCapacity,
+                asset.atk,
+                asset.def,
+                asset.capacityId,
+                asset.image
+            );
+            deckPlayerA.Add(dataA);
+            deckPlayerB.Add(dataB);
+        }
+        Shuffle(deckPlayerA);
+        Shuffle(deckPlayerB);
+
+        // Convertir en Queue et distribuer 7 cartes pour la main de chaque joueur
+        mainPlayerA = new Queue<CarteData>();
+        mainPlayerB = new Queue<CarteData>();
+        piochePlayerA = new Queue<CarteData>();
+        piochePlayerB = new Queue<CarteData>();
+
+        // Distribuer les cartes dans les mains
+        int nombreCartesMain = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerA.Count);
+        int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerB.Count);
+
+        for (int i = 0; i < nombreCartesMain; i++)
+        {
+            mainPlayerA.Enqueue(deckPlayerA[i]);
+        }
+        for (int i = 0; i < nombreCartesMainAdversaire; i++)
+        {
+            mainPlayerB.Enqueue(deckPlayerB[i]);
+        }
+
+        // Le reste va dans la pioche
+        for (int i = nombreCartesMain; i < deckPlayerA.Count; i++)
+        {
+            piochePlayerA.Enqueue(deckPlayerA[i]);
+        }
+        for (int i = nombreCartesMainAdversaire; i < deckPlayerB.Count; i++)
+        {
+            piochePlayerB.Enqueue(deckPlayerB[i]);
+        }
+
+        mainUIManager.ShowHand(mainPlayerA.ToList());
     }
     
     // Méthode pour récupérer les cartes sélectionnées dans l'ordre
@@ -34,7 +115,7 @@ public class GameManager2 : MonoBehaviour
         return mainUIManager.transform.GetComponentsInChildren<CardMain>(true)
             .Where(card => card.isSelect)
             .OrderBy(card => card.transform.GetSiblingIndex())
-            .Select(cardMain => mainList.FirstOrDefault(c => c.idCard.ToString() == cardMain.carteID))
+            .Select(cardMain => mainList.FirstOrDefault(c => c.instanceId == cardMain.instanceId))
             .Where(carteData => carteData != null)
             .ToList();
     }
@@ -42,6 +123,17 @@ public class GameManager2 : MonoBehaviour
     public static void SetMode(string newMode)
     {
         mode = newMode;
+    }
+
+    private void Shuffle(List<CarteData> deck)
+    {
+        for (int i = 0; i < deck.Count; i++)
+        {
+            CarteData temp = deck[i];
+            int randomIndex = Random.Range(i, deck.Count);
+            deck[i] = deck[randomIndex];
+            deck[randomIndex] = temp;
+        }
     }
 
 }

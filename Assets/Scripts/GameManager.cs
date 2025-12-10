@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
     
     private List<int> selectedCards = new List<int>(); // Index des cartes sélectionnées
     private List<CarteData> cartesPlacees = new List<CarteData>(); // Cartes placées sur le tapis
+    public const int MAX_CARTES_TAPIS_SELECT_DECK = 7;
     public const int MAX_CARTES_TAPIS = 4;
 
     public static GameManager Instance { get; private set; }
@@ -97,8 +98,8 @@ public class GameManager : MonoBehaviour
         piochePlayerB = new Queue<CarteData>();
 
         // Distribuer les cartes dans les mains
-        int nombreCartesMain = Mathf.Min(7, deckPlayerA.Count);
-        int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS, deckPlayerB.Count);
+        int nombreCartesMain = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerA.Count);
+        int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerB.Count);
 
         for (int i = 0; i < nombreCartesMain; i++)
         {
@@ -160,7 +161,7 @@ public class GameManager : MonoBehaviour
         return mainUIManager.transform.GetComponentsInChildren<CardMain>(true)
             .Where(card => card.isSelect)
             .OrderBy(card => card.transform.GetSiblingIndex())
-            .Select(cardMain => mainList.FirstOrDefault(c => c.idCard.ToString() == cardMain.carteID))
+            .Select(cardMain => mainList.FirstOrDefault(c => c.instanceId.ToString() == cardMain.instanceId))
             .Where(carteData => carteData != null)
             .ToList();
     }

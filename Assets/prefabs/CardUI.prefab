@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd1a58c835495484eafd62e123241c63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttonText: Button
+  buttonText: Attaque
   hoverAudio: {fileID: 0}
 --- !u!1 &747957135626112345
 GameObject:
@@ -1040,7 +1040,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5769904588811141156}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8ff7a1ad9e0b89e4c81207973db58d9a, type: 3}
   m_Name: 
@@ -1092,12 +1092,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   imageCarte: {fileID: 0}
   nomText: {fileID: 0}
+  attaqueText: {fileID: 0}
+  defenseText: {fileID: 0}
+  nameCapacity: {fileID: 0}
+  descriptionCapacity: {fileID: 0}
   rectTransform: {fileID: 0}
-  newPosition: {x: 0, y: 0, z: 0}
   isSelect: 0
+  indexHierarchieOriginal: 0
   nameCard: 
-  carteID: 
-  indexCarte: 0
+  instanceId: 
+  idCard: 
+  offsetHover: {x: 0, y: 0, z: 0}
+  rotationMax: 0
 --- !u!114 &347962613626030302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1121,12 +1127,16 @@ MonoBehaviour:
   passedIcon: {fileID: 747957135626112345}
   freezeIcon: {fileID: 4250109045803645063}
   rectTransform: {fileID: 1717872437429368769}
-  newPosition: {x: 0, y: 0, z: 0}
+  offsetClick: {x: 0, y: 60, z: 0}
+  buttonAtk: {fileID: 176428939291699513}
+  buttonPass: {fileID: 7690427643014583751}
+  layoutGroup: {fileID: 0}
   isCardPlayer: 0
   isCardOpponent: 0
   isSelect: 0
   nameCard: 
-  carteID: 
+  instanceId: 
+  idCard: 
   indexCarte: 0
 --- !u!1 &7690427643014583751
 GameObject:
@@ -1234,7 +1244,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd1a58c835495484eafd62e123241c63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttonText: Button
+  buttonText: Passer
   hoverAudio: {fileID: 0}
 --- !u!1 &7697475991641557510
 GameObject:

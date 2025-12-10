@@ -24,7 +24,8 @@ public class CardMain : MonoBehaviour, IPointerClickHandler
     public string nameCard = "";
 
     [Header("Identification")]
-    public string carteID; // ID unique de la carte
+    public string instanceId; // ID unique de la carte
+    public string idCard;
 
     [Header("Effets visuels")]
     public Vector3 offsetHover;
@@ -48,7 +49,8 @@ public class CardMain : MonoBehaviour, IPointerClickHandler
         nameCapacity?.SetText(data.nameCapacity);
         descriptionCapacity?.SetText(data.descriptionCapacity);
         
-        carteID = data.idCard.ToString();
+        instanceId = data.instanceId;
+        idCard = data.idCard.ToString();
         gameObject.name = $"CardMain{data.nom}_id{data.idCard}_inst{data.instanceId}";
     }
 

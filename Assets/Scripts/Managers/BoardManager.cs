@@ -62,6 +62,7 @@ public class BoardManager : MonoBehaviour
         interaction.newPosition = interaction.startPosition + (interaction.isCardPlayer ? Vector3.up * 50f : Vector3.down * 50f);
     }
 
+
     public void OnPassed(GameObject buttonObject)
     {
         /*
@@ -310,7 +311,10 @@ public class BoardManager : MonoBehaviour
         */
     }
 
-
+    public void selectCardOnBoard(CardUI cardUI)
+    {
+        cardUI.selectCard();
+    }
 
 
 

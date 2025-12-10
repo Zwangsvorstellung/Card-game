@@ -19,7 +19,6 @@ public class MainUIManager : MonoBehaviour
     public void ShowHand(List<CarteData> cards)
     {
         GameManager2.SetMode("deck");
-        GameManager.SetMode("deck");
         
         if (cards?.Count > 0)
         {

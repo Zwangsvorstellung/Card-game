@@ -77,11 +77,11 @@ public class PlayerActionManager : MonoBehaviour
 
     public void ClickOnMainCard(CardMain cardMain)
     {
-        if(GameManager.mode == "deck"){
+        if(GameManager2.mode == "deck"){
 
             if(!cardMain.isSelect)
             {
-                if (MainUIManager.Instance.CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
+                if (MainUIManager.Instance.CountSelectedCards() < GameManager2.MAX_CARTES_TAPIS){
                     cardMain.SelectCardMain();
                     //if (pulseCoroutine == null) pulseCoroutine = StartCoroutine(cardAnimations.Pulse(0.7f, 0.95f, 1f));
                 }
@@ -98,8 +98,13 @@ public class PlayerActionManager : MonoBehaviour
             }
 
             int numberCardsSelect = MainUIManager.Instance.CountSelectedCards();
-            MainUIManager.Instance.ShowValidateButton(numberCardsSelect >= GameManager.MAX_CARTES_TAPIS);
+            MainUIManager.Instance.ShowValidateButton(numberCardsSelect >= GameManager2.MAX_CARTES_TAPIS);
         }
+    }
+
+    public void ClickOnBoardCard(CardUI cardUI)
+    {
+        BoardManager.Instance.selectCardOnBoard(cardUI);
     }
 
 
