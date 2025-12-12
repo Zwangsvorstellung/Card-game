@@ -16,6 +16,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public TMP_Text nameCapacity;
     public TMP_Text descriptionCapacity;
 
+    public int attaqueValue;
+    public int defenseValue;
+
     [Header("Icônes d'état")]
     public GameObject atk1Icon; // Icône première attaque
     public GameObject atk2Icon; // Icône deuxième attaque
@@ -23,24 +26,30 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public GameObject freezeIcon; // Icône "freeze"
 
     public RectTransform rectTransform;
-    private Vector3 startPosition;
-    public Vector3 offsetClick;
+    public Vector2 startPosition;
+    public Vector2 positionWithOffset;
+    public Vector2 offsetClick;
 
+    public GameObject atk;
+    public GameObject passed;
     public GameObject buttonAtk;
     public GameObject buttonPass;
 
     private LayoutElement layoutElement;
     public LayoutGroup layoutGroup;
 
-    public bool isCardPlayer = false;
-    public bool isCardOpponent = false;
+    public bool isCardPlayer = true;
     public bool isSelect = false;
-
-    public string nameCard = "";
+    public bool actionChoiceDo = false;
+    public string stateOffensif;
+    public string stateDefensif;
+    public string target;
+    public int targetID;
 
     [Header("Identification")]
     public string instanceId; // ID unique de la carte
-    public string idCard;
+    public int idCard;
+    public string nameCard;
     public int indexCarte; // Index dans la collection
 
     private void Awake()
@@ -48,9 +57,27 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         layoutElement = GetComponent<LayoutElement>();
         rectTransform = GetComponent<RectTransform>();
         layoutGroup = transform.parent?.GetComponent<LayoutGroup>();
+        stateDefensif = "notCibled";
+        stateOffensif = "wait";
     }
 
-    public void setAttributesInitCard(CarteData data)
+    private void Start()
+    {
+        startPosition = rectTransform.anchoredPosition;
+        positionWithOffset = rectTransform.anchoredPosition + offsetClick;
+    }
+
+    private void Update()
+    {
+        if(GameManager2.Instance.numberOfAttacksUsedPlayer > 1 && stateOffensif != "atk"){
+            AutoPass();
+        }
+    }
+
+    void OnEnable() => BoardManager.cardsOnBoardUI.Add(this);
+    void OnDisable() => BoardManager.cardsOnBoardUI.Remove(this);
+
+    public void setAttributesInitCardPlayer(CarteData data)
     {
         imageCarte.sprite = data.image;
         nameCard = data.nom;
@@ -59,9 +86,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         defenseText?.SetText(data.defense.ToString());
         nameCapacity?.SetText(data.nameCapacity);
         descriptionCapacity?.SetText(data.descriptionCapacity);
+
+        attaqueValue = data.attaque;
+        defenseValue = data.defense;
         
         instanceId = data.instanceId;
-        idCard = data.idCard.ToString();
+        idCard = data.idCard;
         gameObject.name = $"CarteUI_{data.nom}_id{data.idCard}_inst{data.instanceId}";
         
         HideAllIcons();
@@ -77,7 +107,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        PlayerActionManager.Instance.ClickOnBoardCard(this);
+        if(!actionChoiceDo)
+            PlayerActionManager.Instance.ClickOnBoardCard(this);
     }
 
     public void selectCard()
@@ -85,10 +116,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         if(isSelect)
         {
             Deselect(); 
-            HideActionButtons();          
+            HideActionButtons();
         }
         else
         {
+            BoardManager.Instance.DeselectAllOtherCards();
             Select();
             ShowActionButtons();
         }
@@ -96,43 +128,264 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void Select()
     {
-        isSelect = true;
-        GameManager.SetMode("hasCardSelectedToAction");
+        isSelect = true;          
+        GameManager2.Instance.mode = "hasCardSelectedToAction";
+        stateOffensif = "waitOrder";
+        rectTransform.anchoredPosition = positionWithOffset;
 
-       // HorizontalLayoutGroup layoutGroup = transform.parent?.GetComponent<HorizontalLayoutGroup>();
-       // layoutGroup.enabled = false;
-
-        startPosition = rectTransform.anchoredPosition;
-        rectTransform.anchoredPosition = startPosition + offsetClick;
-
-       // if (layoutElement)
-        //    layoutElement.ignoreLayout = true;
+        if (layoutGroup?.enabled == true)
+            layoutGroup.enabled = false;
+        
+        if (layoutElement)
+            layoutElement.ignoreLayout = true;
     }
 
     public void Deselect()
     {
-        isSelect = false;
-        GameManager.SetMode("selectCardToPlayAction");
+        isSelect = false;          
+        GameManager2.Instance.mode = "selectCardToPlayAction";
+        stateOffensif = "wait";
 
-       // HorizontalLayoutGroup layoutGroup = transform.parent?.GetComponent<HorizontalLayoutGroup>();
-       // layoutGroup.enabled = false;
+        if (layoutGroup?.enabled == true)
+            layoutGroup.enabled = false;
 
-        startPosition = rectTransform.anchoredPosition;
-        rectTransform.anchoredPosition = startPosition - offsetClick;
+        rectTransform.anchoredPosition = startPosition;
 
-       // if (layoutElement)
-        //    layoutElement.ignoreLayout = true;
+        if (layoutElement)
+            layoutElement.ignoreLayout = true;
     }
 
-    private void ShowActionButtons()
+    public void ShowActionButtons()
     {
         buttonAtk?.SetActive(true);
         buttonPass?.SetActive(true);
     }
     
-    private void HideActionButtons()
+    public void HideActionButtons()
     {
         buttonAtk?.SetActive(false);
         buttonPass?.SetActive(false);
+    }
+
+    public void OnPassed()
+    {
+        HideActionButtons();
+
+        passed.SetActive(true);
+        RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
+        StartCoroutine(CardsAnimation.SwingSablier(passedRect));
+
+
+        stateOffensif = "passed";
+        passedIcon.SetActive(true);
+
+        rectTransform.anchoredPosition = startPosition - offsetClick;
+
+        actionChoiceDo = true;
+        imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+   
+
+        /* 
+        if (!coloredCards.Contains(this))
+            coloredCards.Add(this);
+        StartCoroutine(cardAnimations.ChangeColorSmoothly(imgCard, new Color(0.4f, 0.4f, 0.4f, 1f), 0.5f));
+        
+        if (layoutElement) layoutElement.ignoreLayout = true;
+                
+        if(nameCard == "Clorel")
+        {
+            int currentDef = GetDefenseValue(this);
+            bonusDfs++;
+            int newDef = currentDef + bonusDfs;
+            carteUI?.defenseText?.SetText(newDef.ToString());
+            SetDefenseValue(newDef);
+            //PanelManager.instance?.AddLog($"{nameCard} : PASSER sélectionné (+1 défense)");
+        }
+        else if(nameCard == "Cassandre"){
+            int index = carteUI.indexHierarchieOriginal;
+            string team = isCardOpponent ? "opponent": "player";
+
+            var (leftCard, rightCard) = BoardManager.Instance.GetAdjacentCards(index, team);
+
+            //PanelManager.instance.AddLog($"Cassandre passe son tour");
+
+            if(leftCard != null)
+                ApplyAttackBonus(leftCard, leftCard.nameCard);
+            if(rightCard != null)
+                ApplyAttackBonus(rightCard, rightCard.nameCard);
+        }
+        else if(nameCard == "Désir"){
+
+            //PanelManager.instance.AddLog("   → Sélection aléatoire Désir");
+
+            var availableTargetsOpponent = CarteBoardInteraction.AllCardsInteractions
+                .Where(c => c.isCardOpponent)
+                .ToList();
+
+            var availableTargetsPlayer = CarteBoardInteraction.AllCardsInteractions
+                .Where(c => c.isCardPlayer)
+                .ToList();
+
+            if(availableTargetsOpponent.Count > 0)
+            {
+                int randomIndex = Random.Range(0, availableTargetsOpponent.Count);
+                CarteBoardInteraction chosenTarget  = availableTargetsOpponent[randomIndex];
+                chosenTarget.isFreeze = true;
+                chosenTarget.freezeNumberLoop = GameManager.currentRound+1;
+
+                //PanelManager.instance.AddLog($"   → Cible aléatoire opponent sélectionnée : {chosenTarget.nameCard}");
+            }
+            else if(availableTargetsPlayer.Count > 0){
+
+                int randomIndex = Random.Range(0, availableTargetsPlayer.Count);
+                CarteBoardInteraction chosenTarget  = availableTargetsPlayer[randomIndex];
+                chosenTarget.isFreeze = true;
+                chosenTarget.freezeNumberLoop = GameManager.currentRound+1;
+
+                //PanelManager.instance.AddLog($"   → Cible aléatoire player sélectionnée : {chosenTarget.nameCard}");
+            }
+            else
+            {
+                //PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
+            }
+        }
+        else if(nameCard == "Neo")
+        {
+            UnsetAttackBonus(this, nameCard);
+            lastTarget = "";
+        }
+        else if(nameCard == "Ambroise")
+        {
+            // Marquer qu'Ambroise veut appliquer son effet plus tard
+            GameManager.ambroiseEffectPending = true;
+            //PanelManager.instance?.AddLog($"{nameCard} : Onde de Choc Passive en attente.");
+        }
+        else if(nameCard == "Trahison")
+        {
+            // Marquer que Trahison veut appliquer son effet plus tard
+            GameManager.trahisonEffectPending = true;
+            //PanelManager.instance?.AddLog($"{nameCard} : Terreur Sélective en attente.");
+        }
+        else if(nameCard == "Belindra")
+        {
+            //PanelManager.instance?.AddLog($"{nameCard} : Belindra active Bouclier collectif.");
+        }
+        else if(nameCard == "Zao")
+        {
+            //PanelManager.instance?.AddLog($"{nameCard} : Zao passe son tour. Elle est intouchable.");
+        }
+        
+        isSelected = false;
+        GameManager.SetMode("select");
+        CheckEndOfTurn();
+        */
+    }
+
+    public void OnAttack()
+    {
+        HideActionButtons();
+        atk?.SetActive(true);
+
+        stateOffensif = "atk";
+        actionChoiceDo = true;
+        GameManager2.Instance.numberOfAttacksUsedPlayer++;
+
+
+        
+        /*
+        if (layoutElement) layoutElement.ignoreLayout = true;               
+
+        attackingCard = this; 
+        
+        var availableTargets = CarteBoardInteraction.AllCardsInteractions
+            .Where(c => c.isCardOpponent && c.stateDefensif != "isAttacked")
+            .ToList();
+
+        if(nameCard == "Tyroine")
+        {
+            //PanelManager.instance.AddLog("   → Sélection aléatoire");
+
+            if(availableTargets.Count > 0)
+            {
+                int randomIndex = Random.Range(0, availableTargets.Count);
+                CarteBoardInteraction chosenTarget = availableTargets[randomIndex];
+                chosenTarget.SelectTarget();
+
+                //PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée Par Tyroine : {chosenTarget.nameCard}");
+                //PanelManager.instance.AddLog($"   → -1 en dfs pour : {chosenTarget.nameCard} (sera appliqué en fin de tour)");
+            }
+            else
+            {
+                //PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
+            }
+        }
+        else if(nameCard == "Ondine"){
+
+            //PanelManager.instance.AddLog("   → Sélection aléatoire des cibles");
+
+            if(availableTargets.Count > 0)
+            {
+                // Déterminer combien de cibles on va prendre : 1 à 2 mais pas plus que le nombre disponible
+                int numberOfTargets = Mathf.Min(Random.Range(1, 3), availableTargets.Count);
+
+                // Mélanger la liste et prendre les 'numberOfTargets' premières
+                var shuffledTargets = availableTargets.OrderBy(x => Random.value).Take(numberOfTargets).ToList();
+
+                //PanelManager.instance.AddLog($"   → Nombre de cibles sélectionnées : {numberOfTargets}");
+
+                List<int> damages;
+                switch(numberOfTargets)
+                {
+                    case 1:
+                        damages = new List<int> { 3 };
+                        break;
+                    case 2:
+                        damages = new List<int> { 1, 2 }.OrderBy(x => Random.value).ToList(); // aléatoire qui prend 1 et qui prend 2
+                        break;
+                    case 3:
+                    default:
+                        damages = new List<int> { 1, 1, 1 };
+                        break;
+                }
+
+                for(int i = 0; i < shuffledTargets.Count; i++)
+                {
+                    var target = shuffledTargets[i];
+                    int dmg = damages[i];
+
+                    target.isCibledCount++;
+                    target.cardUI?.ShowAttackIcon(target.isCibledCount);
+                    target.stateDefensif = "isAttacked";
+                    
+                    string nameAttacker = this.nameCard ?? "Ondine";
+                    string nameTarget = target.nameCard ?? "Cible";
+                    
+                    //PanelManager.instance?.AddLog($"{nameAttacker} : ATK : {dmg}");
+                    //PanelManager.instance?.AddLog($"{nameTarget} : DEF : {target.GetDefenseValue(target)}");
+                    //PanelManager.instance.AddLog($"   → {target.nameCard} prend {dmg} de dégâts (sera appliqué en fin de tour)");
+                    
+                    BoardManager.Instance.roundDamage.Add($"{nameAttacker} → {nameTarget} (DEF:{target.GetDefenseValue(target)}) = {dmg} dégâts");
+                    attaquesDuTour.Add(new AttaqueInfo(this, target, dmg));
+                    
+                    // Marquer la carte comme ayant fait son choix
+                    this.choiceDo = true;
+                    this.stateOffensif = "atk";
+                }
+            }
+        }
+        
+        CheckEndOfTurn();
+        */
+    }
+
+    public void AutoPass()
+    {
+        OnPassed();
+    }
+
+    public void SetDataTarget(CardAI cardAI)
+    {   
+        target = cardAI.nameCard;
+        targetID = cardAI.idCard;
     }
 }

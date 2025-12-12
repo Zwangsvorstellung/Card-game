@@ -2,15 +2,11 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CardAnimations : MonoBehaviour
+public class CardsAnimation : MonoBehaviour
 {
+
     private RectTransform rectTransform;
     public Image targetImage;
-
-    private void Awake()
-    {
-        rectTransform = GetComponent<RectTransform>();
-    }
 
     // 1. Pop Scale (zoom rapide)
     public IEnumerator PopScale(float duration = 0.2f, float scaleAmount = 1.2f)
@@ -74,11 +70,11 @@ public class CardAnimations : MonoBehaviour
         }
     }
     
-    public IEnumerator ColorFlash(Color flashColor = default, float duration = 0.5f)
+    public IEnumerator ColorFlash(CardAI cardAI, Color flashColor = default, float duration = 0.5f)
     {
         if (flashColor == default) flashColor = Color.red;
 
-        Image img = GetComponentInChildren<Image>();
+        Image img = cardAI.GetComponentInChildren<Image>();
         if (img == null) yield break;
 
         Color originalColor = img.color;
@@ -226,7 +222,7 @@ public class CardAnimations : MonoBehaviour
         image.color = targetColor;
     }
 
-    private IEnumerator SwingSablier(RectTransform passedRect, float angleMax = 10f, float speed = 2f)
+    public static IEnumerator SwingSablier(RectTransform passedRect, float angleMax = 10f, float speed = 2f)
     {
         float elapsed = 0f;
         while (true)
@@ -239,7 +235,7 @@ public class CardAnimations : MonoBehaviour
         }
     }
 
-    private IEnumerator Pulse(RectTransform rectTransform, float minScale = 0.9f, float maxScale = 1.1f, float speed = 2f)
+    public IEnumerator Pulse(RectTransform rectTransform, float minScale = 0.9f, float maxScale = 1.1f, float speed = 2f)
     {
         float elapsed = 0f;
         while (true)

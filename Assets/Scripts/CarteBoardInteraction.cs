@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 
-public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class CarteBoardInteraction : MonoBehaviour
 {
     public List<IAAction.Capacity> capacites; // la liste des capacités de la carte
 
@@ -28,35 +28,24 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     [SerializeField] public bool resetBonusAtk = true;  
     [SerializeField] public string nameCard;  
 
-    [SerializeField] public int defenseValueMax; 
-    [SerializeField] public int attackValueMax;
-    [SerializeField] public int defenseValueCurrent; 
-    [SerializeField] public int attackValueCurrent;
-
-    private Coroutine currentMoveCoroutine;
     public static readonly List<CarteBoardInteraction> AllCardsInteractions = new();
 
     public bool choiceDo = false;
     public CardUI cardUI;
     private LayoutElement layoutElement;
     public LayoutGroup layoutGroup;
-    private CardAnimations cardAnimations;
-    private Image img;
     public GameObject freezeIcon; // Icône "freeze"
-
 
     public Vector3 startPosition; 
     public Vector3 newPosition;
     public RectTransform rectTransform;
-    private bool ignorePointer  = false;
+    //private bool ignorePointer  = false;
 
     public bool yellowCard = false; 
     private static CarteBoardInteraction attackingCard = null; 
     public static int numberOfAttacksMax = 2;
   
     private Vector3 targetHoverOffset = new Vector3(0, -50, 0);
-    private TMP_FontAsset poppinsRegular;
-    private TMP_FontAsset poppinsBold;
     public GameObject buttonAtk;
     public GameObject buttonPass;
     private static Color colorAtk1 = new Color(0.8f, 0.8f, 1f, 1f);
@@ -88,10 +77,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         layoutElement = GetComponent<LayoutElement>();
         rectTransform = GetComponent<RectTransform>();
         layoutGroup = transform.parent?.GetComponent<LayoutGroup>();
-        poppinsBold = Resources.Load<TMP_FontAsset>("Fonts/Poppins-Bold SDF");
-        poppinsRegular = Resources.Load<TMP_FontAsset>("Fonts/Poppins-Regular SDF");
 
-        cardAnimations = GetComponent<CardAnimations>();
 
         bonusAtk = 0;
         bonusDfs = 0;
@@ -105,19 +91,7 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     {
         GameManager.currentRound = 1;
         cardUI = GetComponent<CardUI>();
-
-        defenseValueMax = int.Parse(cardUI.defenseText.text);
-        attackValueMax = int.Parse(cardUI.attaqueText.text);
-        defenseValueCurrent = int.Parse(cardUI.defenseText.text);
-        attackValueCurrent = int.Parse(cardUI.attaqueText.text);
-
-        img = cardUI.GetComponent<Image>();
-        nameCard = cardUI?.nomText?.text ?? "NULL";
-        GameManager.numberOfAttacksUsed = 0;
-
         isAITurn = false;
-        stateOffensif = "waitOrder";
-        stateDefensif = "notCibled";
     }
 
     void Update()
@@ -155,9 +129,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         }
     }
 
-    void OnEnable() => AllCardsInteractions.Add(this);
-    void OnDisable() => AllCardsInteractions.Remove(this);
-
     private void CallMarkEndOfTurn()
     {
        // BoardManager.Instance.MarkEndOfTurn();
@@ -173,370 +144,34 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         //StartCoroutine(cardAnimations.Bounce(0.5f, 30f));
 
         if (isAITurn) return;
-        if (GameManager.mode == "deck") return;
         if (isCardOpponent && GameManager.mode != "atk") return;
         if (isCardPlayer && GameManager.mode == "atk") return;
         if (!isCardPlayer && GameManager.mode == "select" && GameManager.mode == "selectCard") return;
 
-        cardAnimations.targetImage = cardUI.GetComponentInChildren<Image>();
+       // targetImage = cardUI.GetComponentInChildren<Image>();
         //StartCoroutine(cardAnimations.Glow(cardUI));
        // StartCoroutine(cardAnimations.Fade(cardUI, 1f, 0f, 0.5f));
 
-        if(!choiceDo && GameManager.mode != "atk"){
-            if (isSelected)
-            {
-                DeselectCard();            
-                HideActionButtons();
-            }
-            else
-            {
-                DeselectAllOtherCards();
-                SelectCard();
-                ShowActionButtons();
-            }
-        }
-
-        if (GameManager.mode == "atk" && this.isCardOpponent && this.stateDefensif != "isAttacked"){
-            SelectTarget();
-            StartCoroutine(cardAnimations.ColorFlash());
-            StartCoroutine(cardAnimations.Shake());
-        }
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (ignorePointer || choiceDo) return;
 
-        if (GameManager.mode == "select" && isFreeze){
-            return;
-        }
-
-        if ((GameManager.mode == "select" && isCardPlayer) || (GameManager.mode == "atk" && isCardOpponent && stateDefensif != "isAttacked"))
-        {
-            rectTransform.anchoredPosition = (Vector2)newPosition;
-            ignorePointer = true;
-            StartCoroutine(ReenablePointerAfterDelay(0.1f));
-        }      
-    }
-
-    private IEnumerator ReenablePointerAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        ignorePointer = false;
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if(this.choiceDo) return;
-
-        if ((GameManager.mode == "select" && isCardPlayer) || (GameManager.mode == "atk" && isCardOpponent))
-        {
-            rectTransform.anchoredPosition = startPosition;
-        }
-    }
-
-    // action sélection/désélection
-    private void SelectCard()
-    {           
-        isSelected = true;
-        rectTransform.anchoredPosition = newPosition;
-
-        GameManager.SetMode("selectCard");
-        
-        if (layoutGroup?.enabled == true)
-            layoutGroup.enabled = false;
-        
-        if (layoutElement)
-            layoutElement.ignoreLayout = true;
-    }
-    public void DeselectCard()
-    {
-        GameManager.SetMode("select");
-
-        isSelected = false;
-        rectTransform.anchoredPosition = startPosition;
-        
-        if (layoutElement != null)
-            layoutElement.ignoreLayout = false;
-    }
-    private void DeselectAllOtherCards()
-    {
-        foreach (CarteBoardInteraction card in AllCardsInteractions)
-        {
-            if (card.isSelected && !choiceDo)
-            {
-                card.DeselectCard();
-                card.HideActionButtons();
-            }
-        }
-    }
+//    private IEnumerator ReenablePointerAfterDelay(float delay)
+ //   {
+  //      yield return new WaitForSeconds(delay);
+   //     ignorePointer = false;
+    //}
     
     private void ShowActionButtons()
     {
         if (!isCardPlayer) return;      
             
         bool canAttack = GameManager.numberOfAttacksUsed < GameManager.numberOfAttacksMax && !isFreeze;
-
-        buttonAtk?.SetActive(canAttack);
-        buttonPass?.SetActive(true);
-    }
-
-    public void HideActionButtons()
-    {
-        buttonAtk?.SetActive(false);
-        buttonPass?.SetActive(false);
     }
 
     public void DestroyButton()
     {
         if (buttonAtk) Destroy(buttonAtk);
         if (buttonPass) Destroy(buttonPass);
-    }
-    private void OnAttaque()
-    {
-        /*
-        GameManager.SetMode("atk");
-        buttonPass?.SetActive(false);    
-
-        if(buttonAtk)
-        {
-            if (buttonAtk.TryGetComponent(out RectTransform rect))
-            {
-                rect.anchoredPosition = new Vector2(0, rect.anchoredPosition.y);
-                rect.sizeDelta = new Vector2(140, 36);
-            }
-    
-            if (buttonAtk.TryGetComponent(out TMP_Text text))
-            {
-                text.color = Color.red;
-                text.fontStyle = FontStyles.Bold;
-                text.fontSize = 22;
-            }
-
-            if (buttonAtk.TryGetComponent(out Button button))
-            {
-                button.interactable = false;
-            }
-        }
-
-        if (layoutElement) layoutElement.ignoreLayout = true;               
-        
-        attackingCard = this; 
-
-        //PanelManager.instance.AddLog($"{nameCard} : ATTAQUE sélectionnée ({GameManager.numberOfAttacksUsed}/{GameManager.numberOfAttacksMax})");
-        
-        var availableTargets = CarteBoardInteraction.AllCardsInteractions
-            .Where(c => c.isCardOpponent && c.stateDefensif != "isAttacked")
-            .ToList();
-
-        if(nameCard == "Tyroine")
-        {
-            //PanelManager.instance.AddLog("   → Sélection aléatoire");
-
-            if(availableTargets.Count > 0)
-            {
-                int randomIndex = Random.Range(0, availableTargets.Count);
-                CarteBoardInteraction chosenTarget = availableTargets[randomIndex];
-                chosenTarget.SelectTarget();
-
-                //PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée Par Tyroine : {chosenTarget.nameCard}");
-                //PanelManager.instance.AddLog($"   → -1 en dfs pour : {chosenTarget.nameCard} (sera appliqué en fin de tour)");
-            }
-            else
-            {
-                //PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
-            }
-        }
-        else if(nameCard == "Ondine"){
-
-            //PanelManager.instance.AddLog("   → Sélection aléatoire des cibles");
-
-            if(availableTargets.Count > 0)
-            {
-                // Déterminer combien de cibles on va prendre : 1 à 2 mais pas plus que le nombre disponible
-                int numberOfTargets = Mathf.Min(Random.Range(1, 3), availableTargets.Count);
-
-                // Mélanger la liste et prendre les 'numberOfTargets' premières
-                var shuffledTargets = availableTargets.OrderBy(x => Random.value).Take(numberOfTargets).ToList();
-
-                //PanelManager.instance.AddLog($"   → Nombre de cibles sélectionnées : {numberOfTargets}");
-
-                List<int> damages;
-                switch(numberOfTargets)
-                {
-                    case 1:
-                        damages = new List<int> { 3 };
-                        break;
-                    case 2:
-                        damages = new List<int> { 1, 2 }.OrderBy(x => Random.value).ToList(); // aléatoire qui prend 1 et qui prend 2
-                        break;
-                    case 3:
-                    default:
-                        damages = new List<int> { 1, 1, 1 };
-                        break;
-                }
-
-                for(int i = 0; i < shuffledTargets.Count; i++)
-                {
-                    var target = shuffledTargets[i];
-                    int dmg = damages[i];
-
-                    target.isCibledCount++;
-                    target.cardUI?.ShowAttackIcon(target.isCibledCount);
-                    target.stateDefensif = "isAttacked";
-                    
-                    string nameAttacker = this.nameCard ?? "Ondine";
-                    string nameTarget = target.nameCard ?? "Cible";
-                    
-                    //PanelManager.instance?.AddLog($"{nameAttacker} : ATK : {dmg}");
-                    //PanelManager.instance?.AddLog($"{nameTarget} : DEF : {target.GetDefenseValue(target)}");
-                    //PanelManager.instance.AddLog($"   → {target.nameCard} prend {dmg} de dégâts (sera appliqué en fin de tour)");
-                    
-                    BoardManager.Instance.roundDamage.Add($"{nameAttacker} → {nameTarget} (DEF:{target.GetDefenseValue(target)}) = {dmg} dégâts");
-                    attaquesDuTour.Add(new AttaqueInfo(this, target, dmg));
-                    
-                    // Marquer la carte comme ayant fait son choix
-                    this.choiceDo = true;
-                    this.stateOffensif = "atk";
-                }
-            }
-        }
-        else
-        {
-            //PanelManager.instance.AddLog("   → Sélectionnez une cible adverse");
-        }
-        
-        CheckEndOfTurn();
-        */
-    }
-    private void OnPasser()
-    {
-       /* cardUI.AfficherIconePassed();
-                
-        if (!coloredCards.Contains(this))
-            coloredCards.Add(this);
-
-        Image imgCard = GetComponent<Image>() ?? GetComponentInChildren<Image>();
-        StartCoroutine(cardAnimations.ChangeColorSmoothly(imgCard, new Color(0.4f, 0.4f, 0.4f, 1f), 0.5f));
-        
-        if (layoutElement)
-            layoutElement.ignoreLayout = true;
-        
-        rectTransform.anchoredPosition = startPosition;
-        
-        buttonAtk.SetActive(false);
-
-        RectTransform rectPasser = buttonPass.GetComponent<RectTransform>();
-        rectPasser.anchoredPosition = new Vector2(0, rectPasser.anchoredPosition.y);
-        rectPasser.sizeDelta = new Vector2(140, 36);
-        
-        TMP_Text txtPass = buttonPass.GetComponentInChildren<TMP_Text>();
-        if(txtPass)
-        {
-            txtPass.fontStyle = FontStyles.Bold;
-            txtPass.color = Color.black;
-            txtPass.fontSize = 26;
-        }
-        
-        // Désactiver le bouton Passer
-        Button buttonPassComponent = buttonPass.GetComponent<Button>();
-        buttonPassComponent.interactable = false;
-
-        if(nameCard == "Clorel")
-        {
-            int currentDef = GetDefenseValue(this);
-            bonusDfs++;
-            int newDef = currentDef + bonusDfs;
-            cardUI?.defenseText?.SetText(newDef.ToString());
-            SetDefenseValue(newDef);
-            //PanelManager.instance?.AddLog($"{nameCard} : PASSER sélectionné (+1 défense)");
-        }
-        else if(nameCard == "Cassandre"){
-            int index = cardUI.indexHierarchieOriginal;
-            string team = isCardOpponent ? "opponent": "player";
-
-            var (leftCard, rightCard) = BoardManager.Instance.GetAdjacentCards(index, team);
-
-            //PanelManager.instance.AddLog($"Cassandre passe son tour");
-
-            if(leftCard != null)
-                ApplyAttackBonus(leftCard, leftCard.nameCard);
-            if(rightCard != null)
-                ApplyAttackBonus(rightCard, rightCard.nameCard);
-        }
-        else if(nameCard == "Désir"){
-
-            //PanelManager.instance.AddLog("   → Sélection aléatoire Désir");
-
-            var availableTargetsOpponent = CarteBoardInteraction.AllCardsInteractions
-                .Where(c => c.isCardOpponent)
-                .ToList();
-
-            var availableTargetsPlayer = CarteBoardInteraction.AllCardsInteractions
-                .Where(c => c.isCardPlayer)
-                .ToList();
-
-            if(availableTargetsOpponent.Count > 0)
-            {
-                int randomIndex = Random.Range(0, availableTargetsOpponent.Count);
-                CarteBoardInteraction chosenTarget  = availableTargetsOpponent[randomIndex];
-                chosenTarget.isFreeze = true;
-                chosenTarget.freezeNumberLoop = GameManager.currentRound+1;
-
-                //PanelManager.instance.AddLog($"   → Cible aléatoire opponent sélectionnée : {chosenTarget.nameCard}");
-            }
-            else if(availableTargetsPlayer.Count > 0){
-
-                int randomIndex = Random.Range(0, availableTargetsPlayer.Count);
-                CarteBoardInteraction chosenTarget  = availableTargetsPlayer[randomIndex];
-                chosenTarget.isFreeze = true;
-                chosenTarget.freezeNumberLoop = GameManager.currentRound+1;
-
-                //PanelManager.instance.AddLog($"   → Cible aléatoire player sélectionnée : {chosenTarget.nameCard}");
-            }
-            else
-            {
-                //PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
-            }
-        }
-        else if(nameCard == "Neo")
-        {
-            UnsetAttackBonus(this, nameCard);
-            lastTarget = "";
-        }
-        else if(nameCard == "Ambroise")
-        {
-            // Marquer qu'Ambroise veut appliquer son effet plus tard
-            GameManager.ambroiseEffectPending = true;
-            //PanelManager.instance?.AddLog($"{nameCard} : Onde de Choc Passive en attente.");
-        }
-        else if(nameCard == "Trahison")
-        {
-            // Marquer que Trahison veut appliquer son effet plus tard
-            GameManager.trahisonEffectPending = true;
-            //PanelManager.instance?.AddLog($"{nameCard} : Terreur Sélective en attente.");
-        }
-        else if(nameCard == "Belindra")
-        {
-            //PanelManager.instance?.AddLog($"{nameCard} : Belindra active Bouclier collectif.");
-        }
-        else if(nameCard == "Zao")
-        {
-            //PanelManager.instance?.AddLog($"{nameCard} : Zao passe son tour. Elle est intouchable.");
-        }
-        else
-        {
-            //PanelManager.instance?.AddLog($"{nameCard} : passe son tour");
-        }
-        
-        choiceDo = true;
-        stateOffensif = "passed";
-        isSelected = false;
-        
-        GameManager.SetMode("select");
-                
-        CheckEndOfTurn();
-        */
     }
     
     private void ColorCard(CarteBoardInteraction card, Color color)
@@ -813,23 +448,14 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     
     public void AutoPass()
     {
-        /*stateOffensif = "passed";
-
-        CardUI cardUIComponent = GetComponent<CardUI>();
-        cardUIComponent.AfficherIconePassed();
-                
+        /*    
         if (!coloredCards.Contains(this))
             coloredCards.Add(this);
-
-        Image imageCard = GetComponent<Image>() ?? GetComponentInChildren<Image>();
-        imageCard.color = new Color(0.4f, 0.4f, 0.4f, 1f);
         
         // Désactiver le LayoutElement pour que la carte ne soit plus affectée par le GridLayout
         if (layoutElement)
             layoutElement.ignoreLayout = true;
-        
-        // Redescendre la carte à sa position initiale
-        rectTransform.anchoredPosition = startPosition;
+
         
         // Désactiver les effets de hover du Button si présent
         Button buttonCard = GetComponent<Button>();
@@ -841,7 +467,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             colors.fadeDuration = 0;
             buttonCard.colors = colors;
         }
-        choiceDo = true;
         */
     }
     
@@ -902,12 +527,10 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             if (isCardPlayer)
             {
                 GameManager.playerScore = Mathf.Max(0, GameManager.playerScore - 1);
-                //PanelManager.instance?.AddLog($"{cardUI?.nomText?.text ?? "Carte"} : DÉFENSE À 0 - Score Joueur: {GameManager.playerScore}");
             }
             else if (isCardOpponent)
             {
                 GameManager.scoreOpponent = Mathf.Max(0, GameManager.scoreOpponent - 1);
-                //PanelManager.instance?.AddLog($"{cardUI?.nomText?.text ?? "Carte"} : DÉFENSE À 0 - Score IA: {GameManager.scoreOpponent}");
             }
         }
     }
@@ -931,23 +554,9 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
     public void SelectTarget()
     {
         /*
-        if (attackingCard == null)
-        {
-            Debug.LogError("[SelectTarget] attackingCard est null ! Le mode 'atk' n’a pas été préparé.");
-            return;
-        }
-        string nameTarget = nameCard ?? "Nom inconnu";
-        string nameAttacker = attackingCard?.nameCard ?? "Nom inconnu";
-
-        Debug.Log($"[SelectTarget] Attaquant {nameAttacker} Cible {nameTarget}");
-        
-        GameManager.numberOfAttacksUsed++;
-
         Color colorAtk = GameManager.numberOfAttacksUsed == 1 ? colorAtk1 : colorAtk2;        
         isCibledCount++;
-        
-        CardUI cardUIComponent = GetComponent<CardUI>();
-        
+                
         // Afficher atk1 pour le premier ciblage, atk2 pour le deuxième
         cardUIComponent.ShowAttackIcon(isCibledCount);
         // Appliquer la couleur de l'attaquant sur l'icône d'attaque
@@ -970,8 +579,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
                 }
             }
         }
-
-        Debug.Log($"[SelectTarget] Cible {attackingCard} ");
         
         ColorCard(attackingCard, colorAtk);
         if (!coloredCards.Contains(attackingCard))
@@ -989,12 +596,9 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
         stateDefensif = "isAttacked";
 
         attackingCard.currentTarget = nameTarget;
-        
-        //PanelManager.instance?.AddLog($"{nameAttacker} attaque {nameTarget} !");
-        
+                
         CheckEndOfTurn();
         
-        GameManager.SetMode("select");
         attackingCard = null;
         nameTarget = null;
         
@@ -1269,8 +873,6 @@ public class CarteBoardInteraction : MonoBehaviour, IPointerClickHandler, IPoint
             card.cardUI.defenseText.color = Color.black;
         }
     }
-
-
 
     // color
     public void UpdateBonusAtqColor(CarteBoardInteraction card)

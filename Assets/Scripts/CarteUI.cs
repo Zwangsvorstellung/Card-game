@@ -15,9 +15,7 @@ public class CarteUI : MonoBehaviour
     public TMP_Text defenseText;
     public TMP_Text nameCapacity;
     public TMP_Text descriptionCapacity;
-    private CardAnimations cardAnimations;
     private Coroutine pulseCoroutine;
-    private Coroutine swingCoroutine;
     private Coroutine pulseAtk1Coroutine;
     private Coroutine pulseAtk2Coroutine;
 
@@ -32,13 +30,10 @@ public class CarteUI : MonoBehaviour
     public int indexCarte; // Index dans la collection
     
     private Vector3 startPosition;
-    public RectTransform rectTransform;
     public bool isSelect = false;
     public int indexHierarchieOriginal;
     private Color colorDefault;
     private Color colorDimmed;
-
-    public MainUIManager mainUIManager;
 
     public bool isCardPlayer = false;
     public bool isCardOpponent = false;
@@ -51,7 +46,6 @@ public class CarteUI : MonoBehaviour
         colorDefault = imageCarte.color;
         colorDimmed = colorDefault * 0.7f;
         colorDimmed.a = colorDefault.a;
-        
         Transform atk1Transform = transform.Find("atk1");
         atk1Icon = atk1Transform.gameObject;
         Transform atk2Transform = transform.Find("atk2");
@@ -61,18 +55,13 @@ public class CarteUI : MonoBehaviour
         freezeIcon.GetComponent<Image>().color = Color.red;
         Transform passedTransform = transform.Find("passed");
         passedIcon = passedTransform.gameObject;
-
-        cardAnimations = GetComponent<CardAnimations>();
-
-        HideAllIcons();
+        //cardsAnimation = GetComponent<CardsAnimation>();
     }
 
     void Start()
     {
-        rectTransform = GetComponent<RectTransform>();
         // Ne pas enregistrer startPosition ici, car le layout n'a pas encore positionné la carte
         indexHierarchieOriginal = transform.GetSiblingIndex();
-        mainUIManager = MainUIManager.Instance;
     }
 
     public void setAttributesInitCard(CarteData data)
@@ -84,11 +73,7 @@ public class CarteUI : MonoBehaviour
         defenseText?.SetText(data.defense.ToString());
         nameCapacity?.SetText(data.nameCapacity);
         descriptionCapacity?.SetText(data.descriptionCapacity);
-        
         carteID = data.idCard.ToString();
-        gameObject.name = $"CarteUI_{data.nom}_id{data.idCard}_inst{data.instanceId}";
-        
-        HideAllIcons();
     }
 
     /*private int CountSelectedCards()
@@ -109,10 +94,6 @@ public class CarteUI : MonoBehaviour
 
     public void AfficherIconePassed()
     {
-        HideAllIcons();
-        passedIcon.SetActive(true);
-        RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
-        //swingCoroutine = StartCoroutine(SwingSablier(passedRect));
     }
 
     public void ShowAttackIcon(int numberAtk)

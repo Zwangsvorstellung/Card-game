@@ -34,6 +34,8 @@ public class PlayerActionManager : MonoBehaviour
 
     public void ConfirmSelection(GameObject buttonObject)
     {
+        GameManager2.Instance.mode = "selectCardToPlayAction";
+
         PanelManager.Instance.HideInstructionText();
         PanelManager.Instance.HideValidateDeck();
 
@@ -48,14 +50,23 @@ public class PlayerActionManager : MonoBehaviour
             GameManager2.Instance.piochePlayerA.Enqueue(card);
 
         // Génère 4 cartes aléatoires pour l’opposant
-        List<CarteData> opponentCards = GameManager2.Instance?.mainPlayerB.Take(4).ToList() ?? new List<CarteData>();
+        var opponentDeck = GameManager2.Instance.mainPlayerB;
+        List<CarteData> opponentCards = new();
+
+        if (opponentDeck != null)
+        {
+            int count = Mathf.Min(4, opponentDeck.Count);
+
+            for (int i = 0; i < count; i++)
+            {
+                opponentCards.Add(opponentDeck.Dequeue());
+            }
+        }
 
         BoardManager.Instance.SetupBoardCards(opponentCards, selectedCards);
         CamController.Instance.GoToBoardView();
 
         buttonObject.SetActive(false);
-
-        GameManager2.SetMode("select");
 
         MainUIManager.Instance.gameObject.SetActive(false);
     }
@@ -67,17 +78,23 @@ public class PlayerActionManager : MonoBehaviour
         CarteBoardInteraction.isAITurn = false;
     }
 
-    public void ClickOnPassed()
+    public void ClickOnPassed(GameObject buttonObject)
     {
+        CardUI card = buttonObject.GetComponentInParent<CardUI>();
+        card.OnPassed();
+        GameManager2.Instance.mode = "selectCardToPlayAction";
     }
 
-    public void ClickOnAttack()
+    public void ClickOnAttack(GameObject buttonObject)
     {
+        CardUI card = buttonObject.GetComponentInParent<CardUI>();
+        card.OnAttack();
+        GameManager2.Instance.mode = "selectCardOpponentToAttack";
     }
 
     public void ClickOnMainCard(CardMain cardMain)
     {
-        if(GameManager2.mode == "deck"){
+        if(GameManager2.Instance.mode == "deck"){
 
             if(!cardMain.isSelect)
             {
@@ -105,6 +122,11 @@ public class PlayerActionManager : MonoBehaviour
     public void ClickOnBoardCard(CardUI cardUI)
     {
         BoardManager.Instance.selectCardOnBoard(cardUI);
+    }
+
+    public void ClickSelectTargetOnBoard(CardAI cardAI)
+    {
+        BoardManager.Instance.selectCardOpponentOnBoard(cardAI);
     }
 
 

@@ -8,6 +8,10 @@ public class GameManager2 : MonoBehaviour
     public static GameManager2 Instance { get; private set; }
     public const int MAX_CARTES_TAPIS_SELECT_DECK = 7;
     public const int MAX_CARTES_TAPIS = 4;
+    public static int MAX_NUMBER_ATK_ROUND = 2;
+
+    public int numberOfAttacksUsedPlayer;
+    public int numberOfAttacksUsedIA;
 
     public MainUIManager mainUIManager;
     public Queue<CarteData> mainPlayerA;
@@ -18,7 +22,7 @@ public class GameManager2 : MonoBehaviour
     public static int playerScore;
     public static int scoreOpponent;
 
-    public static string mode;
+    public string mode;
 
     void Awake()
     {
@@ -120,11 +124,6 @@ public class GameManager2 : MonoBehaviour
             .ToList();
     }
 
-    public static void SetMode(string newMode)
-    {
-        mode = newMode;
-    }
-
     private void Shuffle(List<CarteData> deck)
     {
         for (int i = 0; i < deck.Count; i++)
@@ -135,5 +134,4 @@ public class GameManager2 : MonoBehaviour
             deck[randomIndex] = temp;
         }
     }
-
 }

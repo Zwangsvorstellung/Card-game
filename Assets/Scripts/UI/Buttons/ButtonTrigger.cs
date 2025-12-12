@@ -21,8 +21,8 @@ public class ButtonTrigger : MonoBehaviour{
     public void OnClickConfirm() => PlayerActionManager.Instance.ConfirmSelection(gameObject);
     public void OnClickNextStep() => PlayerActionManager.Instance.GetNextStep();
 
-    public void OnClickPassed() => PlayerActionManager.Instance.ClickOnPassed();
-    public void OnClickAttack() => PlayerActionManager.Instance.ClickOnAttack();
+    public void OnClickPassed() => PlayerActionManager.Instance.ClickOnPassed(gameObject);
+    public void OnClickAttack() => PlayerActionManager.Instance.ClickOnAttack(gameObject);
 
     // ==================== Menu / navigation ====================
     public void OnClickHome() => PlayerActionManager.Instance.LoadMenu();
