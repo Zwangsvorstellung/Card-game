@@ -5,36 +5,31 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance { get; private set; }
+    public const int MAX_CARTES_TAPIS_SELECT_DECK = 7;
+    public const int MAX_CARTES_TAPIS = 4;
+    public static int MAX_NUMBER_ATK_ROUND = 2;
+
+    public int numberOfAttacksUsedPlayer;
+    public int numberOfAttacksUsedIA;
+
     public MainUIManager mainUIManager;
+    public BoardManager boardManager;
     public Queue<CarteData> mainPlayerA;
     public Queue<CarteData> mainPlayerB;
     public Queue<CarteData> piochePlayerA;
     public Queue<CarteData> piochePlayerB;
-    
-    private List<int> selectedCards = new List<int>(); // Index des cartes sélectionnées
-    private List<CarteData> cartesPlacees = new List<CarteData>(); // Cartes placées sur le tapis
-    public const int MAX_CARTES_TAPIS_SELECT_DECK = 7;
-    public const int MAX_CARTES_TAPIS = 4;
 
-    public static GameManager Instance { get; private set; }
-
-    public static string mode;
-    public static bool iaActive = true;
     public static int playerScore;
     public static int scoreOpponent;
-    public static int currentRound;
-    public static int numberOfAttacksUsed;
-    public static int numberOfAttacksUsedIA;
-    public static int numberOfAttacksMax = 2;
-    public static bool isEndturnPlayer = false;
-    public static bool isEndturnAI = false;
-    public static bool ambroiseEffectPending = false;
-    public static bool trahisonEffectPending = false;
+    public string currentPlayerAction;
 
-    [SerializeField] private bool isEndturnPlayerdebug = false;
-    [SerializeField] private string debugMode;
-    [SerializeField] private int numberOfAttacksUseddebug;
-    [SerializeField] private int currentRounddebug;
+    public bool isEndturnPlayer = false;
+    public bool isEndturnAI = false;
+
+    public string mode;
+    public bool playerStarts;
+    public int round;
 
     void Awake()
     {
@@ -44,14 +39,68 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    public void StartTurn()
+    {
+        numberOfAttacksUsedPlayer = 0;
+        numberOfAttacksUsedIA = 0;
+
+        Debug.Log($"[GAME] ===== DÉBUT DU TOUR {round} =====");
+        Debug.Log($"[GAME] Compteurs réinitialisés - Attaques joueur: {numberOfAttacksUsedPlayer}, Attaques IA: {numberOfAttacksUsedIA}");
+       
+        playerStarts = Random.Range(0, 2) == 0;
+        if(playerStarts)
+            currentPlayerAction = "UI";
+        else
+            currentPlayerAction = "AI";
+
+        if (playerStarts)
+        {
+            Debug.Log($"[GAME] → Le JOUEUR commence ce tour (Round {round})");
+            Debug.Log($"[GAME] Mode: {mode} - Le joueur peut maintenant sélectionner ses cartes");
+        }
+        else
+        {
+            Debug.Log($"[GAME] → L'IA commence ce tour (Round {round})");
+            IA.Instance.StartAITurn();
+        }
+    }
+
+
+    public void EndTurn()
+    {
+        Debug.Log($"[GAME] ===== FIN DU TOUR {round} =====");
+        Debug.Log($"[GAME] Attaques utilisées - Joueur: {numberOfAttacksUsedPlayer}/{MAX_NUMBER_ATK_ROUND}, IA: {numberOfAttacksUsedIA}/{MAX_NUMBER_ATK_ROUND}");
+        Debug.Log($"[GAME] Scores actuels - Joueur: {playerScore}, IA: {scoreOpponent}");
+        
+        round++;
+
+        // Chaque tour : choix aléatoire (joueur ou IA commence)
+        // Cela rend le jeu plus imprévisible et équitable
+        playerStarts = Random.Range(0, 2) == 0;
+        if(playerStarts)
+            currentPlayerAction = "UI";
+        else
+            currentPlayerAction = "AI";
+
+        
+        Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(playerStarts ? "JOUEUR" : "IA")} (aléatoire)");
+
+        StartTurn();
+    }
+
+
     void Start()
     {
+        round = 1;
         mode = "selectDeck";
 
         playerScore = 10;
         scoreOpponent = 10;
         
-        // CarteBoardInteraction.ShowScore(); // Désactivé pour ne pas afficher le score au lancement
+        Debug.Log($"[GAME] ===== INITIALISATION DU JEU =====");
+        Debug.Log($"[GAME] Round: {round}, Mode: {mode}");
+        Debug.Log($"[GAME] Scores initiaux - Joueur: {playerScore}, IA: {scoreOpponent}");
+        
         // faire 2 decks complets pour joueur A et joueur B
         List<CarteData> deckPlayerA = new List<CarteData>();
         List<CarteData> deckPlayerB = new List<CarteData>();
@@ -72,7 +121,7 @@ public class GameManager : MonoBehaviour
                 asset.atk,
                 asset.def,
                 asset.capacityId,
-                asset.image
+                asset.image           
             );
             // Une instance pour B
             CarteData dataB = new CarteData(
@@ -121,24 +170,24 @@ public class GameManager : MonoBehaviour
         }
 
         mainUIManager.ShowHand(mainPlayerA.ToList());
+        
+        Debug.Log($"[GAME] Decks créés - Joueur: {mainPlayerA.Count} cartes, IA: {mainPlayerB.Count} cartes");
+        Debug.Log($"[GAME] Pioches créées - Joueur: {piochePlayerA.Count} cartes, IA: {piochePlayerB.Count} cartes");
+        Debug.Log($"[GAME] Mode: {mode} - En attente de sélection du deck par le joueur");
     }
     
-    void Update()
+    // Méthode pour récupérer les cartes sélectionnées dans l'ordre
+    public List<CarteData> GetSelectedCards()
     {
-        debugMode = mode;
-        numberOfAttacksUseddebug = numberOfAttacksUsed;
-        isEndturnPlayerdebug = isEndturnPlayer;
-        currentRounddebug = currentRound;
-    }
-    
-    private void SelectCard(int indexCard)
-    {
-        selectedCards.Add(indexCard);
-    }
-
-    private void DeselectCard(int indexCard)
-    {
-        selectedCards.Remove(indexCard);
+        MainUIManager mainUIManager = GameObject.Find("MainUIManager").GetComponent<MainUIManager>();
+        List<CarteData> mainList = mainPlayerA.ToList();
+        
+        return mainUIManager.transform.GetComponentsInChildren<CardMain>(true)
+            .Where(card => card.isSelect)
+            .OrderBy(card => card.transform.GetSiblingIndex())
+            .Select(cardMain => mainList.FirstOrDefault(c => c.instanceId == cardMain.instanceId))
+            .Where(carteData => carteData != null)
+            .ToList();
     }
 
     private void Shuffle(List<CarteData> deck)
@@ -151,44 +200,4 @@ public class GameManager : MonoBehaviour
             deck[randomIndex] = temp;
         }
     }
-
-    // Méthode pour récupérer les cartes sélectionnées dans l'ordre
-    public List<CarteData> GetSelectedCards()
-    {
-        MainUIManager mainUIManager = GameObject.Find("MainUIManager").GetComponent<MainUIManager>();
-        List<CarteData> mainList = mainPlayerA.ToList();
-        
-        return mainUIManager.transform.GetComponentsInChildren<CardMain>(true)
-            .Where(card => card.isSelect)
-            .OrderBy(card => card.transform.GetSiblingIndex())
-            .Select(cardMain => mainList.FirstOrDefault(c => c.instanceId.ToString() == cardMain.instanceId))
-            .Where(carteData => carteData != null)
-            .ToList();
-    }
-
-    public static void SetMode(string newMode)
-    {
-        mode = newMode;
-    }
-
-    public void CheckGameOver()
-    {
-        if (BoardManager.Instance != null && BoardManager.Instance.handOpponentTransform != null)
-        {
-            var cardsOpponent = BoardManager.Instance.handOpponentTransform.GetComponentsInChildren<CarteUI>(true)
-                .Where(c => c.gameObject.activeInHierarchy && c.transform.Cast<Transform>().Any(child => child.gameObject.activeSelf))
-                .ToArray();
-            if (cardsOpponent.Length == 0)
-                TriggerVictory();
-        }
-    }
-
-    private void TriggerVictory()
-    {
-        Debug.Log("VICTOIRE ! L'adversaire n'a plus de cartes.");
-        
-        playerScore++;
-        //PanelManager.instance.ShowVictory(GameManager.playerScore);
-    }
-    
 }

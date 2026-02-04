@@ -23,8 +23,46 @@ public class BoardManager : MonoBehaviour
         else Instance = this;
     }
 
+    void Update()
+    {
+        if(GameManager.Instance.mode != "deck"){
+            // Vérifie si toutes les cartes joueur ont fait leur choix
+            if(cardsOnBoardUI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnPlayer){
+                GameManager.Instance.isEndturnPlayer = true;
+                Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
+                Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({cardsOnBoardUI.Count} cartes)");
+                int attacksCount = cardsOnBoardUI.Count(c => c.stateOffensif == "atk");
+                int passesCount = cardsOnBoardUI.Count(c => c.stateOffensif == "passed");
+                Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
+                GameManager.Instance.currentPlayerAction = "AI";
+                IA.Instance.StartAITurn();
+            }
+            
+            // Vérifie si toutes les cartes IA ont fait leur choix
+            if(cardsOnBoardAI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnAI){
+                GameManager.Instance.isEndturnAI = true;
+                Debug.Log($"[BOARD] ===== FIN DU TOUR IA =====");
+                Debug.Log($"[BOARD] Toutes les cartes IA ont fait leur choix ({cardsOnBoardAI.Count} cartes)");
+                int attacksCount = cardsOnBoardAI.Count(c => c.stateOffensif == "atk");
+                int passesCount = cardsOnBoardAI.Count(c => c.stateOffensif == "passed");
+                Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
+                GameManager.Instance.currentPlayerAction = "UI";
+            }
+            
+            // Si les deux ont fini, les attaques seront appliquées
+            if(GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI){
+                Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des attaques en cours...");
+                GameManager.Instance.currentPlayerAction = "NONE";
+            }
+        }
+        
+    }
+
     public void SetupBoardCards(List<CarteData> cardsOpponent, List<CarteData> cardsPlayer)
-    {        
+    {
+        Debug.Log($"[BOARD] ===== SETUP DU PLATEAU =====");
+        Debug.Log($"[BOARD] Cartes adversaire: {cardsOpponent.Count}, Cartes joueur: {cardsPlayer.Count}");
+        
         // Instancier les cartes de l'adversaire (4 premières)
         foreach (var card in cardsOpponent)
         {
@@ -33,6 +71,7 @@ public class BoardManager : MonoBehaviour
             cardAI.isCardOpponent = true;
             cardAI.setAttributesInitCardAI(card);
             instantiatedCards.Add(carteGO);
+            Debug.Log($"[BOARD] Carte IA créée: {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(handOpponentTransform as RectTransform);
 
@@ -44,14 +83,18 @@ public class BoardManager : MonoBehaviour
             cardUI.isCardPlayer = true;
             cardUI.setAttributesInitCardPlayer(card);
             instantiatedCards.Add(carteGO);
+            Debug.Log($"[BOARD] Carte joueur créée: {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(handPlayerTransform as RectTransform);
+        
+        Debug.Log($"[BOARD] Plateau configuré - Cartes IA: {cardsOnBoardAI.Count}, Cartes joueur: {cardsOnBoardUI.Count}");
     }
 
     // selection de la carte qui va jouer
     public void selectCardOnBoard(CardUI cardUI)
     {
-        if(GameManager2.Instance.mode != "selectCardOpponentToAttack"){
+        if(GameManager.Instance.mode != "selectCardOpponentToAttack"){
+            Debug.Log($"[BOARD] Sélection de la carte joueur: {cardUI.nameCard}");
             cardUI.selectCard();
         }
     }
@@ -59,15 +102,18 @@ public class BoardManager : MonoBehaviour
     // selection de la cible à attaquer 
     public void selectCardOpponentOnBoard(CardAI cardAI)
     {
-        if(GameManager2.Instance.mode == "selectCardOpponentToAttack"){
+        if(GameManager.Instance.mode == "selectCardOpponentToAttack"){
+            Debug.Log($"[BOARD] Sélection de la cible IA: {cardAI.nameCard}");
             int idAttacker = cardAI.isSelectCard();
 
             foreach (CardUI card in cardsOnBoardUI)
             {
                 if (card.idCard == idAttacker)
                 {
+                    Debug.Log($"[BOARD] Cible assignée: {card.nameCard} → {cardAI.nameCard}");
                     card.SetDataTarget(cardAI);
-                    GameManager2.Instance.mode = "selectCardToPlayAction";
+                    GameManager.Instance.mode = "selectCardToPlayAction";
+                    Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
                     break;
                 }
             }
@@ -97,8 +143,6 @@ public class BoardManager : MonoBehaviour
         }
         return null;
     }
-
-
 
 /*
     public IEnumerator HandleNextTurnTransition()
@@ -348,5 +392,4 @@ public class BoardManager : MonoBehaviour
     }
 
     */
-
 } 

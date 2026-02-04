@@ -4,9 +4,17 @@ using UnityEngine.UI;
 
 public class CardsAnimation : MonoBehaviour
 {
-
     private RectTransform rectTransform;
     public Image targetImage;
+
+    void Awake()
+    {
+        if (rectTransform == null)
+            rectTransform = GetComponent<RectTransform>();
+
+        if (rectTransform == null)
+            Debug.LogError("CardsAnimation: Aucun RectTransform trouvé sur ce GameObject !");
+    }
 
     // 1. Pop Scale (zoom rapide)
     public IEnumerator PopScale(float duration = 0.2f, float scaleAmount = 1.2f)

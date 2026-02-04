@@ -18,7 +18,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
 
     public CardsAnimation cardsAnimation;
 
-
     public int attaqueValue;
     public int defenseValue;
 
@@ -37,13 +36,17 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
 
     public bool isCardOpponent = true;
     public bool isSelect = false;
+    public bool isFrozen = false;
     public bool actionChoiceDo = false;
     public string stateOffensif;
     public string stateDefensif;
+    public string target;
+    public int targetID;
+    public string lastTarget;
+    public int lastTargetID;
 
     public string nameAttacker;
     public int idAttacker;
-
 
     [Header("Identification")]
     public string nameCard;
@@ -56,6 +59,30 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
         stateDefensif = "notCibled";
         stateOffensif = "wait";
         cardsAnimation = GetComponent<CardsAnimation>();
+    }
+
+    void Update()
+    {
+        if(stateOffensif == "passed"){
+            passedIcon.SetActive(true);
+            RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
+            StartCoroutine(CardsAnimation.SwingSablier(passedRect));
+        }
+        else{
+            passedIcon.SetActive(false);
+        }
+
+        if(stateDefensif == "cibled"){
+            atk1Icon.SetActive(true);
+        }else{
+            atk1Icon.SetActive(false);
+        }
+
+        if(isFrozen){
+            freezeIcon.SetActive(true);
+        }else{
+           freezeIcon.SetActive(false);
+        }
     }
 
     void OnEnable() => BoardManager.cardsOnBoardAI.Add(this);
@@ -98,7 +125,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
     {   
         if(stateDefensif != "cibled"){
 
-
             StartCoroutine(cardsAnimation.ColorFlash(this, Color.red, 0.5f));
             StartCoroutine(cardsAnimation.Shake(0.3f, 5f));
 
@@ -113,4 +139,31 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
         }
         return 0;
     }
+
+    /// <summary>
+    /// Vérifie si deux cartes IA sont adjacentes (pour les alliés).
+    /// </summary>
+    public bool IsAdjacentTo(CardAI a, CardAI b)
+    {
+        if (a == null || b == null) return false;
+        return Mathf.Abs(a.indexCarte - b.indexCarte) == 1;
+    }
+    
+    /// <summary>
+    /// Vérifie si une carte IA est adjacente à une carte joueur (pour les attaques).
+    /// </summary>
+    public bool IsAdjacentTo(CardAI a, CardUI b)
+    {
+        if (a == null || b == null) return false;
+        return Mathf.Abs(a.indexCarte - b.indexCarte) == 1;
+    }
+
+    public bool HasCapacity(IAAction.Capacity cap)
+    {
+        if (nameCapacity == null) return false;
+
+        // Comparaison rapide : le texte contient le nom de l'enum
+        return nameCapacity.text.Contains(cap.ToString());
+    }
+
 }

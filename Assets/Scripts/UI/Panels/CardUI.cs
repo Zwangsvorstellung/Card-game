@@ -25,6 +25,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public GameObject passedIcon; // Icône "passé"
     public GameObject freezeIcon; // Icône "freeze"
 
+    [Header("Position")]
     public RectTransform rectTransform;
     public Vector2 startPosition;
     public Vector2 positionWithOffset;
@@ -38,13 +39,17 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     private LayoutElement layoutElement;
     public LayoutGroup layoutGroup;
 
+    [Header("Caractéristiques")]
     public bool isCardPlayer = true;
     public bool isSelect = false;
+    public bool isFrozen = false;
     public bool actionChoiceDo = false;
     public string stateOffensif;
     public string stateDefensif;
     public string target;
     public int targetID;
+    public string lastTarget;
+    public int lastTargetID;
 
     [Header("Identification")]
     public string instanceId; // ID unique de la carte
@@ -69,8 +74,29 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     private void Update()
     {
-        if(GameManager2.Instance.numberOfAttacksUsedPlayer > 1 && stateOffensif != "atk"){
+        if(GameManager.Instance.numberOfAttacksUsedPlayer > 1 && stateOffensif != "atk"){
             AutoPass();
+        }
+
+        if(stateOffensif == "passed"){
+            passedIcon.SetActive(true);
+            RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
+            StartCoroutine(CardsAnimation.SwingSablier(passedRect));
+        }
+        else{
+            passedIcon.SetActive(false);
+        }
+
+        if(stateDefensif == "cibled"){
+            atk1Icon.SetActive(true);
+        }else{
+            atk1Icon.SetActive(false);
+        }
+
+        if(isFrozen){
+            freezeIcon.SetActive(true);
+        }else{
+           freezeIcon.SetActive(false);
         }
     }
 
@@ -107,8 +133,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if(!actionChoiceDo)
-            PlayerActionManager.Instance.ClickOnBoardCard(this);
+        if(isFrozen) return;
+
+        if(GameManager.Instance.currentPlayerAction == "UI"){
+            if(!actionChoiceDo)
+                PlayerActionManager.Instance.ClickOnBoardCard(this);
+        }
     }
 
     public void selectCard()
@@ -129,7 +159,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public void Select()
     {
         isSelect = true;          
-        GameManager2.Instance.mode = "hasCardSelectedToAction";
+        GameManager.Instance.mode = "hasCardSelectedToAction";
         stateOffensif = "waitOrder";
         rectTransform.anchoredPosition = positionWithOffset;
 
@@ -143,7 +173,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public void Deselect()
     {
         isSelect = false;          
-        GameManager2.Instance.mode = "selectCardToPlayAction";
+        GameManager.Instance.mode = "selectCardToPlayAction";
         stateOffensif = "wait";
 
         if (layoutGroup?.enabled == true)
@@ -171,20 +201,15 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     {
         HideActionButtons();
 
-        passed.SetActive(true);
-        RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
-        StartCoroutine(CardsAnimation.SwingSablier(passedRect));
-
-
         stateOffensif = "passed";
-        passedIcon.SetActive(true);
 
         rectTransform.anchoredPosition = startPosition - offsetClick;
 
         actionChoiceDo = true;
         imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+        
+        Debug.Log($"[CARD-UI] {nameCard} passe son tour (ATK:{attaqueValue}, DEF:{defenseValue})");
    
-
         /* 
         if (!coloredCards.Contains(this))
             coloredCards.Add(this);
@@ -288,10 +313,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
         stateOffensif = "atk";
         actionChoiceDo = true;
-        GameManager2.Instance.numberOfAttacksUsedPlayer++;
-
-
+        GameManager.Instance.numberOfAttacksUsedPlayer++;
         
+        Debug.Log($"[CARD-UI] {nameCard} passe en mode ATTAQUE (ATK:{attaqueValue}, DEF:{defenseValue})");
+        Debug.Log($"[CARD-UI] Attaques utilisées joueur: {GameManager.Instance.numberOfAttacksUsedPlayer}/{GameManager.MAX_NUMBER_ATK_ROUND}");
+
         /*
         if (layoutElement) layoutElement.ignoreLayout = true;               
 
@@ -387,5 +413,26 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     {   
         target = cardAI.nameCard;
         targetID = cardAI.idCard;
+        
+        Debug.Log($"[CARD-UI] {nameCard} cible {cardAI.nameCard} (ATK:{attaqueValue} vs DEF:{cardAI.defenseValue})");
+        int damage = attaqueValue - cardAI.defenseValue;
+        if (damage < 0) damage = 1;
+        Debug.Log($"[CARD-UI] Dégâts potentiels: {damage} (sera appliqué à la fin du tour)");
+    }
+
+    public bool HasCapacity(IAAction.Capacity cap)
+    {
+        if (nameCapacity == null) return false;
+
+        // Comparaison rapide : le texte contient le nom de l'enum
+        return nameCapacity.text.Contains(cap.ToString());
+    }
+
+    public bool IsAdjacentTo(CardUI a, CardUI b)
+    {
+        CardUI cardUIA = a.GetComponent<CardUI>();
+        CardUI cardUIB = b.GetComponent<CardUI>();
+        if (cardUIA == null || cardUIB == null) return false;
+        return Mathf.Abs(cardUIA.indexCarte - cardUIB.indexCarte) == 1;
     }
 }

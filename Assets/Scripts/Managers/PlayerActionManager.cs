@@ -34,23 +34,31 @@ public class PlayerActionManager : MonoBehaviour
 
     public void ConfirmSelection(GameObject buttonObject)
     {
-        GameManager2.Instance.mode = "selectCardToPlayAction";
+        Debug.Log($"[PLAYER] ===== VALIDATION DU DECK =====");
+        
+        GameManager.Instance.mode = "selectCardToPlayAction";
 
         PanelManager.Instance.HideInstructionText();
         PanelManager.Instance.HideValidateDeck();
 
-        List<CarteData> selectedCards = GameManager2.Instance.GetSelectedCards();
+        List<CarteData> selectedCards = GameManager.Instance.GetSelectedCards();
+        Debug.Log($"[PLAYER] Cartes sélectionnées: {selectedCards.Count}");
+        foreach (var card in selectedCards)
+        {
+            Debug.Log($"[PLAYER]   - {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+        }
+        
         HashSet<int> selectedCardIds = selectedCards.Select(c => c.idCard).ToHashSet();
-        List<CarteData> unselectedCards = GameManager2.Instance.mainPlayerA
+        List<CarteData> unselectedCards = GameManager.Instance.mainPlayerA
             .Where(c => !selectedCardIds.Contains(c.idCard)).ToList();
 
-        GameManager2.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
+        GameManager.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
 
         foreach (var card in unselectedCards)
-            GameManager2.Instance.piochePlayerA.Enqueue(card);
+            GameManager.Instance.piochePlayerA.Enqueue(card);
 
-        // Génère 4 cartes aléatoires pour l’opposant
-        var opponentDeck = GameManager2.Instance.mainPlayerB;
+        // Génère 4 cartes aléatoires pour l'opposant
+        var opponentDeck = GameManager.Instance.mainPlayerB;
         List<CarteData> opponentCards = new();
 
         if (opponentDeck != null)
@@ -62,6 +70,12 @@ public class PlayerActionManager : MonoBehaviour
                 opponentCards.Add(opponentDeck.Dequeue());
             }
         }
+        
+        Debug.Log($"[PLAYER] Cartes IA générées: {opponentCards.Count}");
+        foreach (var card in opponentCards)
+        {
+            Debug.Log($"[PLAYER]   - {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+        }
 
         BoardManager.Instance.SetupBoardCards(opponentCards, selectedCards);
         CamController.Instance.GoToBoardView();
@@ -69,36 +83,43 @@ public class PlayerActionManager : MonoBehaviour
         buttonObject.SetActive(false);
 
         MainUIManager.Instance.gameObject.SetActive(false);
+        
+        Debug.Log($"[PLAYER] Passage au plateau de combat - Mode: {GameManager.Instance.mode}");
+        GameManager.Instance.StartTurn();
+
     }
 
     public void GetNextStep()
     {
         PanelManager.Instance.HideButtonNextStep();
         //BoardManager.Instance.StartCoroutine(BoardManager.Instance.HandleNextTurnTransition());
-        CarteBoardInteraction.isAITurn = false;
     }
 
     public void ClickOnPassed(GameObject buttonObject)
     {
         CardUI card = buttonObject.GetComponentInParent<CardUI>();
+        Debug.Log($"[PLAYER] Carte {card.nameCard} choisit de PASSER");
         card.OnPassed();
-        GameManager2.Instance.mode = "selectCardToPlayAction";
+        GameManager.Instance.mode = "selectCardToPlayAction";
+        Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode}");
     }
 
     public void ClickOnAttack(GameObject buttonObject)
     {
         CardUI card = buttonObject.GetComponentInParent<CardUI>();
+        Debug.Log($"[PLAYER] Carte {card.nameCard} choisit d'ATTAQUER (ATK:{card.attaqueValue})");
         card.OnAttack();
-        GameManager2.Instance.mode = "selectCardOpponentToAttack";
+        GameManager.Instance.mode = "selectCardOpponentToAttack";
+        Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode} - Sélection de la cible requise");
     }
 
     public void ClickOnMainCard(CardMain cardMain)
     {
-        if(GameManager2.Instance.mode == "deck"){
+        if(GameManager.Instance.mode == "deck"){
 
             if(!cardMain.isSelect)
             {
-                if (MainUIManager.Instance.CountSelectedCards() < GameManager2.MAX_CARTES_TAPIS){
+                if (MainUIManager.Instance.CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
                     cardMain.SelectCardMain();
                     //if (pulseCoroutine == null) pulseCoroutine = StartCoroutine(cardAnimations.Pulse(0.7f, 0.95f, 1f));
                 }
@@ -115,17 +136,19 @@ public class PlayerActionManager : MonoBehaviour
             }
 
             int numberCardsSelect = MainUIManager.Instance.CountSelectedCards();
-            MainUIManager.Instance.ShowValidateButton(numberCardsSelect >= GameManager2.MAX_CARTES_TAPIS);
+            MainUIManager.Instance.ShowValidateButton(numberCardsSelect >= GameManager.MAX_CARTES_TAPIS);
         }
     }
 
     public void ClickOnBoardCard(CardUI cardUI)
     {
+        Debug.Log($"[PLAYER] Clic sur carte joueur: {cardUI.nameCard} (État: {cardUI.stateOffensif})");
         BoardManager.Instance.selectCardOnBoard(cardUI);
     }
 
     public void ClickSelectTargetOnBoard(CardAI cardAI)
     {
+        Debug.Log($"[PLAYER] Clic sur carte IA (cible): {cardAI.nameCard} (DEF:{cardAI.defenseValue})");
         BoardManager.Instance.selectCardOpponentOnBoard(cardAI);
     }
 

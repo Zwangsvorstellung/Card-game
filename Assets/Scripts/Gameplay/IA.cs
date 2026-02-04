@@ -1,0 +1,509 @@
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+using System.Collections;
+using UnityEngine.UI;
+using static IAAction;
+
+/// <summary>
+/// Structure pour stocker les informations d'une attaque (joueur ou IA).
+/// </summary>
+public struct AttackInfo
+{
+    public CardAI attackerAI;      // Attaquant si c'est l'IA (null si c'est le joueur)
+    public CardUI attackerPlayer;  // Attaquant si c'est le joueur (null si c'est l'IA)
+    public CardUI targetPlayer;    // Cible si c'est une carte joueur
+    public CardAI targetAI;        // Cible si c'est une carte IA
+    public int damage;
+    public bool isPlayerAttack;     // true si c'est une attaque du joueur, false si c'est l'IA
+    
+    public AttackInfo(CardAI attacker, CardUI target, int damage)
+    {
+        this.attackerAI = attacker;
+        this.attackerPlayer = null;
+        this.targetPlayer = target;
+        this.targetAI = null;
+        this.damage = damage;
+        this.isPlayerAttack = false;
+    }
+    
+    public AttackInfo(CardUI attacker, CardAI target, int damage)
+    {
+        this.attackerAI = null;
+        this.attackerPlayer = attacker;
+        this.targetPlayer = null;
+        this.targetAI = target;
+        this.damage = damage;
+        this.isPlayerAttack = true;
+    }
+}
+
+/// <summary>
+/// Gère le comportement de l'IA pour les tours de l'adversaire.
+/// Utilise IAAction pour évaluer les meilleures actions et les exécute.
+/// </summary>
+public class IA : MonoBehaviour
+{
+    private static IA instance;
+    public static IA Instance => instance;
+    
+    [Header("Paramètres")]
+    [SerializeField] private float delayAction = 0.5f; // Délai entre chaque action de l'IA
+    
+    // Liste des attaques de l'IA pour ce tour (sera appliquée à la fin du tour)
+    private static List<AttackInfo> aiAttacksThisTurn = new List<AttackInfo>();
+    
+    void Awake()
+    {
+        if (instance == null)
+            instance = this;
+        else if (instance != this)
+            Destroy(gameObject);
+    }
+    
+    /// <summary>
+    /// Démarre le tour de l'IA. Appelé depuis l'extérieur pour initier le tour.
+    /// </summary>
+    public void StartAITurn()
+    {
+        StartCoroutine(ExecuteAITurn());
+    }
+    
+    /// <summary>
+    /// Exécute le tour de l'IA : évalue les actions possibles et choisit les meilleures.
+    /// Utilise un système de scoring pour décider entre attaquer et rester passif.
+    /// </summary>
+    private IEnumerator ExecuteAITurn()
+    {
+        Debug.Log($"[IA] ===== DÉBUT DU TOUR IA =====");
+        Debug.Log($"[IA] Cartes IA disponibles: {BoardManager.cardsOnBoardAI.Count}");
+        Debug.Log($"[IA] Cartes joueur disponibles: {BoardManager.cardsOnBoardUI.Count}");
+        
+        // Vérification préliminaire : s'il n'y a pas de cartes IA, on arrête
+        if (BoardManager.cardsOnBoardAI.Count == 0)
+        {
+            Debug.Log("[IA] ⚠️ Aucune carte IA trouvée - Arrêt du tour");
+            yield break;
+        }
+
+        // Seuil minimal de score pour qu'une attaque soit envisagée
+        const int seuilMinAttaque = 2;
+        int attacksExecuted = 0;
+
+        // Création de copies des listes pour pouvoir les modifier sans affecter les originaux
+        List<CardAI> cardsAIOnBoard = new List<CardAI>(BoardManager.cardsOnBoardAI);
+        List<CardUI> cardsUIOnBoard = new List<CardUI>(BoardManager.cardsOnBoardUI);
+        List<CardAI> cardsAIPassed = new List<CardAI>(); // Cartes qui ont choisi de passer
+        
+        Debug.Log($"[IA] Seuil minimum d'attaque: {seuilMinAttaque}");
+
+        // Boucle principale : on continue tant qu'on n'a pas atteint le maximum d'attaques
+        // et qu'il reste des cartes IA disponibles
+        Debug.Log($"[IA] Boucle d'exécution - Max attaques: {GameManager.MAX_NUMBER_ATK_ROUND}, Cartes disponibles: {cardsAIOnBoard.Count}");
+        
+        while (attacksExecuted < GameManager.MAX_NUMBER_ATK_ROUND && cardsAIOnBoard.Count > 0)
+        {
+            Debug.Log($"[IA] --- Itération {attacksExecuted + 1}/{GameManager.MAX_NUMBER_ATK_ROUND} ---");
+            
+            int bestScoring = 0;
+            CardAI bestAttacker = null;
+            CardUI bestTarget = null;
+
+            // Pour chaque carte IA disponible, on évalue la meilleure action
+            Debug.Log($"[IA] Évaluation de {cardsAIOnBoard.Count} cartes IA...");
+            foreach (var cardAI in cardsAIOnBoard)
+            {
+                if (cardAI.isFrozen) continue;
+
+                // Décision : attaquer ou rester passif ?
+                var decision = IAAction.DecideAction(cardAI, cardsAIOnBoard, cardsUIOnBoard);
+                
+                Debug.Log($"[IA]   {cardAI.nameCard} (ATK:{cardAI.attaqueValue}, DEF:{cardAI.defenseValue}) → " +
+                         $"attack={decision.attack}, score={decision.score}, " +
+                         $"target={(decision.target != null ? decision.target.nameCard : "null")}");
+
+                // Si la décision est d'attaquer et que le score est suffisant
+                if (decision.attack && decision.score > bestScoring && decision.score >= seuilMinAttaque)
+                {
+                    bestScoring = decision.score;
+                    bestAttacker = cardAI;
+                    bestTarget = decision.target;
+                }
+            }
+
+            // Si on a trouvé une bonne attaque, on l'exécute
+            if (bestAttacker != null && bestTarget != null)
+            {
+                Debug.Log($"[IA] ✓ Meilleure action trouvée: {bestAttacker.nameCard} → {bestTarget.nameCard} (score: {bestScoring})");
+                
+                // Exécute l'attaque
+                ExecuteAttack(bestAttacker, bestTarget);
+
+                attacksExecuted++;
+                Debug.Log($"[IA] Attaques exécutées: {attacksExecuted}/{GameManager.MAX_NUMBER_ATK_ROUND}");
+                
+                // Retire l'attaquant de la liste pour qu'il n'attaque qu'une fois
+                cardsAIOnBoard.Remove(bestAttacker);
+                
+                // Retire la cible de la liste si elle est éliminée (optionnel)
+                // cardsUIOnBoard.Remove(bestTarget);
+
+                yield return new WaitForSeconds(delayAction);
+            }
+            else
+            {
+                Debug.Log($"[IA] Aucune attaque intéressante trouvée (score max: {bestScoring}, seuil: {seuilMinAttaque})");
+                break;
+            }
+        }
+
+        // Les cartes restantes qui n'ont pas attaqué passent leur tour
+        Debug.Log($"[IA] Cartes restantes à passer: {cardsAIOnBoard.Count(c => !c.actionChoiceDo)}");
+        foreach (var cardAI in cardsAIOnBoard)
+        {
+            if (!cardAI.actionChoiceDo)
+            {
+                Debug.Log($"[IA] {cardAI.nameCard} : PASSER");
+                ExecutePass(cardAI);
+                yield return new WaitForSeconds(delayAction);
+            }
+        }
+
+        // Attente finale avant de terminer le tour
+        yield return new WaitForSeconds(1f);
+        
+        Debug.Log($"[IA] ===== FIN DU TOUR IA =====");
+        Debug.Log($"[IA] Attaques stockées: {aiAttacksThisTurn.Count}");
+        foreach (var attack in aiAttacksThisTurn)
+        {
+            if (attack.attackerAI != null)
+                Debug.Log($"[IA]   - {attack.attackerAI.nameCard} → {attack.targetPlayer.nameCard} ({attack.damage} dégâts)");
+        }
+        
+        // À la fin du tour de l'IA, on vérifie si le joueur a aussi fini
+        // Si oui, on applique toutes les attaques dans un ordre aléatoire
+        if (GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI)
+        {
+            Debug.Log($"[IA] Les deux joueurs ont terminé - Application des attaques...");
+            ApplyAllAttacksInRandomOrder();
+        }
+        else
+        {
+            Debug.Log($"[IA] En attente du joueur (isEndturnPlayer: {GameManager.Instance.isEndturnPlayer})");
+        }
+    }
+
+    /// <summary>
+    /// Exécute une attaque de l'IA : met à jour les états et applique les effets visuels.
+    /// </summary>
+    /// <param name="attacker">La carte IA qui attaque (CardAI)</param>
+    /// <param name="target">La carte joueur ciblée (CardUI)</param>
+    private void ExecuteAttack(CardAI attacker, CardUI target)
+    {
+        if (attacker == null || target == null) return;
+        
+        // Applique l'effet visuel de l'attaque
+        ApplyIAAttackVisualEffect(attacker);
+        
+        // Simule l'attaque : met à jour les compteurs et les états
+        SimulateAIAttack(attacker, target);
+    }
+    
+    /// <summary>
+    /// Simule une attaque de l'IA : met à jour les états et enregistre l'attaque.
+    /// </summary>
+    /// <param name="attacker">La carte IA qui attaque</param>
+    /// <param name="target">La carte joueur ciblée</param>
+    private void SimulateAIAttack(CardAI attacker, CardUI target)
+    {
+        // Incrémente le compteur d'attaques de l'IA
+        GameManager.Instance.numberOfAttacksUsedIA++;
+
+        // Met à jour l'état de l'attaquant
+        attacker.actionChoiceDo = true;
+        attacker.stateOffensif = "atk";
+        
+        // Met à jour la cible de l'attaquant (pour le suivi)
+        attacker.target = target.nameCard;
+        attacker.targetID = target.idCard;
+        
+        // Met à jour la dernière cible (pour Attaque Surprise)
+        attacker.lastTarget = target.nameCard;
+        attacker.lastTargetID = target.idCard;
+
+        // Applique l'attaque : met à jour l'UI et calcule les dégâts
+        ApplyAttack(attacker, target);
+    }
+    
+    /// <summary>
+    /// Applique une attaque : met à jour l'interface utilisateur et calcule les dégâts.
+    /// </summary>
+    /// <param name="attacker">La carte IA qui attaque</param>
+    /// <param name="target">La carte joueur ciblée</param>
+    private void ApplyAttack(CardAI attacker, CardUI target)
+    {
+        if (attacker == null || target == null) return;
+        
+        // Compte le nombre d'attaques déjà reçues par la cible
+        // (en comptant les icônes d'attaque actives)
+        int attackCount = 0;
+        if (target.atk1Icon != null && target.atk1Icon.activeSelf) attackCount++;
+        if (target.atk2Icon != null && target.atk2Icon.activeSelf) attackCount++;
+        attackCount++; // Ajoute la nouvelle attaque
+        
+        // Affiche les icônes d'attaque appropriées
+        if (target.atk1Icon != null)
+        {
+            target.atk1Icon.SetActive(true);
+        }
+        if (attackCount >= 2 && target.atk2Icon != null)
+        {
+            target.atk2Icon.SetActive(true);
+        }
+        
+        // Met à jour l'état défensif de la cible
+        target.stateDefensif = "isAttacked";
+        
+        // Calcule les dégâts potentiels
+        int damage = attacker.attaqueValue - target.defenseValue;
+        if (damage < 0) damage = 1; // Minimum 1 dégât
+        
+        // Enregistre l'attaque dans les logs du tour
+        string attackLog = $"{attacker.nameCard} → {target.nameCard} (ATK:{attacker.attaqueValue} vs DEF:{target.defenseValue}) = {damage} dégâts";
+        BoardManager.Instance.roundDamage.Add(attackLog);
+        
+        Debug.Log($"[IA] ✓ Attaque stockée: {attacker.nameCard} → {target.nameCard} ({damage} dégâts)");
+        Debug.Log($"[IA]   Attaques IA stockées: {aiAttacksThisTurn.Count + 1}");
+        
+        // Stocke l'attaque pour l'appliquer à la fin du tour (avec les attaques du joueur)
+        aiAttacksThisTurn.Add(new AttackInfo(attacker, target, damage));
+    }
+
+    /// <summary>
+    /// Fait passer le tour d'une carte IA (ne pas attaquer).
+    /// </summary>
+    /// <param name="card">La carte IA qui passe son tour</param>
+    private void ExecutePass(CardAI card)
+    {
+        if (card == null) return;
+        
+        // Met à jour l'état de la carte
+        card.actionChoiceDo = true;
+        card.stateOffensif = "passed";
+        
+        // Effet visuel optionnel : assombrir la carte
+        if (card.imageCarte != null)
+        {
+            card.imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+        }
+        
+        Debug.Log($"[IA] ✓ {card.nameCard} passe son tour (ATK:{card.attaqueValue}, DEF:{card.defenseValue})");
+    }
+    
+    /// <summary>
+    /// Coroutine pour démarrer le tour de l'IA après un délai.
+    /// Utile pour attendre la fin d'une animation ou d'un effet.
+    /// </summary>
+    public IEnumerator StartAITurnCoroutine()
+    {
+        yield return new WaitForSeconds(1f);
+        StartAITurn();
+    }
+    
+    /// <summary>
+    /// Applique un effet visuel lors d'une attaque de l'IA.
+    /// Déplace légèrement la carte vers le bas pour indiquer l'attaque.
+    /// </summary>
+    /// <param name="card">La carte IA qui attaque</param>
+    private void ApplyIAAttackVisualEffect(CardAI card)
+    {
+        if (card == null || card.rectTransform == null) return;
+        
+        // Sauvegarde la position de départ
+        Vector3 startPosition = card.rectTransform.anchoredPosition;
+        
+        // Déplace la carte vers le bas pour l'effet visuel
+        Vector3 newPosition = startPosition + new Vector3(0, -50, 0);
+        card.rectTransform.anchoredPosition = newPosition;
+        
+        // TODO: Optionnellement, ajouter une animation de retour à la position initiale
+    }
+    
+    /// <summary>
+    /// Applique toutes les attaques (joueur + IA) dans un ordre aléatoire.
+    /// Le hasard détermine qui commence à appliquer ses attaques.
+    /// </summary>
+    public static void ApplyAllAttacksInRandomOrder()
+    {
+        Debug.Log($"[ATTACK] ===== APPLICATION DES ATTAQUES =====");
+        
+        // Récupère les attaques du joueur depuis le système existant
+        List<AttackInfo> playerAttacks = GetPlayerAttacks();
+        Debug.Log($"[ATTACK] Attaques joueur récupérées: {playerAttacks.Count}");
+        foreach (var attack in playerAttacks)
+        {
+            if (attack.attackerPlayer != null)
+                Debug.Log($"[ATTACK]   Joueur: {attack.attackerPlayer.nameCard} → {attack.targetAI.nameCard} ({attack.damage} dégâts)");
+        }
+        
+        Debug.Log($"[ATTACK] Attaques IA stockées: {aiAttacksThisTurn.Count}");
+        foreach (var attack in aiAttacksThisTurn)
+        {
+            if (attack.attackerAI != null)
+                Debug.Log($"[ATTACK]   IA: {attack.attackerAI.nameCard} → {attack.targetPlayer.nameCard} ({attack.damage} dégâts)");
+        }
+        
+        bool playerStarts = GameManager.Instance.playerStarts;
+        
+        
+        Debug.Log($"[ATTACK] Ordre d'application déterminé: {(playerStarts ? "JOUEUR" : "IA")} commence");
+        
+        // Crée une liste combinée avec l'ordre déterminé
+        List<AttackInfo> allAttacks = new List<AttackInfo>();
+        
+        if (playerStarts)
+        {
+            // Joueur commence : attaques joueur puis attaques IA
+            allAttacks.AddRange(playerAttacks);
+            allAttacks.AddRange(aiAttacksThisTurn);
+        }
+        else
+        {
+            // IA commence : attaques IA puis attaques joueur
+            allAttacks.AddRange(aiAttacksThisTurn);
+            allAttacks.AddRange(playerAttacks);
+        }
+        
+        // Applique toutes les attaques dans l'ordre déterminé
+        Debug.Log($"[ATTACK] Application de {allAttacks.Count} attaques dans l'ordre...");
+        int attackIndex = 1;
+        foreach (var attack in allAttacks)
+        {
+            Debug.Log($"[ATTACK] [{attackIndex}/{allAttacks.Count}] Application de l'attaque...");
+            ApplySingleAttack(attack);
+            attackIndex++;
+        }
+        
+        Debug.Log($"[ATTACK] ===== TOUTES LES ATTAQUES APPLIQUÉES =====");
+        
+        // Nettoie les listes pour le prochain tour
+        aiAttacksThisTurn.Clear();
+        ClearPlayerAttacks(); // À implémenter selon votre système
+        Debug.Log($"[ATTACK] Listes nettoyées pour le prochain tour");
+    }
+    
+    /// <summary>
+    /// Applique une seule attaque et met à jour les dégâts de la cible.
+    /// </summary>
+    private static void ApplySingleAttack(AttackInfo attack)
+    {
+        string attackerName;
+        string targetName;
+        int newDefense;
+        
+        if (attack.isPlayerAttack)
+        {
+            // Attaque du joueur vers l'IA
+            if (attack.targetAI == null || attack.attackerPlayer == null) return;
+            
+            attackerName = attack.attackerPlayer.nameCard;
+            targetName = attack.targetAI.nameCard;
+            
+            // Applique les dégâts à la cible IA
+            newDefense = attack.targetAI.defenseValue - attack.damage;
+            if (newDefense < 0) newDefense = 0;
+            
+            // Met à jour la défense de la cible IA
+            attack.targetAI.defenseValue = newDefense;
+            if (attack.targetAI.defenseText != null)
+            {
+                attack.targetAI.defenseText.SetText(newDefense.ToString());
+            }
+        }
+        else
+        {
+            // Attaque de l'IA vers le joueur
+            if (attack.targetPlayer == null || attack.attackerAI == null) return;
+            
+            attackerName = attack.attackerAI.nameCard;
+            targetName = attack.targetPlayer.nameCard;
+            
+            // Applique les dégâts à la cible joueur
+            newDefense = attack.targetPlayer.defenseValue - attack.damage;
+            if (newDefense < 0) newDefense = 0;
+            
+            // Met à jour la défense de la cible joueur
+            attack.targetPlayer.defenseValue = newDefense;
+            if (attack.targetPlayer.defenseText != null)
+            {
+                attack.targetPlayer.defenseText.SetText(newDefense.ToString());
+            }
+        }
+        
+        Debug.Log($"[ATTACK] → {attackerName} inflige {attack.damage} dégâts à {targetName}");
+        Debug.Log($"[ATTACK]   DEF avant: {(attack.isPlayerAttack ? attack.targetAI.defenseValue + attack.damage : attack.targetPlayer.defenseValue + attack.damage)}, " +
+                 $"DEF après: {newDefense}");
+        
+        // Si la défense atteint 0, la carte est éliminée
+        if (newDefense <= 0)
+        {
+            Debug.Log($"[ATTACK] ⚠️ {targetName} est ÉLIMINÉE ! (DEF: 0)");
+            // TODO: Gérer l'élimination de la carte (retirer du plateau, etc.)
+        }
+    }
+    
+    /// <summary>
+    /// Récupère les attaques du joueur depuis le système existant.
+    /// </summary>
+    private static List<AttackInfo> GetPlayerAttacks()
+    {
+        List<AttackInfo> playerAttacks = new List<AttackInfo>();
+        
+        Debug.Log($"[ATTACK] Récupération des attaques du joueur depuis {BoardManager.cardsOnBoardUI.Count} cartes...");
+        
+        // Parcourt les cartes du joueur qui ont attaqué
+        foreach (var cardUI in BoardManager.cardsOnBoardUI)
+        {
+            if (cardUI.stateOffensif == "atk" && !string.IsNullOrEmpty(cardUI.target))
+            {
+                // Trouve la cible IA correspondante
+                CardAI target = BoardManager.cardsOnBoardAI.FirstOrDefault(c => c.nameCard == cardUI.target);
+                if (target != null)
+                {
+                    // Calcule les dégâts
+                    int damage = cardUI.attaqueValue - target.defenseValue;
+                    if (damage < 0) damage = 1;
+                    
+                    Debug.Log($"[ATTACK] Attaque joueur trouvée: {cardUI.nameCard} → {target.nameCard} " +
+                             $"(ATK:{cardUI.attaqueValue} vs DEF:{target.defenseValue} = {damage} dégâts)");
+                    
+                    // Ajoute l'attaque du joueur
+                    playerAttacks.Add(new AttackInfo(cardUI, target, damage));
+                }
+                else
+                {
+                    Debug.LogWarning($"[ATTACK] ⚠️ Cible '{cardUI.target}' non trouvée pour {cardUI.nameCard}");
+                }
+            }
+        }
+        
+        return playerAttacks;
+    }
+    
+    /// <summary>
+    /// Nettoie les attaques du joueur après application.
+    /// </summary>
+    private static void ClearPlayerAttacks()
+    {
+        // Les attaques du joueur sont gérées par le système existant
+        // Cette méthode peut être étendue si nécessaire
+    }
+    
+    /// <summary>
+    /// Réinitialise les attaques de l'IA (appelé au début d'un nouveau tour).
+    /// </summary>
+    public static void ResetAIAttacks()
+    {
+        aiAttacksThisTurn.Clear();
+    }
+} 
