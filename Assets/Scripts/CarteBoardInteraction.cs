@@ -70,22 +70,6 @@ public class CarteBoardInteraction : MonoBehaviour
 
     public bool WillAttackThisTurn = false;
 
-    private void Awake()
-    {
-        layoutElement = GetComponent<LayoutElement>();
-        rectTransform = GetComponent<RectTransform>();
-        layoutGroup = transform.parent?.GetComponent<LayoutGroup>();
-
-        bonusAtk = 0;
-        bonusDfs = 0;
-        malusAtk = 0;
-        malusDfs = 0;
-    }
-    
-    void Start()
-    {
-        cardUI = GetComponent<CardUI>();
-    }
 
     
     public void OnPointerClick(PointerEventData eventData)
@@ -110,12 +94,6 @@ public class CarteBoardInteraction : MonoBehaviour
    //     ignorePointer = false;
     //}
     
-    private void ShowActionButtons()
-    {
-       // if (!isCardPlayer) return;      
-            
-       // bool canAttack = GameManager.Instance.numberOfAttacksUsedPlayer < GameManager.Instance.MAX_NUMBER_ATK_ROUND && !isFreeze;
-    }
     
     // BoardManager
     public void ApplyAllAttacks()
@@ -281,7 +259,6 @@ public class CarteBoardInteraction : MonoBehaviour
                         //PanelManager.instance?.AddLog($"   → Terreur Sélective de Trahison : -1 DF à {passiveOpponent.nameCard}");
                     }
                     
-                    //PanelManager.instance?.AddLog($"   → Terreur Sélective de Trahison inflige -1 DF à {passedOpponents.Count} adversaire(s) passif(s)");
                 }
                 
                 GameManager.trahisonEffectPending = false;
@@ -297,21 +274,18 @@ public class CarteBoardInteraction : MonoBehaviour
                 target.SetAttaqueValue(newAtkValue);
                 
                 target.UpdateMalusAtqColor(target);
-                //PanelManager.instance?.AddLog($"{attackerName} : Malus d'attaque inflige -1 ATK à {target.nameCard}");
             }
 
             if (targetName == "Solicia") 
             { 
                 // Réflexion partielle : inflige 1 dégât à l'attaquant
                 attacker.ApplyDamageToTarget(1, targetName);
-                //PanelManager.instance?.AddLog($"{targetName} : Réflexion partielle inflige 1 dégât à {attackerName}");
             }
 
             // --- Zao : intouchable si a passé son tour ---
             if (targetName == "Zao" && target.stateOffensif == "passed")
             {
                 Debug.Log($"[ApplyAllAttacks] {target.nameCard} esquive l'attaque de {attackerName} (Zao - mode passé).");
-                //PanelManager.instance?.AddLog($"{targetName} : Zao est intouchable (mode passé)");
                 continue;
             }
 
@@ -319,7 +293,6 @@ public class CarteBoardInteraction : MonoBehaviour
             if (target.stateOffensif == "atk" && targetName != "Zao")
             {
                 Debug.Log($"[ApplyAllAttacks] {target.nameCard} esquive l'attaque de {attackerName} (mode attaque).");
-                //PanelManager.instance?.AddLog($"{targetName} : Esquive (mode attaque)");
                 continue;
             }
 
@@ -342,7 +315,6 @@ public class CarteBoardInteraction : MonoBehaviour
                 {
                     var chosenTarget = adjacentEnemies[UnityEngine.Random.Range(0, adjacentEnemies.Count)];
                     chosenTarget.ApplyDamageToTarget(1, attackerName);
-                    //PanelManager.instance.AddLog($"{attackerName} inflige 1 dégât supplémentaire à {chosenTarget.nameCard} !");
                 }
             }
 
@@ -350,7 +322,6 @@ public class CarteBoardInteraction : MonoBehaviour
             target.ApplyDamageToTarget(attaque.damage, attackerName);
         }
 
-        attaquesDuTour.Clear();
         */
     }
 
@@ -358,111 +329,7 @@ public class CarteBoardInteraction : MonoBehaviour
     {
         rectTransform.anchoredPosition = startPosition;
     }
-    
-    public void AutoPass()
-    {
-        /*    
-        // Désactiver les effets de hover du Button si présent
-        Button buttonCard = GetComponent<Button>();
-        if (buttonCard)
-        {
-            ColorBlock colors = buttonCard.colors;
-            colors.normalColor = Color.white;
-            colors.colorMultiplier = 1;
-            colors.fadeDuration = 0;
-            buttonCard.colors = colors;
-        }
-        */
-    }
-
-    private void ApplyDamageToTarget(int damage, string attackerName)
-    {
-       /* int dfsValue = GetDefenseValue(this);
-        dfsValue = CalculateEffectiveDefense(dfsValue, attackerName);
-        int newDfs = Mathf.Max(0, dfsValue - damage);
-    
-        int atqValue = GetAttackValue(this);
-        
-        cardUI?.defenseText?.SetText(newDfs.ToString());
-        cardUI?.attaqueText?.SetText(atqValue.ToString());
-        SetDefenseValue(newDfs);
-        
-        if (newDfs <= 0 && !yellowCard)
-        {
-            yellowCard = true;
-            if (cardUI?.imageCarte)
-                cardUI.imageCarte.color = Color.yellow;
-            
-            // Déduire les points de vie uniquement si c'est une carte du joueur qui est détruite
-            if (isCardPlayer)
-            {
-                GameManager.playerScore = Mathf.Max(0, GameManager.playerScore - 1);
-            }
-            else if (isCardOpponent)
-            {
-                GameManager.scoreOpponent = Mathf.Max(0, GameManager.scoreOpponent - 1);
-            }
-        }
-        */
-    }
-    
-    
-    public void SelectTarget()
-    {
-        /*
-        Color colorAtk = GameManager.numberOfAttacksUsed == 1 ? colorAtk1 : colorAtk2;        
-        isCibledCount++;
-                
-        // Afficher atk1 pour le premier ciblage, atk2 pour le deuxième
-        cardUIComponent.ShowAttackIcon(isCibledCount);
-        // Appliquer la couleur de l'attaquant sur l'icône d'attaque
-        if (attackingCard != null && attackingCard.cardUI != null)
-        {
-            CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
-            var so = System.Array.Find(cartesAssets, c => c.nom == nameAttacker);
-  
-            if (so != null && !string.IsNullOrEmpty(so.color))
-            {
-                if (isCibledCount == 1)
-                {
-                    cardUIComponent.SetAtk1IconColor(so.color);
-                    cardUIComponent.SetAtk1IconTooltip(so.nom, so.atk);
-                }
-                else if (isCibledCount == 2)
-                {
-                    cardUIComponent.SetAtk2IconColor(so.color);
-                    cardUIComponent.SetAtk2IconTooltip(so.nom, so.atk);
-                }
-            }
-        }
-        
-        ColorCard(attackingCard, colorAtk);
-        if (!coloredCards.Contains(attackingCard))
-            coloredCards.Add(attackingCard);
-        
-        ColorCard(this, colorAtk);
-        if (!coloredCards.Contains(this))
-            coloredCards.Add(this);
-                    
-        ComputeAndStoreDamage();
-        
-        attackingCard.choiceDo = true;
-        attackingCard.stateOffensif = "atk";
-        attackingCard.isSelected = false;
-        stateDefensif = "isAttacked";
-
-        attackingCard.currentTarget = nameTarget;
-                
-        CheckEndOfTurn();
-        
-        attackingCard = null;
-        nameTarget = null;
-        
-        //BoardManager.Instance.ResetAllCardsPositions();
-        */
-    }
-} 
-
+}
 
 /*
 est une carte joueur

@@ -28,7 +28,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
     public GameObject freezeIcon; // Icône "freeze"
 
     public RectTransform rectTransform;
-    private Vector3 startPosition;
+    public Vector3 startPosition;
     public Vector3 offsetClick;
 
     //private LayoutElement layoutElement;
@@ -37,9 +37,19 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
     public bool isCardOpponent = true;
     public bool isSelect = false;
     public bool isFrozen = false;
+    public bool isYellow = false;
     public bool actionChoiceDo = false;
     public string stateOffensif;
     public string stateDefensif;
+
+    enum OffensiveState { None, Passed, SelectTarget }
+    enum DefensiveState { None, Cibled }
+
+    //OffensiveState stateOffensif;
+    //DefensiveState stateDefensif;
+    //bool isPassed = stateOffensif == OffensiveState.Passed;
+
+
     public string target;
     public int targetID;
     public string lastTarget;
@@ -63,6 +73,11 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
 
     void Update()
     {
+        UpdatePassedState();
+        UpdateDefensiveState();
+        UpdateFreezeState();
+        UpdateYellowState();
+
         if(stateOffensif == "passed"){
             passedIcon.SetActive(true);
             RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
@@ -83,7 +98,60 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
         }else{
            freezeIcon.SetActive(false);
         }
+
+        if(isYellow){
+            imageCarte.color = new Color(1f, 0.95f, 0.4f, 1f);
+        }
     }
+
+    bool isPassedAnimating;
+
+    void UpdatePassedState()
+    {
+        bool isPassed = stateOffensif == "passed";
+
+        if (passedIcon.activeSelf != isPassed)
+            passedIcon.SetActive(isPassed);
+
+        if (isPassed && !isPassedAnimating)
+        {
+            isPassedAnimating = true;
+            StartCoroutine(PassedAnimation());
+        }
+    }
+
+    IEnumerator PassedAnimation()
+    {
+        RectTransform rect = passedIcon.GetComponent<RectTransform>();
+        yield return CardsAnimation.SwingSablier(rect);
+        isPassedAnimating = false;
+    }
+
+    void UpdateDefensiveState()
+    {
+        atk1Icon.SetActive(stateDefensif == "cibled");
+    }
+
+    void UpdateFreezeState()
+    {
+        freezeIcon.SetActive(isFrozen);
+    }
+
+    bool wasYellow;
+    void UpdateYellowState()
+    {
+        if (isYellow && !wasYellow)
+        {
+            imageCarte.color = new Color(1f, 0.95f, 0.4f, 1f);
+            wasYellow = true;
+        }
+        else if (!isYellow && wasYellow)
+        {
+            imageCarte.color = Color.white;
+            wasYellow = false;
+        }
+    }
+
 
     void OnEnable() => BoardManager.cardsOnBoardAI.Add(this);
     void OnDisable() => BoardManager.cardsOnBoardAI.Remove(this);
@@ -140,18 +208,14 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
         return 0;
     }
 
-    /// <summary>
     /// Vérifie si deux cartes IA sont adjacentes (pour les alliés).
-    /// </summary>
     public bool IsAdjacentTo(CardAI a, CardAI b)
     {
         if (a == null || b == null) return false;
         return Mathf.Abs(a.indexCarte - b.indexCarte) == 1;
     }
     
-    /// <summary>
     /// Vérifie si une carte IA est adjacente à une carte joueur (pour les attaques).
-    /// </summary>
     public bool IsAdjacentTo(CardAI a, CardUI b)
     {
         if (a == null || b == null) return false;
@@ -160,10 +224,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
 
     public bool HasCapacity(IAAction.Capacity cap)
     {
-        if (nameCapacity == null) return false;
-
-        // Comparaison rapide : le texte contient le nom de l'enum
-        return nameCapacity.text.Contains(cap.ToString());
+        return nameCapacity != null &&
+            nameCapacity.text.Contains(cap.ToString());
     }
-
 }

@@ -137,7 +137,7 @@ Joueur clique sur "Attaquer" → PlayerActionManager.ClickOnAttack()
 **Actions** :
 - Cache les boutons d'action : `HideActionButtons()`
 - Active l'icône d'attaque : `atk.SetActive(true)`
-- Met à jour l'état : `stateOffensif = "atk"`
+- Met à jour l'état : `stateOffensif = "selectTarget"`
 - Marque la carte : `actionChoiceDo = true`
 - Incrémente le compteur : `GameManager.Instance.numberOfAttacksUsedPlayer++`
 - Change le mode : `mode = "selectCardOpponentToAttack"`
@@ -296,7 +296,7 @@ IA.ApplyAllAttacksInRandomOrder()
 
 **Processus** :
 1. **Récupère les attaques** :
-   - Attaques du joueur : `GetPlayerAttacks()` (depuis `CardUI` avec `stateOffensif == "atk"`)
+   - Attaques du joueur : `GetPlayerAttacks()` (depuis `CardUI` avec `stateOffensif == "selectTarget"`)
    - Attaques de l'IA : `aiAttacksThisTurn` (liste stockée pendant le tour)
 
 2. **Détermine l'ordre aléatoire** :

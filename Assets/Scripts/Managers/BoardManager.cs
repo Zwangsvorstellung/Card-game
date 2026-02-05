@@ -27,7 +27,7 @@ public class BoardManager : MonoBehaviour
     {
         if(GameManager.Instance.mode != "deck"){
             // Vérifie si toutes les cartes joueur ont fait leur choix
-            if(cardsOnBoardUI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnPlayer){
+            if(cardsOnBoardUI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnPlayer && GameManager.Instance.currentPlayerAction == "UI"){
                 GameManager.Instance.isEndturnPlayer = true;
                 Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
                 Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({cardsOnBoardUI.Count} cartes)");
@@ -39,7 +39,7 @@ public class BoardManager : MonoBehaviour
             }
             
             // Vérifie si toutes les cartes IA ont fait leur choix
-            if(cardsOnBoardAI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnAI){
+            if(cardsOnBoardAI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnAI && GameManager.Instance.currentPlayerAction == "AI"){
                 GameManager.Instance.isEndturnAI = true;
                 Debug.Log($"[BOARD] ===== FIN DU TOUR IA =====");
                 Debug.Log($"[BOARD] Toutes les cartes IA ont fait leur choix ({cardsOnBoardAI.Count} cartes)");
@@ -51,7 +51,7 @@ public class BoardManager : MonoBehaviour
             
             // Si les deux ont fini, les attaques seront appliquées
             if(GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI){
-                Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des attaques en cours...");
+               // Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des attaques en cours...");
                 GameManager.Instance.currentPlayerAction = "NONE";
             }
         }
@@ -106,42 +106,129 @@ public class BoardManager : MonoBehaviour
             Debug.Log($"[BOARD] Sélection de la cible IA: {cardAI.nameCard}");
             int idAttacker = cardAI.isSelectCard();
 
-            foreach (CardUI card in cardsOnBoardUI)
+            var card = cardsOnBoardUI.FirstOrDefault(c => c.idCard == idAttacker);
+            if (card != null)
             {
-                if (card.idCard == idAttacker)
-                {
-                    Debug.Log($"[BOARD] Cible assignée: {card.nameCard} → {cardAI.nameCard}");
-                    card.SetDataTarget(cardAI);
-                    GameManager.Instance.mode = "selectCardToPlayAction";
-                    Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
-                    break;
-                }
+                Debug.Log($"[BOARD] Cible assignée: {card.nameCard} → {cardAI.nameCard}");
+                card.SetDataTarget(cardAI);
+                GameManager.Instance.mode = "selectCardToPlayAction";
+                Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
             }
+
         }
     }
 
     public void DeselectAllOtherCards()
     {
-        foreach (CardUI card in cardsOnBoardUI)
+        foreach (var card in cardsOnBoardUI.Where(c => c.isSelect && !c.actionChoiceDo))
         {
-            if (card.isSelect && !card.actionChoiceDo)
-            {
-                card.Deselect();
-                card.HideActionButtons();
-            }
+            card.Deselect();
+            card.HideActionButtons();
         }
     }
 
-    public CardUI getDataAttacker()
+    public CardUI GetDataAttacker()
     {
+        return cardsOnBoardUI.FirstOrDefault(card => card.stateOffensif == "selectTarget");
+    }
+
+    public void ResetBoardForNextTurn(){
+        GameManager.Instance.isEndturnPlayer = false;
+        GameManager.Instance.isEndturnAI = false;
+        GameManager.Instance.mode = "selectCardToPlayAction";
+
+        /*    card.ResetIcon(card);
+            card.RestoreCardColor(card);
+            card.ResetPosition();
+            card.DestroyButton();
+            card.isCibledCount = 0;
+            card.lastTarget = card.currentTarget;
+            card.layoutGroup.enabled = true;
+
+            card.ResetAllBonusMalus(card);
+
+            */
+
         foreach (CardUI card in cardsOnBoardUI)
         {
-            if (card.stateOffensif == "atk")
-            {
-                return card;
-            }
+            card.actionChoiceDo = false;
+            card.stateOffensif = "wait";
+            card.stateDefensif = "notCibled";
+            card.target = "";
+            card.targetID = 0;
         }
-        return null;
+        foreach (CardAI card in cardsOnBoardAI)
+        {
+            card.actionChoiceDo = false;
+        }
+
+        var yellowOpponent = cardsOnBoardAI.Where(c => c.isYellow).ToList();
+        var yellowPlayer = cardsOnBoardUI.Where(c => c.isYellow).ToList();
+
+        if (yellowOpponent.Count == 0 && yellowPlayer.Count == 0) 
+            return;
+
+        var deckPlayer = GameManager.Instance.piochePlayerA;
+        var deckOpponent = GameManager.Instance.piochePlayerB;
+
+        var cartesIntoBoardOpponent = cardsOnBoardAI
+                                        .Select(c => c.idCard)
+                                        .ToHashSet();
+
+        var cartesIntoBoardPlayer = cardsOnBoardUI
+                                        .Select(c => c.idCard)
+                                        .ToHashSet();
+
+        var availableCardsOpponent = deckOpponent
+                                    .Where(c => !cartesIntoBoardOpponent.Contains(c.idCard))
+                                    .ToList();
+
+        var availableCardsPlayer = deckPlayer
+                                    .Where(c => !cartesIntoBoardPlayer.Contains(c.idCard))
+                                    .ToList();
+
+                    Debug.Log(availableCardsOpponent.Count);
+
+        foreach (CardAI card in yellowOpponent)
+        {
+            if (availableCardsOpponent.Count == 0)
+            {
+                // Plus de remplaçante : rendre invisibles tous les enfants de la carte
+                foreach (Transform child in card.transform)
+                {
+                    child.gameObject.SetActive(false);
+                }
+                continue;
+            }
+            int idx = Random.Range(0, availableCardsOpponent.Count);
+            var newCard = availableCardsOpponent[idx];
+            availableCardsOpponent.RemoveAt(idx);
+        
+            var tempList = deckOpponent.ToList();
+            tempList.Remove(newCard);
+            deckOpponent.Clear();
+
+            foreach (var c in tempList) deckOpponent.Enqueue(c);
+
+            Transform parent = card.transform.parent;
+            int siblingIndex = card.transform.GetSiblingIndex();
+
+            Vector3 oldInitialPosition = card.startPosition;
+
+            GameObject.DestroyImmediate(card.gameObject);
+
+            GameObject carteGO = GameObject.Instantiate(BoardManager.Instance.cartePrefab, parent);
+            carteGO.transform.SetSiblingIndex(siblingIndex);
+
+            // Réappliquer la position exacte
+            RectTransform rtNewCard = carteGO.GetComponent<RectTransform>();
+            rtNewCard.anchoredPosition = oldInitialPosition;
+
+            CardAI cardAI = carteGO.GetComponent<CardAI>();
+            //cardAI.setAttributesInitCard(newCard);
+            //cardAI.isCardOpponent = true;
+        }
+
     }
 
 /*
@@ -158,29 +245,6 @@ public class BoardManager : MonoBehaviour
         ResetBoardForNextTurn();
     }
     
-    public void ResetBoardForNextTurn()
-    {    
-        GameManager.numberOfAttacksUsed = 0;
-        foreach(CarteBoardInteraction card in CarteBoardInteraction.AllCardsInteractions){
-
-            card.ResetIcon(card);
-            card.RestoreCardColor(card);
-            card.ResetPosition();
-            card.DestroyButton();
-            card.isCibledCount = 0;
-            card.stateDefensif = "notCibled";
-            card.stateOffensif = "waitOrder";
-            card.choiceDo = false;
-            card.isSelected = false;
-            card.lastTarget = card.currentTarget;
-            card.currentTarget = "";
-            card.layoutGroup.enabled = true;
-
-            // reset des bonus/malus
-            card.ResetAllBonusMalus(card);
-        }
-    }
-
     public void ResetAllCardsPositions()
     {
         foreach(CarteBoardInteraction card in CarteBoardInteraction.AllCardsInteractions)
@@ -188,17 +252,7 @@ public class BoardManager : MonoBehaviour
             card.rectTransform.anchoredPosition = card.startPosition;
         }
     }
-
-    public void AutoPassLastCards()
-    {        
-        foreach (CarteBoardInteraction card in CarteBoardInteraction.AllCardsInteractions)
-        {
-            if (card.isCardPlayer && !card.choiceDo)
-                card.AutoPass();
-        }
-    }
     
-
     public (CarteBoardInteraction leftCard, CarteBoardInteraction rightCard) GetAdjacentCards(int index, string team)
     {
         List<CarteBoardInteraction> allCards = CarteBoardInteraction.AllCardsInteractions;
@@ -229,41 +283,6 @@ public class BoardManager : MonoBehaviour
         
     }
 
-
-    public void MarkEndOfTurn()
-    {
-        // Si l'IA est active, simuler les attaques de l'IA
-        // Les attaques du joueur sont stockées dans attaquesDuTour et seront appliquées
-        // avec les attaques de l'IA à la fin du tour complet dans ExecuteAITurn()
-        if (GameManager.iaActive)
-        {            
-            //PanelManager.instance?.AddLog("[IA] Lancement");
-        
-            Invoke("StartAI", 0.2f);
-            
-            if (roundDamage.Count > 0)
-            {
-                //PanelManager.instance.AddLog("------");
-                //foreach (string calcul in roundDamage)
-                    //PanelManager.instance.AddLog(calcul);
-            }
-            roundDamage.Clear();
-            
-            //PanelManager.instance.AddLog($"--- SCORE : {GameManager.playerScore} points ---");
-        }
-        else
-        {            
-            //BoardManager.Instance.ShowButtonNextStep(true);
-        }
-        GameManager.currentRound++;
-    }
-
-    private void StartAI()
-    {
-        IA.Instance.StartCoroutine(IA.Instance.StartAITurnCoroutine());
-    }
-
-
     private IEnumerator FadeYellowCards(float fromAlpha, float toAlpha, float duration)
     {
         var yellowCards = CarteBoardInteraction.AllCardsInteractions
@@ -288,17 +307,6 @@ public class BoardManager : MonoBehaviour
 
     public void ReplaceOpponentYellowCards()
     {
-        List<CarteBoardInteraction> allCards = CarteBoardInteraction.AllCardsInteractions;
-
-        var yellowOpponent = allCards.Where(c => c.yellowCard && c.isCardOpponent).ToList();
-        var yellowPlayer = allCards.Where(c => c.yellowCard && c.isCardPlayer).ToList();
-        
-        if (yellowOpponent.Count == 0 && yellowPlayer.Count == 0) 
-            return;
-        
-        var deckOpponent = GameManager.Instance.piochePlayerB;
-        var deckPlayer = GameManager.Instance.piochePlayerA;
-
         var cartesIntoBoardOpponent = allCards.Where(c => c.isCardOpponent && c.carteUI != null)
                                            .Select(c => c.carteUI.carteID).ToHashSet();
 
@@ -391,5 +399,5 @@ public class BoardManager : MonoBehaviour
         GameManager.Instance.CheckGameOver();
     }
 
-    */
+*/
 } 

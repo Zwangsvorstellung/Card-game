@@ -1412,7 +1412,6 @@ MonoBehaviour:
   bonusDfs: 0
   malusAtk: 0
   malusDfs: 0
-  isFreeze: 0
   freezeNumberLoop: 0
   resetBonusAtk: 1
   nameCard: 
@@ -1455,7 +1454,7 @@ MonoBehaviour:
   rectTransform: {fileID: 1717872437429368769}
   startPosition: {x: 0, y: 0}
   positionWithOffset: {x: 0, y: 0}
-  offsetClick: {x: 0, y: 60}
+  offsetClick: {x: 0, y: 40}
   atk: {fileID: 79617391956324289}
   passed: {fileID: 2470472244662116377}
   buttonAtk: {fileID: 176428939291699513}
@@ -1463,11 +1462,14 @@ MonoBehaviour:
   layoutGroup: {fileID: 0}
   isCardPlayer: 0
   isSelect: 0
+  isFrozen: 0
   actionChoiceDo: 0
   stateOffensif: 
   stateDefensif: 
   target: 
   targetID: 0
+  lastTarget: 
+  lastTargetID: 0
   instanceId: 
   idCard: 0
   nameCard: 

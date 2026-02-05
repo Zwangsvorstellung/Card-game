@@ -1244,11 +1244,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 428539232}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f3f5d7ab989725a4d8cbccfe8b2f61b8, type: 3}
+  m_Script: {fileID: 11500000, guid: 2abc2a5077f127a47bc74a7262cdbe61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  delayAction: 3
 --- !u!4 &428539234
 Transform:
   m_ObjectHideFlags: 0
@@ -1670,13 +1671,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 646254233}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d75e5350487ec544abfeeeadaad84d4b, type: 3}
+  m_Script: {fileID: 11500000, guid: 1e337297b96a2124cbba6e8dba4cba3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   numberOfAttacksUsedPlayer: 0
   numberOfAttacksUsedIA: 0
   mainUIManager: {fileID: 1866777778}
+  boardManager: {fileID: 581423556}
+  currentPlayerAction: 
+  isEndturnPlayer: 0
+  isEndturnAI: 0
   mode: 
+  playerStarts: 0
+  round: 0
 --- !u!1 &652632049
 GameObject:
   m_ObjectHideFlags: 0
@@ -3214,7 +3221,7 @@ MonoBehaviour:
   m_Padding:
     m_Left: 0
     m_Right: 0
-    m_Top: 0
+    m_Top: 80
     m_Bottom: 0
   m_ChildAlignment: 4
   m_Spacing: 0

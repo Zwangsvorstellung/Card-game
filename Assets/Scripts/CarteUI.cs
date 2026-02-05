@@ -84,17 +84,6 @@ public class CarteUI : MonoBehaviour
     }
     */
 
-    public void HideAllIcons()
-    {
-        atk1Icon.SetActive(false);
-        atk2Icon.SetActive(false);
-        passedIcon.SetActive(false);
-        freezeIcon.SetActive(false);
-    }
-
-    public void AfficherIconePassed()
-    {
-    }
 
     public void ShowAttackIcon(int numberAtk)
     {

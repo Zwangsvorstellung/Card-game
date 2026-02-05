@@ -61,10 +61,13 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log($"[GAME] → L'IA commence ce tour (Round {round})");
-            IA.Instance.StartAITurn();
+            IA.Instance.StartCoroutine(IA.Instance.StartAITurnCoroutine());
         }
     }
 
+    public void initRound(){
+        boardManager.ResetBoardForNextTurn();
+    }
 
     public void EndTurn()
     {
@@ -87,7 +90,6 @@ public class GameManager : MonoBehaviour
 
         StartTurn();
     }
-
 
     void Start()
     {

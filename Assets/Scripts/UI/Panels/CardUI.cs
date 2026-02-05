@@ -43,6 +43,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public bool isCardPlayer = true;
     public bool isSelect = false;
     public bool isFrozen = false;
+    public bool isYellow = false;
     public bool actionChoiceDo = false;
     public string stateOffensif;
     public string stateDefensif;
@@ -74,10 +75,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     private void Update()
     {
-        if(GameManager.Instance.numberOfAttacksUsedPlayer > 1 && stateOffensif != "atk"){
-            AutoPass();
-        }
-
         if(stateOffensif == "passed"){
             passedIcon.SetActive(true);
             RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
@@ -97,6 +94,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
             freezeIcon.SetActive(true);
         }else{
            freezeIcon.SetActive(false);
+        }
+
+        if(isYellow){
+            imageCarte.color = new Color(1f, 0.95f, 0.4f, 1f);
         }
     }
 
@@ -187,7 +188,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void ShowActionButtons()
     {
-        buttonAtk?.SetActive(true);
+        if(GameManager.Instance.numberOfAttacksUsedPlayer < 2)
+            buttonAtk?.SetActive(true);
+
         buttonPass?.SetActive(true);
     }
     
@@ -206,6 +209,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         rectTransform.anchoredPosition = startPosition - offsetClick;
 
         actionChoiceDo = true;
+        isSelect = false;          
+
         imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
         
         Debug.Log($"[CARD-UI] {nameCard} passe son tour (ATK:{attaqueValue}, DEF:{defenseValue})");
@@ -228,9 +233,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         }
         else if(nameCard == "Cassandre"){
             int index = carteUI.indexHierarchieOriginal;
-            string team = isCardOpponent ? "opponent": "player";
 
-            var (leftCard, rightCard) = BoardManager.Instance.GetAdjacentCards(index, team);
+            var (leftCard, rightCard) = BoardManager.Instance.GetAdjacentCards(index, 'player');
 
             //PanelManager.instance.AddLog($"Cassandre passe son tour");
 
@@ -300,8 +304,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
             //PanelManager.instance?.AddLog($"{nameCard} : Zao passe son tour. Elle est intouchable.");
         }
         
-        isSelected = false;
-        GameManager.SetMode("select");
         CheckEndOfTurn();
         */
     }
@@ -311,8 +313,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         HideActionButtons();
         atk?.SetActive(true);
 
-        stateOffensif = "atk";
-        actionChoiceDo = true;
+        stateOffensif = "selectTarget";
         GameManager.Instance.numberOfAttacksUsedPlayer++;
         
         Debug.Log($"[CARD-UI] {nameCard} passe en mode ATTAQUE (ATK:{attaqueValue}, DEF:{defenseValue})");
@@ -320,8 +321,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
         /*
         if (layoutElement) layoutElement.ignoreLayout = true;               
-
-        attackingCard = this; 
         
         var availableTargets = CarteBoardInteraction.AllCardsInteractions
             .Where(c => c.isCardOpponent && c.stateDefensif != "isAttacked")
@@ -338,7 +337,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
                 chosenTarget.SelectTarget();
 
                 //PanelManager.instance.AddLog($"   → Cible aléatoire sélectionnée Par Tyroine : {chosenTarget.nameCard}");
-                //PanelManager.instance.AddLog($"   → -1 en dfs pour : {chosenTarget.nameCard} (sera appliqué en fin de tour)");
             }
             else
             {
@@ -399,20 +397,17 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
                 }
             }
         }
-        
         CheckEndOfTurn();
         */
-    }
-
-    public void AutoPass()
-    {
-        OnPassed();
     }
 
     public void SetDataTarget(CardAI cardAI)
     {   
         target = cardAI.nameCard;
         targetID = cardAI.idCard;
+        actionChoiceDo = true;
+        isSelect = false;    
+        stateOffensif = "atk";      
         
         Debug.Log($"[CARD-UI] {nameCard} cible {cardAI.nameCard} (ATK:{attaqueValue} vs DEF:{cardAI.defenseValue})");
         int damage = attaqueValue - cardAI.defenseValue;
@@ -424,7 +419,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     {
         if (nameCapacity == null) return false;
 
-        // Comparaison rapide : le texte contient le nom de l'enum
         return nameCapacity.text.Contains(cap.ToString());
     }
 

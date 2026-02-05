@@ -38,10 +38,8 @@ public static class IAAction
 
     public static List<Capacity> Capacites;
 
-    /// <summary>
     /// Évalue le score d'une attaque potentielle de l'attaquant vers le défenseur.
     /// Plus le score est élevé, plus l'attaque est avantageuse.
-    /// </summary>
     /// <param name="attacker">La carte qui envisagerait d'attaquer (CardAI)</param>
     /// <param name="defender">La carte visée par l'attaque (CardUI)</param>
     /// <param name="attackerAllies">Liste des alliés de l'attaquant (autres cartes du même camp)</param>
@@ -227,10 +225,8 @@ public static class IAAction
         return scoring;
     }
 
-    /// <summary>
     /// Évalue le score de rester passif (ne pas attaquer) pour une carte.
     /// Plus le score est élevé, plus il est avantageux de ne pas attaquer.
-    /// </summary>
     /// <param name="card">La carte qui envisagerait de rester passive (CardAI)</param>
     /// <param name="allies">Liste des alliés de la carte</param>
     /// <param name="opponents">Liste des ennemis</param>
@@ -294,10 +290,8 @@ public static class IAAction
         return scoring;
     }
 
-    /// <summary>
     /// Décide de l'action optimale pour une carte : attaquer ou rester passif.
     /// Compare les scores d'attaque et de passivité pour prendre la meilleure décision.
-    /// </summary>
     /// <param name="attacker">La carte qui doit décider de son action (CardAI)</param>
     /// <param name="allies">Liste des alliés de la carte</param>
     /// <param name="opponents">Liste des ennemis disponibles comme cibles</param>
@@ -345,10 +339,8 @@ public static class IAAction
         return (shouldAttack, bestTarget, shouldAttack ? maxAttackScore : passifScore);
     }
     
-    /// <summary>
     /// Évalue la menace globale représentée par les ennemis.
     /// Plus le score est élevé, plus les ennemis sont dangereux.
-    /// </summary>
     /// <param name="opponents">Liste des cartes ennemies</param>
     /// <returns>Un score de menace (0 = aucune menace)</returns>
     public static int EvaluateEnemyThreat(List<CardUI> opponents)
@@ -378,11 +370,9 @@ public static class IAAction
         return threatScore;
     }
 
-    /// <summary>
     /// Évalue les bonus passifs des ennemis.
     /// Plus le score est élevé, plus les ennemis profitent de rester passifs.
     /// Cela incite à les attaquer plutôt que de rester passif soi-même.
-    /// </summary>
     /// <param name="opponents">Liste des cartes ennemies</param>
     /// <returns>Un score de bonus passif (0 = aucun bonus)</returns>
     public static int EvaluateEnemyPassiveBonus(List<CardUI> opponents)
