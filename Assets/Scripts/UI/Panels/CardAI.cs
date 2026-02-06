@@ -32,7 +32,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
     public Vector3 offsetClick;
 
     //private LayoutElement layoutElement;
-    //public LayoutGroup layoutGroup;
+    public LayoutGroup layoutGroup;
 
     public bool isCardOpponent = true;
     public bool isSelect = false;
@@ -199,13 +199,29 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
             imageCarte.color = new Color(0.5f, 0.7f, 1f, 1f);
 
             stateDefensif = "cibled";
-            CardUI cardUI = BoardManager.Instance.getDataAttacker();
+            CardUI cardUI = BoardManager.Instance.GetDataAttacker();
             nameAttacker = cardUI.nameCard;
             idAttacker = cardUI.idCard;
 
             return idAttacker;
         }
         return 0;
+    }
+
+    public void ResetCardEndTurn(){
+
+        actionChoiceDo = false;
+        stateOffensif = "wait";
+        stateDefensif = "notCibled";
+        lastTarget = target;
+        target = "";
+        targetID = 0;
+        HideAllIcons();
+    }
+
+    public void ResetPosition()
+    {
+        rectTransform.anchoredPosition = startPosition;
     }
 
     /// Vérifie si deux cartes IA sont adjacentes (pour les alliés).

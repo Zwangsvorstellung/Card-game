@@ -137,31 +137,22 @@ public class BoardManager : MonoBehaviour
         GameManager.Instance.isEndturnAI = false;
         GameManager.Instance.mode = "selectCardToPlayAction";
 
-        /*    card.ResetIcon(card);
-            card.RestoreCardColor(card);
-            card.ResetPosition();
-            card.DestroyButton();
-            card.isCibledCount = 0;
-            card.lastTarget = card.currentTarget;
-            card.layoutGroup.enabled = true;
-
-            card.ResetAllBonusMalus(card);
-
-            */
-
         foreach (CardUI card in cardsOnBoardUI)
         {
-            card.actionChoiceDo = false;
-            card.stateOffensif = "wait";
-            card.stateDefensif = "notCibled";
-            card.target = "";
-            card.targetID = 0;
+            card.ResetCardEndTurn();
+           // card.ResetPosition();
         }
         foreach (CardAI card in cardsOnBoardAI)
         {
-            card.actionChoiceDo = false;
+            card.ResetCardEndTurn();
+            //card.ResetPosition();
         }
 
+        ReplaceOpponentYellowCards();
+    }
+
+    public void ReplaceOpponentYellowCards()
+    {
         var yellowOpponent = cardsOnBoardAI.Where(c => c.isYellow).ToList();
         var yellowPlayer = cardsOnBoardUI.Where(c => c.isYellow).ToList();
 
@@ -186,8 +177,6 @@ public class BoardManager : MonoBehaviour
         var availableCardsPlayer = deckPlayer
                                     .Where(c => !cartesIntoBoardPlayer.Contains(c.idCard))
                                     .ToList();
-
-                    Debug.Log(availableCardsOpponent.Count);
 
         foreach (CardAI card in yellowOpponent)
         {
@@ -217,7 +206,7 @@ public class BoardManager : MonoBehaviour
 
             GameObject.DestroyImmediate(card.gameObject);
 
-            GameObject carteGO = GameObject.Instantiate(BoardManager.Instance.cartePrefab, parent);
+            GameObject carteGO = GameObject.Instantiate(BoardManager.Instance.cartePrefabAI, parent);
             carteGO.transform.SetSiblingIndex(siblingIndex);
 
             // Réappliquer la position exacte
@@ -225,10 +214,48 @@ public class BoardManager : MonoBehaviour
             rtNewCard.anchoredPosition = oldInitialPosition;
 
             CardAI cardAI = carteGO.GetComponent<CardAI>();
-            //cardAI.setAttributesInitCard(newCard);
-            //cardAI.isCardOpponent = true;
+            cardAI.setAttributesInitCardAI(newCard);
         }
 
+        foreach (CardUI card in yellowPlayer)
+        {
+            if (availableCardsPlayer.Count == 0)
+            {
+                // Plus de remplaçante : rendre invisibles tous les enfants de la carte
+                foreach (Transform child in card.transform)
+                {
+                    child.gameObject.SetActive(false);
+                }
+                continue;
+            }
+            int idx = Random.Range(0, availableCardsOpponent.Count);
+            var newCard = availableCardsOpponent[idx];
+            availableCardsOpponent.RemoveAt(idx);
+        
+            var tempList = deckOpponent.ToList();
+            tempList.Remove(newCard);
+            deckOpponent.Clear();
+
+            foreach (var c in tempList) deckPlayer.Enqueue(c);
+
+            Transform parent = card.transform.parent;
+            int siblingIndex = card.transform.GetSiblingIndex();
+
+            Vector3 oldInitialPosition = card.startPosition;
+
+            GameObject.DestroyImmediate(card.gameObject);
+
+            GameObject carteGO = GameObject.Instantiate(BoardManager.Instance.cartePrefab, parent);
+            carteGO.transform.SetSiblingIndex(siblingIndex);
+
+            // Réappliquer la position exacte
+            RectTransform rtNewCard = carteGO.GetComponent<RectTransform>();
+            rtNewCard.anchoredPosition = oldInitialPosition;
+
+            CardUI cardUI = carteGO.GetComponent<CardUI>();
+            cardUI.setAttributesInitCardPlayer(newCard);
+
+        }
     }
 
 /*

@@ -64,18 +64,6 @@ public class CarteUI : MonoBehaviour
         indexHierarchieOriginal = transform.GetSiblingIndex();
     }
 
-    public void setAttributesInitCard(CarteData data)
-    {
-        imageCarte.sprite = data.image;
-        nameCard = data.nom;
-        nomText?.SetText(data.nom);
-        attaqueText?.SetText(data.attaque.ToString());
-        defenseText?.SetText(data.defense.ToString());
-        nameCapacity?.SetText(data.nameCapacity);
-        descriptionCapacity?.SetText(data.descriptionCapacity);
-        carteID = data.idCard.ToString();
-    }
-
     /*private int CountSelectedCards()
     {
         Transform parentPanel = transform.parent;

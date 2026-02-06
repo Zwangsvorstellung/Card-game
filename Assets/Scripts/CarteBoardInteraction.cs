@@ -324,11 +324,6 @@ public class CarteBoardInteraction : MonoBehaviour
 
         */
     }
-
-    public void ResetPosition()
-    {
-        rectTransform.anchoredPosition = startPosition;
-    }
 }
 
 /*

@@ -104,6 +104,22 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     void OnEnable() => BoardManager.cardsOnBoardUI.Add(this);
     void OnDisable() => BoardManager.cardsOnBoardUI.Remove(this);
 
+    public void ResetCardEndTurn(){
+
+        actionChoiceDo = false;
+        stateOffensif = "wait";
+        stateDefensif = "notCibled";
+        lastTarget = target;
+        target = "";
+        targetID = 0;
+    }
+
+    public void ResetPosition()
+    {
+        rectTransform.anchoredPosition = startPosition;
+        layoutGroup.enabled = true;
+    }
+
     public void setAttributesInitCardPlayer(CarteData data)
     {
         imageCarte.sprite = data.image;
