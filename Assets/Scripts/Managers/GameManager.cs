@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour
     public const int MAX_CARTES_TAPIS = 4;
     public static int MAX_NUMBER_ATK_ROUND = 2;
 
+    public List<CarteData> deckPlayerA;
+    public List<CarteData> deckPlayerB;
+
     public int numberOfAttacksUsedPlayer;
     public int numberOfAttacksUsedIA;
 

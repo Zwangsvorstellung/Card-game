@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 using System.Collections;
+using TMPro;
 
 public class BoardManager : MonoBehaviour
 {
@@ -17,6 +18,12 @@ public class BoardManager : MonoBehaviour
     public Transform handPlayerTransform;
     public Transform handOpponentTransform;
 
+    public TMP_Text carteUI;
+    public TMP_Text carteAI;
+
+    bool aiTurnStarted = false;
+
+
     void Awake()
     {
         if (Instance != null && Instance != this) Destroy(gameObject);
@@ -25,6 +32,15 @@ public class BoardManager : MonoBehaviour
 
     void Update()
     {
+                 
+        int aicount = GameManager.Instance.piochePlayerA.Count;
+        int uicount =  GameManager.Instance.piochePlayerB.Count;
+
+        carteUI?.SetText(uicount.ToString());
+        carteAI?.SetText(aicount.ToString());
+
+
+
         if(GameManager.Instance.mode != "deck"){
             // Vérifie si toutes les cartes joueur ont fait leur choix
             if(cardsOnBoardUI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnPlayer && GameManager.Instance.currentPlayerAction == "UI"){
@@ -35,12 +51,19 @@ public class BoardManager : MonoBehaviour
                 int passesCount = cardsOnBoardUI.Count(c => c.stateOffensif == "passed");
                 Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
                 GameManager.Instance.currentPlayerAction = "AI";
-                IA.Instance.StartAITurn();
+
+                if(!aiTurnStarted)
+                {
+                    aiTurnStarted = true;
+                    StartCoroutine(StartAITurnWithDelay(1.5f));
+                }
             }
             
             // Vérifie si toutes les cartes IA ont fait leur choix
             if(cardsOnBoardAI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnAI && GameManager.Instance.currentPlayerAction == "AI"){
                 GameManager.Instance.isEndturnAI = true;
+                aiTurnStarted = false;
+
                 Debug.Log($"[BOARD] ===== FIN DU TOUR IA =====");
                 Debug.Log($"[BOARD] Toutes les cartes IA ont fait leur choix ({cardsOnBoardAI.Count} cartes)");
                 int attacksCount = cardsOnBoardAI.Count(c => c.stateOffensif == "atk");
@@ -140,12 +163,10 @@ public class BoardManager : MonoBehaviour
         foreach (CardUI card in cardsOnBoardUI)
         {
             card.ResetCardEndTurn();
-           // card.ResetPosition();
         }
         foreach (CardAI card in cardsOnBoardAI)
         {
             card.ResetCardEndTurn();
-            //card.ResetPosition();
         }
 
         ReplaceOpponentYellowCards();
@@ -258,6 +279,13 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    IEnumerator StartAITurnWithDelay(float delay)
+    {
+        Debug.Log("[AI] Réflexion en cours...");
+        yield return new WaitForSeconds(delay);
+        IA.Instance.StartAITurn();
+    }
+
 /*
     public IEnumerator HandleNextTurnTransition()
     {
@@ -272,13 +300,6 @@ public class BoardManager : MonoBehaviour
         ResetBoardForNextTurn();
     }
     
-    public void ResetAllCardsPositions()
-    {
-        foreach(CarteBoardInteraction card in CarteBoardInteraction.AllCardsInteractions)
-        {
-            card.rectTransform.anchoredPosition = card.startPosition;
-        }
-    }
     
     public (CarteBoardInteraction leftCard, CarteBoardInteraction rightCard) GetAdjacentCards(int index, string team)
     {

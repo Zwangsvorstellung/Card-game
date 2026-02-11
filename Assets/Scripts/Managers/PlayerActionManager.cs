@@ -54,8 +54,22 @@ public class PlayerActionManager : MonoBehaviour
 
         GameManager.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
 
+    Debug.Log($"Pioche contient {GameManager.Instance.piochePlayerA.Count} cartes :");
+foreach (var card in GameManager.Instance.piochePlayerA)
+{
+    Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+}
+
+
         foreach (var card in unselectedCards)
             GameManager.Instance.piochePlayerA.Enqueue(card);
+
+    Debug.Log($"Pioche contient {GameManager.Instance.piochePlayerA.Count} cartes :");
+foreach (var card in GameManager.Instance.piochePlayerA)
+{
+    Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+}
+
 
         // Génère 4 cartes aléatoires pour l'opposant
         var opponentDeck = GameManager.Instance.mainPlayerB;

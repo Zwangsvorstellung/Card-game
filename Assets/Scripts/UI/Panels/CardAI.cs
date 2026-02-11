@@ -31,6 +31,9 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
     public Vector3 startPosition;
     public Vector3 offsetClick;
 
+    public GameObject atk;
+
+
     //private LayoutElement layoutElement;
     public LayoutGroup layoutGroup;
 
@@ -69,6 +72,11 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
         stateDefensif = "notCibled";
         stateOffensif = "wait";
         cardsAnimation = GetComponent<CardsAnimation>();
+    }
+
+    private void Start()
+    {
+        startPosition = rectTransform.anchoredPosition;
     }
 
     void Update()
@@ -216,7 +224,12 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
         lastTarget = target;
         target = "";
         targetID = 0;
+
+        imageCarte.color = Color.white;
+
         HideAllIcons();
+        ResetPosition();
+        atk?.SetActive(false);
     }
 
     public void ResetPosition()
