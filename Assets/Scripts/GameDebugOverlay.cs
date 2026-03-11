@@ -8,7 +8,6 @@ public class GameDebugOverlay : MonoBehaviour
 
     void Awake()
     {
-        // Crée une texture noire opaque
         blackTexture = new Texture2D(1, 1);
         blackTexture.SetPixel(0, 0, Color.black);
         blackTexture.Apply();
@@ -41,7 +40,6 @@ public class GameDebugOverlay : MonoBehaviour
         int lineHeight = 24;
         int line = y + 10;
 
-        // Fond opaque avec Texture2D
         GUI.DrawTexture(new Rect(x, y, width, height), blackTexture);
 
         // Vérification GameManager

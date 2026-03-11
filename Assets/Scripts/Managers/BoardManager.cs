@@ -19,9 +19,6 @@ public class BoardManager : MonoBehaviour
     public Transform handOpponentTransform;
 
 
-    bool aiTurnStarted = false;
-
-
     void Awake()
     {
         if (Instance != null && Instance != this) Destroy(gameObject);
@@ -32,49 +29,36 @@ public class BoardManager : MonoBehaviour
     {
         if (GameManager.Instance.mode == "deck") return;
 
-
-        // Vérifie si toutes les cartes joueur ont fait leur choix
-        if(cardsOnBoardUI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnPlayer && GameManager.Instance.currentPlayerAction == "UI"){
-            GameManager.Instance.isEndturnPlayer = true;
-            Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
-            Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({cardsOnBoardUI.Count} cartes)");
-            int attacksCount = cardsOnBoardUI.Count(c => c.stateOffensif == "atk");
-            int passesCount = cardsOnBoardUI.Count(c => c.stateOffensif == "passed");
-            Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
-            GameManager.Instance.currentPlayerAction = "AI";
-
-            Debug.Log($"[BOARD] aiTurnStarted={aiTurnStarted} avant lancement IA");
-
-            if(!aiTurnStarted)
-            {
-                aiTurnStarted = true;
-                StartCoroutine(StartAITurnWithDelay(1.5f));
-            }
-        }
-        
-        // Cas où l'IA doit commencer le round (playerStarts = false)
-        if (GameManager.Instance.currentPlayerAction == "AI" && !aiTurnStarted && !GameManager.Instance.isEndturnAI)
+        if (GameManager.Instance.aiStart)
         {
-            aiTurnStarted = true;
             StartCoroutine(StartAITurnWithDelay(1.5f));
-        }
-        
-        // Vérifie si toutes les cartes IA ont fait leur choix
-        if(cardsOnBoardAI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnAI && GameManager.Instance.currentPlayerAction == "AI"){
-            GameManager.Instance.isEndturnAI = true;
-            aiTurnStarted = false;
+            GameManager.Instance.aiStart = false; // S'assurer que l'IA ne démarre qu'une fois
+            GameManager.Instance.isEndturnAI = true; // Réinitialiser le flag pour le tour de l'IA
 
             Debug.Log($"[BOARD] ===== FIN DU TOUR IA =====");
             Debug.Log($"[BOARD] Toutes les cartes IA ont fait leur choix ({cardsOnBoardAI.Count} cartes)");
             int attacksCount = cardsOnBoardAI.Count(c => c.stateOffensif == "atk");
             int passesCount = cardsOnBoardAI.Count(c => c.stateOffensif == "passed");
             Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
-            GameManager.Instance.currentPlayerAction = "UI";
+        }else
+        {
+            Debug.Log($"[BOARD] En attente du joueur (isEndturnPlayer: {GameManager.Instance.isEndturnPlayer})");
+
+            // Vérifie si toutes les cartes joueur ont fait leur choix
+            if(cardsOnBoardUI.All(card => card.actionChoiceDo)){
+                GameManager.Instance.isEndturnPlayer = true;
+                Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
+                Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({cardsOnBoardUI.Count} cartes)");
+                int attacksCount = cardsOnBoardUI.Count(c => c.stateOffensif == "atk");
+                int passesCount = cardsOnBoardUI.Count(c => c.stateOffensif == "passed");
+                Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
+            }
+
         }
+
         
-        // Si les deux ont fini, les attaques seront appliquées
         if(GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI){
-            // Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des attaques en cours...");
+            Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des attaques en cours...");
             GameManager.Instance.currentPlayerAction = "NONE";
         }
         
@@ -157,7 +141,7 @@ public class BoardManager : MonoBehaviour
     public void ResetBoardForNextTurn(){
         GameManager.Instance.isEndturnPlayer = false;
         GameManager.Instance.isEndturnAI = false;
-        aiTurnStarted = false;
+
         GameManager.Instance.mode = "selectCardToPlayAction";
 
         foreach (CardUI card in cardsOnBoardUI)
@@ -326,18 +310,6 @@ public class BoardManager : MonoBehaviour
         var list = gm.mainPlayerA.Where(c => c.instanceId != oldInstanceId).ToList();
         list.Add(newCard);
         gm.mainPlayerA = new Queue<CarteData>(list);
-    }
-
-    /// <summary>
-    /// Lance le tour de l'IA si ce n'est pas déjà fait. Appelé par GameManager quand l'IA doit commencer le round.
-    /// </summary>
-    public void StartAITurnIfNeeded()
-    {
-        if (!aiTurnStarted)
-        {
-            aiTurnStarted = true;
-            StartCoroutine(StartAITurnWithDelay(1.5f));
-        }
     }
 
     IEnumerator StartAITurnWithDelay(float delay)

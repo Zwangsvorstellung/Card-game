@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviour
     public bool isEndturnAI = false;
 
     public string mode;
-    public bool playerStarts;
+    public bool aiStart;
     public int round;
 
     void Awake()
@@ -50,9 +50,9 @@ public class GameManager : MonoBehaviour
         Debug.Log($"[GAME] ===== DÉBUT DU TOUR {round} =====");
         Debug.Log($"[GAME] Compteurs réinitialisés - Attaques joueur: {numberOfAttacksUsedPlayer}, Attaques IA: {numberOfAttacksUsedIA}");
     
-        playerStarts = Random.Range(0, 2) == 0;
+        aiStart = Random.Range(0, 2) == 0;
 
-        if(playerStarts)
+        if(aiStart)
         {
             currentPlayerAction = "UI";
             Debug.Log($"[GAME] → Le JOUEUR commence ce tour (Round {round})");
@@ -62,7 +62,6 @@ public class GameManager : MonoBehaviour
         {
             currentPlayerAction = "AI";
             Debug.Log($"[GAME] → L'IA commence ce tour (Round {round})");
-            boardManager.StartAITurnIfNeeded();
         }
     }
 
@@ -80,14 +79,14 @@ public class GameManager : MonoBehaviour
 
         // Chaque tour : choix aléatoire (joueur ou IA commence)
         // Cela rend le jeu plus imprévisible et équitable
-        playerStarts = Random.Range(0, 2) == 0;
-        if(playerStarts)
-            currentPlayerAction = "UI";
-        else
+        aiStart = Random.Range(0, 2) == 0;
+        if(aiStart)
             currentPlayerAction = "AI";
+        else
+            currentPlayerAction = "UI";
 
         
-        Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(playerStarts ? "JOUEUR" : "IA")} (aléatoire)");
+        Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(aiStart ? "IA" : "JOUEUR")} (aléatoire)");
 
         StartTurn();
     }

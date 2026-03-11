@@ -174,17 +174,50 @@ public class IA : MonoBehaviour
                 Debug.Log($"[IA]   - {attack.attackerAI.nameCard} → {attack.targetPlayer.nameCard} ({attack.damage} dégâts)");
         }
         
-        // À la fin du tour de l'IA, on vérifie si le joueur a aussi fini
-        // Si oui, on applique toutes les attaques
-        if (GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI)
+        //StartCoroutine(ApplyAllAttacksCoroutine());
+    }
+
+    /// Applique toutes les attaques (joueur + IA) de manière séquentielle
+    public IEnumerator ApplyAllAttacksCoroutine()
+    {
+        Debug.Log($"[ATTACK] ===== APPLICATION DES ATTAQUES =====");
+        
+        // 1. Récupération des attaques du joueur
+        List<AttackInfo> playerAttacks = GetPlayerAttacks();
+        
+        // 2. Préparation de la liste globale
+        List<AttackInfo> allAttacks = new List<AttackInfo>();
+        bool aiStart = GameManager.Instance.aiStart;
+
+        if (aiStart)
         {
-            Debug.Log($"[IA] Les deux joueurs ont terminé - Application des attaques...");
-            ApplyAllAttacks();
+            allAttacks.AddRange(aiAttacksThisTurn);
+            allAttacks.AddRange(playerAttacks);
         }
         else
         {
-            Debug.Log($"[IA] En attente du joueur (isEndturnPlayer: {GameManager.Instance.isEndturnPlayer})");
+            allAttacks.AddRange(playerAttacks);
+            allAttacks.AddRange(aiAttacksThisTurn);
         }
+
+        // 3. Application séquentielle avec pause pour laisser l'Update() afficher le jaune
+        foreach (var attack in allAttacks)
+        {
+            ApplySingleAttack(attack);
+            
+            // PAUSE : Indispensable pour que l'oeil voie la carte devenir jaune
+            // et pour que l'Update() s'exécute au moins une fois
+            yield return new WaitForSeconds(0.8f);
+        }
+
+        // Petite pause supplémentaire avant de tout réinitialiser
+        yield return new WaitForSeconds(0.5f);
+        
+        aiAttacksThisTurn.Clear();
+        
+        // Fin du round
+        GameManager.Instance.initRound();
+        GameManager.Instance.EndTurn();
     }
 
     /// Exécute une attaque de l'IA : met à jour les états et applique les effets visuels.
@@ -321,67 +354,6 @@ public class IA : MonoBehaviour
         }
 
         // TODO: Optionnellement, ajouter une animation de retour à la position initiale
-    }
-    
-    /// Applique toutes les attaques (joueur + IA)
-    public static void ApplyAllAttacks()
-    {
-        Debug.Log($"[ATTACK] ===== APPLICATION DES ATTAQUES =====");
-        
-        // Récupère les attaques du joueur depuis le système existant
-        List<AttackInfo> playerAttacks = GetPlayerAttacks();
-        Debug.Log($"[ATTACK] Attaques joueur récupérées: {playerAttacks.Count}");
-        foreach (var attack in playerAttacks)
-        {
-            if (attack.attackerPlayer != null)
-                Debug.Log($"[ATTACK]   Joueur: {attack.attackerPlayer.nameCard} → {attack.targetAI.nameCard} ({attack.damage} dégâts)");
-        }
-        
-        Debug.Log($"[ATTACK] Attaques IA stockées: {aiAttacksThisTurn.Count}");
-        foreach (var attack in aiAttacksThisTurn)
-        {
-            if (attack.attackerAI != null)
-                Debug.Log($"[ATTACK]   IA: {attack.attackerAI.nameCard} → {attack.targetPlayer.nameCard} ({attack.damage} dégâts)");
-        }
-        
-        bool playerStarts = GameManager.Instance.playerStarts;
-        
-        Debug.Log($"[ATTACK] Ordre d'application déterminé: {(playerStarts ? "JOUEUR" : "IA")} commence");
-        
-        // Crée une liste combinée avec l'ordre déterminé
-        List<AttackInfo> allAttacks = new List<AttackInfo>();
-        
-        if (playerStarts)
-        {
-            // Joueur commence : attaques joueur puis attaques IA
-            allAttacks.AddRange(playerAttacks);
-            allAttacks.AddRange(aiAttacksThisTurn);
-        }
-        else
-        {
-            // IA commence : attaques IA puis attaques joueur
-            allAttacks.AddRange(aiAttacksThisTurn);
-            allAttacks.AddRange(playerAttacks);
-        }
-        
-        // Applique toutes les attaques dans l'ordre déterminé
-        Debug.Log($"[ATTACK] Application de {allAttacks.Count} attaques dans l'ordre...");
-        int attackIndex = 1;
-        foreach (var attack in allAttacks)
-        {
-            Debug.Log($"[ATTACK] [{attackIndex}/{allAttacks.Count}] Application de l'attaque...");
-            ApplySingleAttack(attack);
-            attackIndex++;
-        }
-        
-        Debug.Log($"[ATTACK] ===== TOUTES LES ATTAQUES APPLIQUÉES =====");
-        
-        // Nettoie les listes pour le prochain tour
-        aiAttacksThisTurn.Clear();
-        Debug.Log($"[ATTACK] Listes nettoyées pour le prochain tour");
-
-        GameManager.Instance.initRound();
-        GameManager.Instance.EndTurn();
     }
     
     /// Applique une seule attaque et met à jour les dégâts de la cible.
