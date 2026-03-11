@@ -30,50 +30,52 @@ public class BoardManager : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance.mode == "deck") return;
 
-        if(GameManager.Instance.mode != "deck"){
-            // Vérifie si toutes les cartes joueur ont fait leur choix
-            if(cardsOnBoardUI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnPlayer && GameManager.Instance.currentPlayerAction == "UI"){
-                GameManager.Instance.isEndturnPlayer = true;
-                Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
-                Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({cardsOnBoardUI.Count} cartes)");
-                int attacksCount = cardsOnBoardUI.Count(c => c.stateOffensif == "atk");
-                int passesCount = cardsOnBoardUI.Count(c => c.stateOffensif == "passed");
-                Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
-                GameManager.Instance.currentPlayerAction = "AI";
 
-                if(!aiTurnStarted)
-                {
-                    aiTurnStarted = true;
-                    StartCoroutine(StartAITurnWithDelay(1.5f));
-                }
-            }
-            
-            // Cas où l'IA doit commencer le round (playerStarts = false)
-            if (GameManager.Instance.currentPlayerAction == "AI" && !aiTurnStarted && !GameManager.Instance.isEndturnAI)
+        // Vérifie si toutes les cartes joueur ont fait leur choix
+        if(cardsOnBoardUI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnPlayer && GameManager.Instance.currentPlayerAction == "UI"){
+            GameManager.Instance.isEndturnPlayer = true;
+            Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
+            Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({cardsOnBoardUI.Count} cartes)");
+            int attacksCount = cardsOnBoardUI.Count(c => c.stateOffensif == "atk");
+            int passesCount = cardsOnBoardUI.Count(c => c.stateOffensif == "passed");
+            Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
+            GameManager.Instance.currentPlayerAction = "AI";
+
+            Debug.Log($"[BOARD] aiTurnStarted={aiTurnStarted} avant lancement IA");
+
+            if(!aiTurnStarted)
             {
                 aiTurnStarted = true;
                 StartCoroutine(StartAITurnWithDelay(1.5f));
             }
-            
-            // Vérifie si toutes les cartes IA ont fait leur choix
-            if(cardsOnBoardAI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnAI && GameManager.Instance.currentPlayerAction == "AI"){
-                GameManager.Instance.isEndturnAI = true;
-                aiTurnStarted = false;
+        }
+        
+        // Cas où l'IA doit commencer le round (playerStarts = false)
+        if (GameManager.Instance.currentPlayerAction == "AI" && !aiTurnStarted && !GameManager.Instance.isEndturnAI)
+        {
+            aiTurnStarted = true;
+            StartCoroutine(StartAITurnWithDelay(1.5f));
+        }
+        
+        // Vérifie si toutes les cartes IA ont fait leur choix
+        if(cardsOnBoardAI.All(card => card.actionChoiceDo) && !GameManager.Instance.isEndturnAI && GameManager.Instance.currentPlayerAction == "AI"){
+            GameManager.Instance.isEndturnAI = true;
+            aiTurnStarted = false;
 
-                Debug.Log($"[BOARD] ===== FIN DU TOUR IA =====");
-                Debug.Log($"[BOARD] Toutes les cartes IA ont fait leur choix ({cardsOnBoardAI.Count} cartes)");
-                int attacksCount = cardsOnBoardAI.Count(c => c.stateOffensif == "atk");
-                int passesCount = cardsOnBoardAI.Count(c => c.stateOffensif == "passed");
-                Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
-                GameManager.Instance.currentPlayerAction = "UI";
-            }
-            
-            // Si les deux ont fini, les attaques seront appliquées
-            if(GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI){
-               // Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des attaques en cours...");
-                GameManager.Instance.currentPlayerAction = "NONE";
-            }
+            Debug.Log($"[BOARD] ===== FIN DU TOUR IA =====");
+            Debug.Log($"[BOARD] Toutes les cartes IA ont fait leur choix ({cardsOnBoardAI.Count} cartes)");
+            int attacksCount = cardsOnBoardAI.Count(c => c.stateOffensif == "atk");
+            int passesCount = cardsOnBoardAI.Count(c => c.stateOffensif == "passed");
+            Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
+            GameManager.Instance.currentPlayerAction = "UI";
+        }
+        
+        // Si les deux ont fini, les attaques seront appliquées
+        if(GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI){
+            // Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des attaques en cours...");
+            GameManager.Instance.currentPlayerAction = "NONE";
         }
         
     }
@@ -155,6 +157,7 @@ public class BoardManager : MonoBehaviour
     public void ResetBoardForNextTurn(){
         GameManager.Instance.isEndturnPlayer = false;
         GameManager.Instance.isEndturnAI = false;
+        aiTurnStarted = false;
         GameManager.Instance.mode = "selectCardToPlayAction";
 
         foreach (CardUI card in cardsOnBoardUI)
@@ -209,6 +212,8 @@ public class BoardManager : MonoBehaviour
                 {
                     child.gameObject.SetActive(false);
                 }
+                // Synchroniser mainPlayerB : retirer la carte éliminée
+                SyncRemoveFromMainPlayerB(card.instanceId);
                 continue;
             }
             int idx = Random.Range(0, availableCardsOpponent.Count);
@@ -223,8 +228,8 @@ public class BoardManager : MonoBehaviour
 
             Transform parent = card.transform.parent;
             int siblingIndex = card.transform.GetSiblingIndex();
-
             Vector3 oldInitialPosition = card.startPosition;
+            string oldInstanceId = card.instanceId;
 
             GameObject.DestroyImmediate(card.gameObject);
 
@@ -237,6 +242,8 @@ public class BoardManager : MonoBehaviour
 
             CardAI cardAI = carteGO.GetComponent<CardAI>();
             cardAI.setAttributesInitCardAI(newCard);
+            // Synchroniser mainPlayerB : retirer l'ancienne carte, ajouter la nouvelle
+            SyncReplaceInMainPlayerB(oldInstanceId, newCard);
         }
 
         foreach (CardUI card in yellowPlayer)
@@ -248,6 +255,8 @@ public class BoardManager : MonoBehaviour
                 {
                     child.gameObject.SetActive(false);
                 }
+                // Synchroniser mainPlayerA : retirer la carte éliminée
+                SyncRemoveFromMainPlayerA(card.instanceId);
                 continue;
             }
             int idx = Random.Range(0, availableCardsPlayer.Count);
@@ -262,8 +271,8 @@ public class BoardManager : MonoBehaviour
 
             Transform parent = card.transform.parent;
             int siblingIndex = card.transform.GetSiblingIndex();
-
             Vector3 oldInitialPosition = card.startPosition;
+            string oldInstanceId = card.instanceId;
 
             GameObject.DestroyImmediate(card.gameObject);
 
@@ -276,8 +285,47 @@ public class BoardManager : MonoBehaviour
 
             CardUI cardUI = carteGO.GetComponent<CardUI>();
             cardUI.setAttributesInitCardPlayer(newCard);
-
+            // Synchroniser mainPlayerA : retirer l'ancienne carte, ajouter la nouvelle
+            SyncReplaceInMainPlayerA(oldInstanceId, newCard);
         }
+    }
+
+    /// <summary>Retire une carte de mainPlayerB (carte masquée sans remplaçant).</summary>
+    void SyncRemoveFromMainPlayerB(string instanceId)
+    {
+        var gm = GameManager.Instance;
+        if (gm.mainPlayerB == null) return;
+        var list = gm.mainPlayerB.Where(c => c.instanceId != instanceId).ToList();
+        gm.mainPlayerB = new Queue<CarteData>(list);
+    }
+
+    /// <summary>Remplace une carte dans mainPlayerB (carte remplacée depuis la pioche).</summary>
+    void SyncReplaceInMainPlayerB(string oldInstanceId, CarteData newCard)
+    {
+        var gm = GameManager.Instance;
+        if (gm.mainPlayerB == null) return;
+        var list = gm.mainPlayerB.Where(c => c.instanceId != oldInstanceId).ToList();
+        list.Add(newCard);
+        gm.mainPlayerB = new Queue<CarteData>(list);
+    }
+
+    /// <summary>Retire une carte de mainPlayerA (carte masquée sans remplaçant).</summary>
+    void SyncRemoveFromMainPlayerA(string instanceId)
+    {
+        var gm = GameManager.Instance;
+        if (gm.mainPlayerA == null) return;
+        var list = gm.mainPlayerA.Where(c => c.instanceId != instanceId).ToList();
+        gm.mainPlayerA = new Queue<CarteData>(list);
+    }
+
+    /// <summary>Remplace une carte dans mainPlayerA (carte remplacée depuis la pioche).</summary>
+    void SyncReplaceInMainPlayerA(string oldInstanceId, CarteData newCard)
+    {
+        var gm = GameManager.Instance;
+        if (gm.mainPlayerA == null) return;
+        var list = gm.mainPlayerA.Where(c => c.instanceId != oldInstanceId).ToList();
+        list.Add(newCard);
+        gm.mainPlayerA = new Queue<CarteData>(list);
     }
 
     /// <summary>

@@ -328,13 +328,12 @@ public static class IAAction
         // Calcule le score de rester passif
         int passifScore = RatePassif(attacker, allies, opponents);
 
-        // Ajuste le score passif en fonction de la situation :
-        // - Si les ennemis sont peu menaçants, rester passif est plus avantageux
-        // - Si les ennemis ont de forts bonus passifs, il vaut mieux les attaquer
-        passifScore += (5 - opponentThreat) - opponentPassiveBonus;
+        // Ajuste le score passif en fonction de la situation
+        // (valeur réduite pour éviter que l'IA reste trop passive)
+        passifScore += Mathf.Max(-2, (2 - opponentThreat) - opponentPassiveBonus);
 
-        // Décide : attaquer si le score d'attaque est supérieur au score passif
-        bool shouldAttack = maxAttackScore > passifScore;
+        // Décide : attaquer si le score d'attaque est au moins proche du passif (léger biais agressif)
+        bool shouldAttack = maxAttackScore >= passifScore - 1;
 
         return (shouldAttack, bestTarget, shouldAttack ? maxAttackScore : passifScore);
     }

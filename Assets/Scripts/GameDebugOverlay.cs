@@ -63,16 +63,16 @@ public class GameDebugOverlay : MonoBehaviour
 
         int mainPlayerA = gm.mainPlayerA != null ? gm.mainPlayerA.Count : 0;
         int mainPlayerB = gm.mainPlayerB != null ? gm.mainPlayerB.Count : 0;
-        //GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Hand: " + mainPlayerA, labelStyle); line += lineHeight;
-        //GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Hand: " + mainPlayerB, labelStyle); line += lineHeight;
+        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Hand: " + mainPlayerA, labelStyle); line += lineHeight;
+        GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Hand: " + mainPlayerB, labelStyle); line += lineHeight;
 
         int piochePlayerA = gm.piochePlayerA != null ? gm.piochePlayerA.Count : 0;
         int piochePlayerB = gm.piochePlayerB != null ? gm.piochePlayerB.Count : 0;
         GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Deck: " + piochePlayerA, labelStyle); line += lineHeight;
         GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Deck: " + piochePlayerB, labelStyle); line += lineHeight;
 
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Score: " + GameManager.playerScore, labelStyle); line += lineHeight;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Score: " + GameManager.scoreOpponent, labelStyle); line += lineHeight + 10;
+        //GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Score: " + GameManager.playerScore, labelStyle); line += lineHeight;
+        //GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Score: " + GameManager.scoreOpponent, labelStyle); line += lineHeight + 10;
 
         int totalPlayer = mainPlayerA + piochePlayerA;
         int totalAI = mainPlayerB + piochePlayerB;

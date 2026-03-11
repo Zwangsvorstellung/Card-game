@@ -81,7 +81,7 @@ public class IA : MonoBehaviour
         }
 
         // Seuil minimal de score pour qu'une attaque soit envisagée
-        const int seuilMinAttaque = 2;
+        const int seuilMinAttaque = 1;
         int attacksExecuted = 0;
 
         // Création de copies des listes pour pouvoir les modifier sans affecter les originaux
