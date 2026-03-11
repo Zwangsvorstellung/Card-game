@@ -18,8 +18,6 @@ public class BoardManager : MonoBehaviour
     public Transform handPlayerTransform;
     public Transform handOpponentTransform;
 
-    public TMP_Text carteUI;
-    public TMP_Text carteAI;
 
     bool aiTurnStarted = false;
 
@@ -32,14 +30,6 @@ public class BoardManager : MonoBehaviour
 
     void Update()
     {
-                 
-        int aicount = GameManager.Instance.piochePlayerA.Count;
-        int uicount =  GameManager.Instance.piochePlayerB.Count;
-
-        carteUI?.SetText(uicount.ToString());
-        carteAI?.SetText(aicount.ToString());
-
-
 
         if(GameManager.Instance.mode != "deck"){
             // Vérifie si toutes les cartes joueur ont fait leur choix
@@ -57,6 +47,13 @@ public class BoardManager : MonoBehaviour
                     aiTurnStarted = true;
                     StartCoroutine(StartAITurnWithDelay(1.5f));
                 }
+            }
+            
+            // Cas où l'IA doit commencer le round (playerStarts = false)
+            if (GameManager.Instance.currentPlayerAction == "AI" && !aiTurnStarted && !GameManager.Instance.isEndturnAI)
+            {
+                aiTurnStarted = true;
+                StartCoroutine(StartAITurnWithDelay(1.5f));
             }
             
             // Vérifie si toutes les cartes IA ont fait leur choix
@@ -183,6 +180,10 @@ public class BoardManager : MonoBehaviour
         var deckPlayer = GameManager.Instance.piochePlayerA;
         var deckOpponent = GameManager.Instance.piochePlayerB;
 
+        Debug.Log($"Pioche deckPlayer contient {GameManager.Instance.piochePlayerA.Count} cartes :");
+        Debug.Log($"Pioche deckOpponent contient {GameManager.Instance.piochePlayerB.Count} cartes :");
+
+
         var cartesIntoBoardOpponent = cardsOnBoardAI
                                         .Select(c => c.idCard)
                                         .ToHashSet();
@@ -249,13 +250,13 @@ public class BoardManager : MonoBehaviour
                 }
                 continue;
             }
-            int idx = Random.Range(0, availableCardsOpponent.Count);
-            var newCard = availableCardsOpponent[idx];
-            availableCardsOpponent.RemoveAt(idx);
+            int idx = Random.Range(0, availableCardsPlayer.Count);
+            var newCard = availableCardsPlayer[idx];
+            availableCardsPlayer.RemoveAt(idx);
         
-            var tempList = deckOpponent.ToList();
+            var tempList = deckPlayer.ToList();
             tempList.Remove(newCard);
-            deckOpponent.Clear();
+            deckPlayer.Clear();
 
             foreach (var c in tempList) deckPlayer.Enqueue(c);
 
@@ -276,6 +277,18 @@ public class BoardManager : MonoBehaviour
             CardUI cardUI = carteGO.GetComponent<CardUI>();
             cardUI.setAttributesInitCardPlayer(newCard);
 
+        }
+    }
+
+    /// <summary>
+    /// Lance le tour de l'IA si ce n'est pas déjà fait. Appelé par GameManager quand l'IA doit commencer le round.
+    /// </summary>
+    public void StartAITurnIfNeeded()
+    {
+        if (!aiTurnStarted)
+        {
+            aiTurnStarted = true;
+            StartCoroutine(StartAITurnWithDelay(1.5f));
         }
     }
 

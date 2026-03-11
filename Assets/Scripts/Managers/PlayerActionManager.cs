@@ -54,34 +54,32 @@ public class PlayerActionManager : MonoBehaviour
 
         GameManager.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
 
-    Debug.Log($"Pioche contient {GameManager.Instance.piochePlayerA.Count} cartes :");
-foreach (var card in GameManager.Instance.piochePlayerA)
-{
-    Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
-}
-
+        foreach (var card in GameManager.Instance.piochePlayerA)
+        {
+            Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+        }
 
         foreach (var card in unselectedCards)
             GameManager.Instance.piochePlayerA.Enqueue(card);
 
-    Debug.Log($"Pioche contient {GameManager.Instance.piochePlayerA.Count} cartes :");
-foreach (var card in GameManager.Instance.piochePlayerA)
-{
-    Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
-}
-
+        foreach (var card in GameManager.Instance.piochePlayerA)
+        {
+            Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+        }
 
         // Génère 4 cartes aléatoires pour l'opposant
         var opponentDeck = GameManager.Instance.mainPlayerB;
-        List<CarteData> opponentCards = new();
+
+        List<CarteData> opponentCards = GameManager.Instance.mainPlayerB.Take(4).ToList();
+        List<CarteData> remainingCards = GameManager.Instance.mainPlayerB.Skip(4).ToList();
+
+        GameManager.Instance.mainPlayerB = new Queue<CarteData>(opponentCards);
 
         if (opponentDeck != null)
         {
-            int count = Mathf.Min(4, opponentDeck.Count);
-
-            for (int i = 0; i < count; i++)
+            foreach (var card in remainingCards)
             {
-                opponentCards.Add(opponentDeck.Dequeue());
+                GameManager.Instance.piochePlayerB.Enqueue(card);
             }
         }
         

@@ -49,22 +49,20 @@ public class GameManager : MonoBehaviour
 
         Debug.Log($"[GAME] ===== DÉBUT DU TOUR {round} =====");
         Debug.Log($"[GAME] Compteurs réinitialisés - Attaques joueur: {numberOfAttacksUsedPlayer}, Attaques IA: {numberOfAttacksUsedIA}");
-       
+    
         playerStarts = Random.Range(0, 2) == 0;
-        if(playerStarts)
-            currentPlayerAction = "UI";
-        else
-            currentPlayerAction = "AI";
 
-        if (playerStarts)
+        if(playerStarts)
         {
+            currentPlayerAction = "UI";
             Debug.Log($"[GAME] → Le JOUEUR commence ce tour (Round {round})");
             Debug.Log($"[GAME] Mode: {mode} - Le joueur peut maintenant sélectionner ses cartes");
         }
         else
         {
+            currentPlayerAction = "AI";
             Debug.Log($"[GAME] → L'IA commence ce tour (Round {round})");
-            IA.Instance.StartCoroutine(IA.Instance.StartAITurnCoroutine());
+            boardManager.StartAITurnIfNeeded();
         }
     }
 
