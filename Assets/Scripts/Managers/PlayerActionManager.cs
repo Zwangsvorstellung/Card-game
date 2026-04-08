@@ -21,6 +21,7 @@ public class PlayerActionManager : MonoBehaviour
 
     public void LoadMemoryGame() => SceneManager.LoadScene("MemoryGameScene");
     public void LoadCardGame() => SceneManager.LoadScene("CardGamesMainScene");
+    public void ReplayCurrentGame() => SceneManager.LoadScene("CardGamesMainScene");
 
     public void QuitGame()
     {
@@ -96,7 +97,6 @@ public class PlayerActionManager : MonoBehaviour
 
         MainUIManager.Instance.gameObject.SetActive(false);
         
-        Debug.Log($"[PLAYER] Passage au plateau de combat - Mode: {GameManager.Instance.mode}");
         GameManager.Instance.StartTurn();
 
     }
