@@ -33,6 +33,11 @@ public class GameManager : MonoBehaviour
     public string mode;
     public bool aiStart;
     public int round;
+    public bool isGameOver;
+
+    [Header("Debug")]
+    [SerializeField] private bool limitCardsForDebug = true;
+    [SerializeField, Min(5)] private int debugCardsPerDeck = 5;
 
     void Awake()
     {
@@ -44,6 +49,9 @@ public class GameManager : MonoBehaviour
 
     public void StartTurn()
     {
+        if (isGameOver || CheckGameOver())
+            return;
+
         numberOfAttacksUsedPlayer = 0;
         numberOfAttacksUsedIA = 0;
 
@@ -54,15 +62,16 @@ public class GameManager : MonoBehaviour
 
         if(aiStart)
         {
-            currentPlayerAction = "UI";
-            Debug.Log($"[GAME] → Le JOUEUR commence ce tour (Round {round})");
-            Debug.Log($"[GAME] Mode: {mode} - Le joueur peut maintenant sélectionner ses cartes");
-        }
-        else
-        {
             currentPlayerAction = "AI";
             Debug.Log($"[GAME] → L'IA commence ce tour (Round {round})");
         }
+        else
+        {
+            currentPlayerAction = "UI";
+            Debug.Log($"[GAME] → Le JOUEUR commence ce tour (Round {round})");
+        }
+
+        PanelManager.Instance?.ShowTurnBanner(currentPlayerAction);
     }
 
     public void initRound(){
@@ -71,6 +80,9 @@ public class GameManager : MonoBehaviour
 
     public void EndTurn()
     {
+        if (isGameOver || CheckGameOver())
+            return;
+
         Debug.Log($"[GAME] ===== FIN DU TOUR {round} =====");
         Debug.Log($"[GAME] Attaques utilisées - Joueur: {numberOfAttacksUsedPlayer}/{MAX_NUMBER_ATK_ROUND}, IA: {numberOfAttacksUsedIA}/{MAX_NUMBER_ATK_ROUND}");
         Debug.Log($"[GAME] Scores actuels - Joueur: {playerScore}, IA: {scoreOpponent}");
@@ -78,42 +90,81 @@ public class GameManager : MonoBehaviour
         round++;
 
         // Chaque tour : choix aléatoire (joueur ou IA commence)
-        // Cela rend le jeu plus imprévisible et équitable
         aiStart = Random.Range(0, 2) == 0;
         if(aiStart)
             currentPlayerAction = "AI";
         else
             currentPlayerAction = "UI";
 
-        
         Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(aiStart ? "IA" : "JOUEUR")} (aléatoire)");
 
         StartTurn();
+    }
+
+    public bool CheckGameOver()
+    {
+        if (isGameOver) return true;
+
+        int playerBoard = BoardManager.cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot);
+        int aiBoard = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot);
+        int playerHand = mainPlayerA?.Count ?? 0;
+        int aiHand = mainPlayerB?.Count ?? 0;
+        int playerDeck = piochePlayerA?.Count ?? 0;
+        int aiDeck = piochePlayerB?.Count ?? 0;
+
+        bool playerHasNoCards = playerBoard == 0 && playerHand == 0 && playerDeck == 0;
+        bool aiHasNoCards = aiBoard == 0 && aiHand == 0 && aiDeck == 0;
+
+        if (!playerHasNoCards && !aiHasNoCards) return false;
+
+        isGameOver = true;
+        currentPlayerAction = "NONE";
+        mode = "gameOver";
+        isEndturnPlayer = true;
+        isEndturnAI = true;
+
+        string resultMessage;
+        if (playerHasNoCards && aiHasNoCards)
+            resultMessage = "Match nul !";
+        else if (aiHasNoCards)
+            resultMessage = "Victoire";
+        else
+            resultMessage = "Défaite";
+
+        string details = $"Round: {round}\n" +
+                         $"Joueur - Plateau:{playerBoard} Main:{playerHand} Pioche:{playerDeck}\n" +
+                         $"IA - Plateau:{aiBoard} Main:{aiHand} Pioche:{aiDeck}";
+        string popupMessage = $"{resultMessage}\n{details}";
+
+        PanelManager.Instance.endGamePanel.SetActive(true);
+        PanelManager.Instance.logResultEndGame.SetText(popupMessage);
+        
+        return true;
     }
 
     void Start()
     {
         round = 1;
         mode = "selectDeck";
+        isGameOver = false;
 
         playerScore = 10;
         scoreOpponent = 10;
-        
-        Debug.Log($"[GAME] ===== INITIALISATION DU JEU =====");
-        Debug.Log($"[GAME] Round: {round}, Mode: {mode}");
-        Debug.Log($"[GAME] Scores initiaux - Joueur: {playerScore}, IA: {scoreOpponent}");
-        
-        // faire 2 decks complets pour joueur A et joueur B
-        List<CarteData> deckPlayerA = new List<CarteData>();
-        List<CarteData> deckPlayerB = new List<CarteData>();
+                
+        deckPlayerA = new List<CarteData>();
+        deckPlayerB = new List<CarteData>();
 
         // Charger toutes les cartes .asset dans Resources/CartesGenerees
         CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
         
         // Mélanger toutes les cartes et les répartir entre les deux joueurs (deck partagé)
         List<CarteData> allCards = new List<CarteData>();
+        int cardsAdded = 0;
         foreach (var asset in cartesAssets)
         {
+            if (limitCardsForDebug && cardsAdded >= debugCardsPerDeck)
+                break;
+
             // Une instance pour A
             CarteData dataA = new CarteData(
                 asset.idCard,
@@ -138,6 +189,7 @@ public class GameManager : MonoBehaviour
             );
             deckPlayerA.Add(dataA);
             deckPlayerB.Add(dataB);
+            cardsAdded++;
         }
         Shuffle(deckPlayerA);
         Shuffle(deckPlayerB);
@@ -175,10 +227,8 @@ public class GameManager : MonoBehaviour
         
         Debug.Log($"[GAME] Decks créés - Joueur: {mainPlayerA.Count} cartes, IA: {mainPlayerB.Count} cartes");
         Debug.Log($"[GAME] Pioches créées - Joueur: {piochePlayerA.Count} cartes, IA: {piochePlayerB.Count} cartes");
-        Debug.Log($"[GAME] Mode: {mode} - En attente de sélection du deck par le joueur");
     }
     
-    // Méthode pour récupérer les cartes sélectionnées dans l'ordre
     public List<CarteData> GetSelectedCards()
     {
         MainUIManager mainUIManager = GameObject.Find("MainUIManager").GetComponent<MainUIManager>();
