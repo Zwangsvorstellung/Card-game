@@ -12,6 +12,7 @@ public class ButtonTrigger : MonoBehaviour{
     void Awake()
     {
         button = GetComponent<Button>();
+        button.onClick.AddListener(() => Debug.Log($"[BTN] Click reçu sur {name} ({buttonText})"));
 
         TMP_Text textComponent = button.GetComponentInChildren<TMP_Text>();
         if (textComponent != null) textComponent.text = buttonText;
@@ -28,6 +29,7 @@ public class ButtonTrigger : MonoBehaviour{
     public void OnClickHome() => PlayerActionManager.Instance.LoadMenu();
     public void OnClickMemoryGame() => PlayerActionManager.Instance.LoadMemoryGame();
     public void OnClickCardGame() => PlayerActionManager.Instance.LoadCardGame();
+    public void OnClickReplay() => PlayerActionManager.Instance.ReplayCurrentGame();
     public void OnClickQuit() => PlayerActionManager.Instance.QuitGame();
 
     // ==================== Sons ====================
