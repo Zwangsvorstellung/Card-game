@@ -1,10 +1,14 @@
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
 
 public class GameDebugOverlay : MonoBehaviour
 {
-    bool showDebug = true;
+    bool showDebug = false;
     GUIStyle labelStyle;
+    GUIStyle titleStyle;
     Texture2D blackTexture;
+    Vector2 scrollPos;
 
     void Awake()
     {
@@ -31,50 +35,100 @@ public class GameDebugOverlay : MonoBehaviour
                 wordWrap = true,
                 normal = { textColor = Color.white }
             };
+
+            titleStyle = new GUIStyle(labelStyle)
+            {
+                fontSize = 17,
+                fontStyle = FontStyle.Bold
+            };
         }
 
-        int width = 400;
-        int height = 450;
+        int width = 620;
+        int height = Mathf.Min(Screen.height, 780);
         int x = Screen.width - width;
         int y = 0;
-        int lineHeight = 24;
+        int lineHeight = 22;
         int line = y + 10;
 
         GUI.DrawTexture(new Rect(x, y, width, height), blackTexture);
 
+        Rect viewRect = new Rect(x + 8, y + 8, width - 16, height - 16);
+        GUILayout.BeginArea(viewRect);
+        scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Width(viewRect.width), GUILayout.Height(viewRect.height));
+
         // Vérification GameManager
         if (GameManager.Instance == null)
         {
-            GUI.Label(new Rect(x + 10, line, width - 20, 20), "GameManager NOT INITIALIZED!", labelStyle);
+            GUILayout.Label("GameManager NOT INITIALIZED!", labelStyle);
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
             return;
         }
 
         GameManager gm = GameManager.Instance;
 
         // Affichage infos
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Round: " + gm.round, labelStyle); line += lineHeight;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Mode: " + (gm.mode ?? "null"), labelStyle); line += lineHeight;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Current Action: " + (gm.currentPlayerAction ?? "null"), labelStyle); line += lineHeight + 10;
+        GUILayout.Label("Round: " + gm.round, labelStyle);
+        GUILayout.Label("Mode: " + (gm.mode ?? "null"), labelStyle);
+        GUILayout.Label("Current Action: " + (gm.currentPlayerAction ?? "null"), labelStyle);
+        GUILayout.Space(8);
 
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Attacks: " + gm.numberOfAttacksUsedPlayer, labelStyle); line += lineHeight;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Attacks: " + gm.numberOfAttacksUsedIA, labelStyle); line += lineHeight + 10;
+        GUILayout.Label("Player Attacks: " + gm.numberOfAttacksUsedPlayer, labelStyle);
+        GUILayout.Label("AI Attacks: " + gm.numberOfAttacksUsedIA, labelStyle);
+        GUILayout.Space(8);
 
         int mainPlayerA = gm.mainPlayerA != null ? gm.mainPlayerA.Count : 0;
         int mainPlayerB = gm.mainPlayerB != null ? gm.mainPlayerB.Count : 0;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Hand: " + mainPlayerA, labelStyle); line += lineHeight;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Hand: " + mainPlayerB, labelStyle); line += lineHeight;
+        GUILayout.Label("Player Hand: " + mainPlayerA, labelStyle);
+        GUILayout.Label("AI Hand: " + mainPlayerB, labelStyle);
 
         int piochePlayerA = gm.piochePlayerA != null ? gm.piochePlayerA.Count : 0;
         int piochePlayerB = gm.piochePlayerB != null ? gm.piochePlayerB.Count : 0;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Deck: " + piochePlayerA, labelStyle); line += lineHeight;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Deck: " + piochePlayerB, labelStyle); line += lineHeight;
-
-        //GUI.Label(new Rect(x + 10, line, width - 20, 20), "Player Score: " + GameManager.playerScore, labelStyle); line += lineHeight;
-        //GUI.Label(new Rect(x + 10, line, width - 20, 20), "AI Score: " + GameManager.scoreOpponent, labelStyle); line += lineHeight + 10;
+        GUILayout.Label("Player Deck: " + piochePlayerA, labelStyle);
+        GUILayout.Label("AI Deck: " + piochePlayerB, labelStyle);
 
         int totalPlayer = mainPlayerA + piochePlayerA;
         int totalAI = mainPlayerB + piochePlayerB;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Total Player Cards: " + totalPlayer, labelStyle); line += lineHeight;
-        GUI.Label(new Rect(x + 10, line, width - 20, 20), "Total AI Cards: " + totalAI, labelStyle); line += lineHeight;
+        GUILayout.Label("Total Player Cards: " + totalPlayer, labelStyle);
+        GUILayout.Label("Total AI Cards: " + totalAI, labelStyle);
+        GUILayout.Space(10);
+
+        DrawQueue("PLAYER HAND (mainPlayerA)", gm.mainPlayerA);
+        DrawQueue("PLAYER DECK (piochePlayerA)", gm.piochePlayerA);
+        DrawQueue("AI HAND (mainPlayerB)", gm.mainPlayerB);
+        DrawQueue("AI DECK (piochePlayerB)", gm.piochePlayerB);
+
+        GUILayout.EndScrollView();
+        GUILayout.EndArea();
+    }
+
+    private void DrawQueue(string title, Queue<CarteData> queue)
+    {
+        GUILayout.Label(title, titleStyle);
+
+        if (queue == null)
+        {
+            GUILayout.Label(" - null", labelStyle);
+            GUILayout.Space(6);
+            return;
+        }
+
+        if (queue.Count == 0)
+        {
+            GUILayout.Label(" - empty", labelStyle);
+            GUILayout.Space(6);
+            return;
+        }
+
+        int index = 0;
+        foreach (CarteData card in queue.ToList())
+        {
+            string name = card != null ? card.nom : "null";
+            string id = card != null ? card.idCard.ToString() : "-";
+            GUILayout.Label($" {index:00}. {name} | id:{id}", labelStyle);
+            index++;
+        }
+
+        GUILayout.Space(8);
     }
 }
