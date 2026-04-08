@@ -92,7 +92,6 @@ public class IA : MonoBehaviour
         // Création de copies des listes pour pouvoir les modifier sans affecter les originaux
         List<CardAI> cardsAIOnBoard = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot).ToList();
         List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot).ToList();
-        List<CardAI> cardsAIPassed = new List<CardAI>(); // Cartes qui ont choisi de passer
         
         // Boucle principale : on continue tant qu'on n'a pas atteint le maximum d'attaques
         // et qu'il reste des cartes IA disponibles
@@ -143,7 +142,7 @@ public class IA : MonoBehaviour
                 cardsAIOnBoard.Remove(bestAttacker);
                 
                 // Retire la cible de la liste si elle est éliminée (optionnel)
-                // cardsUIOnBoard.Remove(bestTarget);
+                 cardsUIOnBoard.Remove(bestTarget);
 
                 yield return new WaitForSeconds(delayAction);
             }
@@ -232,6 +231,64 @@ public class IA : MonoBehaviour
         // Fin du round
         GameManager.Instance.initRound();
         GameManager.Instance.EndTurn();
+    }
+
+    public void ApplyBonusAI(List<CardAI> cards)
+    {
+        int newDefense;
+
+        foreach (var card in cards)
+        {
+            Debug.Log($"[AI] Bonus appliqué à {card.nameCard}");
+
+            if(card.nameCard == "Clorel"){
+                newDefense = card.defenseValue+1;
+                card.defenseValue = newDefense;
+                card.defenseText.SetText(newDefense.ToString());
+            }
+
+        }
+    }
+
+    public void ApplyBonusUI(List<CardUI> cards)
+    {
+        int newDefense;
+
+        foreach (var card in cards)
+        {
+            Debug.Log($"[AI] Bonus appliqué à {card.nameCard}");
+
+            if(card.nameCard == "Clorel"){
+                newDefense = card.defenseValue+1;
+                card.defenseValue = newDefense;
+                card.defenseText.SetText(newDefense.ToString());
+            }
+
+        }
+    }
+
+    /// Applique les bonus
+    public IEnumerator ApplyAllBonus()
+    {
+        Debug.Log($"[ATTACK] ===== APPLICATION DES BONUS =====");
+        
+        List<CardAI> cardsAIOnBoard = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed").ToList();
+        List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed").ToList();
+        bool aiStart = GameManager.Instance.aiStart;
+
+        if (aiStart)
+        {
+            ApplyBonusAI(cardsAIOnBoard);
+            ApplyBonusUI(cardsUIOnBoard);
+        }
+        else
+        {
+            ApplyBonusUI(cardsUIOnBoard);
+            ApplyBonusAI(cardsAIOnBoard);
+        }
+
+        // Petite pause supplémentaire avant de tout réinitialiser
+        yield return new WaitForSeconds(0.5f);
     }
 
     /// Exécute une attaque de l'IA : met à jour les états et applique les effets visuels.
@@ -386,10 +443,8 @@ public class IA : MonoBehaviour
             
             // Met à jour la défense de la cible IA
             attack.targetAI.defenseValue = newDefense;
-            if (attack.targetAI.defenseText != null)
-            {
-                attack.targetAI.defenseText.SetText(newDefense.ToString());
-            }
+            attack.targetAI.defenseText.SetText(newDefense.ToString());
+            
 
             Debug.Log($"[ATTACK] → {attackerName} inflige {attack.damage} dégâts à {targetName}");
             Debug.Log($"[ATTACK]   DEF avant: {(attack.targetAI.defenseValue + attack.damage)}, " +

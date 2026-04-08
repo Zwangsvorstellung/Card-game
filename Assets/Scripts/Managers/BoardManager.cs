@@ -71,7 +71,7 @@ public class BoardManager : MonoBehaviour
         }
 
         if(GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI && !roundResolutionInProgress){
-            Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des attaques en cours...");
+            Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des choix");
             StartCoroutine(ResolveRoundCoroutine());
         }
     }
@@ -81,9 +81,8 @@ public class BoardManager : MonoBehaviour
         roundResolutionInProgress = true;
         GameManager.Instance.currentPlayerAction = "NONE";
 
-        IA ai = IA.Instance ?? FindFirstObjectByType<IA>();
-
-        yield return StartCoroutine(ai.ApplyAllAttacksCoroutine());
+        yield return StartCoroutine(IA.Instance.ApplyAllBonus());
+        yield return StartCoroutine(IA.Instance.ApplyAllAttacksCoroutine());
 
         aiTurnLaunched = false;
         hasLoggedWaitingPlayer = false;
