@@ -41,6 +41,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
     public bool isSelect = false;
     public bool isFrozen = false;
     public bool isYellow = false;
+    public bool isHiddenSlot = false;
     public bool actionChoiceDo = false;
     public string stateOffensif;
     public string stateDefensif;
@@ -81,6 +82,8 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
 
     void Update()
     {
+        if (isHiddenSlot) return;
+
         UpdatePassedState();
         UpdateDefensiveState();
         UpdateFreezeState();
@@ -217,6 +220,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
     }
 
     public void ResetCardEndTurn(){
+        if (isHiddenSlot) return;
 
         actionChoiceDo = false;
         stateOffensif = "wait";
@@ -230,6 +234,22 @@ public class CardAI : MonoBehaviour, IPointerClickHandler
         HideAllIcons();
         ResetPosition();
         atk?.SetActive(false);
+    }
+
+    public void HideAsEmptySlot()
+    {
+        isHiddenSlot = true;
+        actionChoiceDo = true;
+        stateOffensif = "hidden";
+        stateDefensif = "hidden";
+        isSelect = false;
+        isFrozen = false;
+        isYellow = false;
+        atk?.SetActive(false);
+        HideAllIcons();
+
+        foreach (Transform child in transform)
+            child.gameObject.SetActive(false);
     }
 
     public void ResetPosition()

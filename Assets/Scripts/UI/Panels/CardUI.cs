@@ -44,6 +44,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     public bool isSelect = false;
     public bool isFrozen = false;
     public bool isYellow = false;
+    public bool isHiddenSlot = false;
     public bool actionChoiceDo = false;
     public string stateOffensif;
     public string stateDefensif;
@@ -75,6 +76,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     private void Update()
     {
+        if (isHiddenSlot) return;
+
         if(stateOffensif == "passed"){
             passedIcon.SetActive(true);
             RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
@@ -105,6 +108,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
     void OnDisable() => BoardManager.cardsOnBoardUI.Remove(this);
 
     public void ResetCardEndTurn(){
+        if (isHiddenSlot) return;
 
         actionChoiceDo = false;
         stateOffensif = "wait";
@@ -157,6 +161,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (isHiddenSlot) return;
         if(isFrozen) return;
 
         if(GameManager.Instance.currentPlayerAction == "UI"){
@@ -225,6 +230,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void OnPassed()
     {
+        if (isHiddenSlot) return;
         HideActionButtons();
 
         stateOffensif = "passed";
@@ -333,6 +339,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
 
     public void OnAttack()
     {
+        if (isHiddenSlot) return;
         HideActionButtons();
         atk?.SetActive(true);
 
@@ -451,5 +458,21 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         CardUI cardUIB = b.GetComponent<CardUI>();
         if (cardUIA == null || cardUIB == null) return false;
         return Mathf.Abs(cardUIA.indexCarte - cardUIB.indexCarte) == 1;
+    }
+
+    public void HideAsEmptySlot()
+    {
+        isHiddenSlot = true;
+        actionChoiceDo = true;
+        stateOffensif = "hidden";
+        stateDefensif = "hidden";
+        isSelect = false;
+        isFrozen = false;
+        isYellow = false;
+        atk?.SetActive(false);
+        HideAllIcons();
+
+        foreach (Transform child in transform)
+            child.gameObject.SetActive(false);
     }
 }
