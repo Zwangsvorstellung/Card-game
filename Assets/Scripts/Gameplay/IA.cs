@@ -5,9 +5,7 @@ using System.Collections;
 using UnityEngine.UI;
 using static IAAction;
 
-/// <summary>
 /// Structure pour stocker les informations d'une attaque (joueur ou IA).
-/// </summary>
 public struct AttackInfo
 {
     public CardAI attackerAI;      // Attaquant si c'est l'IA (null si c'est le joueur)
@@ -44,9 +42,10 @@ public class IA : MonoBehaviour
 {
     private static IA instance;
     public static IA Instance => instance;
+    private Coroutine aiTurnCoroutine;
     
     [Header("Paramètres")]
-    [SerializeField] private float delayAction = 0.5f; // Délai entre chaque action de l'IA
+    [SerializeField] private float delayAction = 0.4f; // Délai entre chaque action de l'IA
     
     // Liste des attaques de l'IA pour ce tour (sera appliquée à la fin du tour)
     private static List<AttackInfo> aiAttacksThisTurn = new List<AttackInfo>();
@@ -59,22 +58,28 @@ public class IA : MonoBehaviour
             Destroy(gameObject);
     }
     
-    /// Démarre le tour de l'IA. Appelé depuis l'extérieur pour initier le tour.
+    /// Démarre le tour de l'IA
     public void StartAITurn()
     {
-        StartCoroutine(ExecuteAITurn());
+        Debug.Log($"[IA] ===== StartAITurn() =====");
+
+        if (aiTurnCoroutine != null)
+        {
+            StopCoroutine(aiTurnCoroutine);
+            aiTurnCoroutine = null;
+        }
+
+        aiTurnCoroutine = StartCoroutine(ExecuteAITurn());
     }
     
     /// Exécute le tour de l'IA : évalue les actions possibles et choisit les meilleures.
     /// Utilise un système de scoring pour décider entre attaquer et rester passif.
     private IEnumerator ExecuteAITurn()
     {
-        Debug.Log($"[IA] ===== DÉBUT DU TOUR IA =====");
-        Debug.Log($"[IA] Cartes IA disponibles: {BoardManager.cardsOnBoardAI.Count}");
-        Debug.Log($"[IA] Cartes joueur disponibles: {BoardManager.cardsOnBoardUI.Count}");
+        Debug.Log($"[IA] ===== DÉBUT DU TOUR IA ExecuteAITurn =====");
+        int aiCardsCount = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot);
         
-        // Vérification préliminaire : s'il n'y a pas de cartes IA, on arrête
-        if (BoardManager.cardsOnBoardAI.Count == 0)
+        if (aiCardsCount == 0)
         {
             Debug.Log("[IA] ⚠️ Aucune carte IA trouvée - Arrêt du tour");
             yield break;
@@ -85,12 +90,10 @@ public class IA : MonoBehaviour
         int attacksExecuted = 0;
 
         // Création de copies des listes pour pouvoir les modifier sans affecter les originaux
-        List<CardAI> cardsAIOnBoard = new List<CardAI>(BoardManager.cardsOnBoardAI);
-        List<CardUI> cardsUIOnBoard = new List<CardUI>(BoardManager.cardsOnBoardUI);
+        List<CardAI> cardsAIOnBoard = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot).ToList();
+        List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot).ToList();
         List<CardAI> cardsAIPassed = new List<CardAI>(); // Cartes qui ont choisi de passer
         
-        Debug.Log($"[IA] Seuil minimum d'attaque: {seuilMinAttaque}");
-
         // Boucle principale : on continue tant qu'on n'a pas atteint le maximum d'attaques
         // et qu'il reste des cartes IA disponibles
         Debug.Log($"[IA] Boucle d'exécution - Max attaques: {GameManager.MAX_NUMBER_ATK_ROUND}, Cartes disponibles: {cardsAIOnBoard.Count}");
@@ -157,7 +160,6 @@ public class IA : MonoBehaviour
         {
             if (!cardAI.actionChoiceDo)
             {
-                Debug.Log($"[IA] {cardAI.nameCard} : PASSER");
                 ExecutePass(cardAI);
                 yield return new WaitForSeconds(delayAction);
             }
@@ -166,15 +168,30 @@ public class IA : MonoBehaviour
         // Attente finale avant de terminer le tour
         yield return new WaitForSeconds(1f);
         
-        Debug.Log($"[IA] ===== FIN DU TOUR IA =====");
         Debug.Log($"[IA] Attaques stockées: {aiAttacksThisTurn.Count}");
         foreach (var attack in aiAttacksThisTurn)
         {
             if (attack.attackerAI != null)
                 Debug.Log($"[IA]   - {attack.attackerAI.nameCard} → {attack.targetPlayer.nameCard} ({attack.damage} dégâts)");
         }
-        
-        //StartCoroutine(ApplyAllAttacksCoroutine());
+
+        GameManager.Instance.isEndturnAI = true;
+        Debug.Log($"[BOARD] ===== FIN DU TOUR IA =====");
+        int visibleAICards = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot);
+        Debug.Log($"[BOARD] Toutes les cartes IA ont fait leur choix ({visibleAICards} cartes)");
+        int attacksCount = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot && c.stateOffensif == "atk");
+        int passesCount = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed");
+        Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
+
+        // Si l'IA a commencé le tour, on rend ensuite la main au joueur.
+        if (!GameManager.Instance.isEndturnPlayer)
+        {
+            GameManager.Instance.currentPlayerAction = "UI";
+            PanelManager.Instance?.ShowTurnBanner("UI");
+            Debug.Log("[GAME] Transition de tour: IA -> JOUEUR");
+        }
+
+        aiTurnCoroutine = null;
     }
 
     /// Applique toutes les attaques (joueur + IA) de manière séquentielle
@@ -204,9 +221,6 @@ public class IA : MonoBehaviour
         foreach (var attack in allAttacks)
         {
             ApplySingleAttack(attack);
-            
-            // PAUSE : Indispensable pour que l'oeil voie la carte devenir jaune
-            // et pour que l'Update() s'exécute au moins une fois
             yield return new WaitForSeconds(0.8f);
         }
 
@@ -262,7 +276,7 @@ public class IA : MonoBehaviour
     /// <param name="target">La carte joueur ciblée</param>
     private void ApplyAttack(CardAI attacker, CardUI target)
     {
-        if (attacker == null || target == null) return;
+        if (attacker == null || target == null || attacker.isHiddenSlot || target.isHiddenSlot) return;
         
         // Compte le nombre d'attaques déjà reçues par la cible
         // (en comptant les icônes d'attaque actives)
@@ -299,21 +313,17 @@ public class IA : MonoBehaviour
         aiAttacksThisTurn.Add(new AttackInfo(attacker, target, damage));
     }
 
-    /// Fait passer le tour d'une carte IA (ne pas attaquer).
-    /// <param name="card">La carte IA qui passe son tour</param>
+    /// Fait passer le tour d'une carte IA
     private void ExecutePass(CardAI card)
     {
-        if (card == null) return;
+        if (card == null || card.isHiddenSlot) return;
         
         // Met à jour l'état de la carte
         card.actionChoiceDo = true;
         card.stateOffensif = "passed";
         
         // Effet visuel optionnel : assombrir la carte
-        if (card.imageCarte != null)
-        {
-            card.imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
-        }
+        card.imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
 
         // Sauvegarde la position de départ
         Vector3 startPosition = card.rectTransform.anchoredPosition;
@@ -335,7 +345,6 @@ public class IA : MonoBehaviour
     
     /// Applique un effet visuel lors d'une attaque de l'IA.
     /// Déplace légèrement la carte vers le bas pour indiquer l'attaque.
-    /// <param name="card">La carte IA qui attaque</param>
     private void ApplyIAAttackVisualEffect(CardAI card)
     {
         if (card == null || card.rectTransform == null) return;
@@ -429,15 +438,18 @@ public class IA : MonoBehaviour
     {
         List<AttackInfo> playerAttacks = new List<AttackInfo>();
         
-        Debug.Log($"[ATTACK] Récupération des attaques du joueur depuis {BoardManager.cardsOnBoardUI.Count} cartes...");
+        int playerCardsCount = BoardManager.cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot);
+        Debug.Log($"[ATTACK] Récupération des attaques du joueur depuis {playerCardsCount} cartes...");
         
         // Parcourt les cartes du joueur qui ont attaqué
-        foreach (var cardUI in BoardManager.cardsOnBoardUI)
+        foreach (var cardUI in BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot))
         {
             if (cardUI.stateOffensif == "atk" && !string.IsNullOrEmpty(cardUI.target))
             {
                 // Trouve la cible IA correspondante
-                CardAI target = BoardManager.cardsOnBoardAI.FirstOrDefault(c => c.nameCard == cardUI.target);
+                CardAI target = BoardManager.cardsOnBoardAI.FirstOrDefault(c => c != null && !c.isHiddenSlot && c.idCard == cardUI.targetID);
+                if (target == null)
+                    target = BoardManager.cardsOnBoardAI.FirstOrDefault(c => c != null && !c.isHiddenSlot && c.nameCard == cardUI.target);
                 if (target != null)
                 {
                     // Calcule les dégâts
@@ -460,12 +472,5 @@ public class IA : MonoBehaviour
         }
         
         return playerAttacks;
-    }
-    
-    
-    /// Réinitialise les attaques de l'IA (appelé au début d'un nouveau tour).
-    public static void ResetAIAttacks()
-    {
-        aiAttacksThisTurn.Clear();
     }
 } 
