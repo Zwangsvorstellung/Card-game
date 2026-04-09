@@ -60,6 +60,7 @@ public class CarteUI : MonoBehaviour
 
     void Start()
     {
+        // test
         // Ne pas enregistrer startPosition ici, car le layout n'a pas encore positionné la carte
         indexHierarchieOriginal = transform.GetSiblingIndex();
     }
