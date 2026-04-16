@@ -146,7 +146,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler
         
         instanceId = data.instanceId;
         idCard = data.idCard;
-        gameObject.name = $"CarteUI_{data.nom}_id{data.idCard}_inst{data.instanceId}";
+        gameObject.name = $"CardUI_{data.nom}_id{data.idCard}_inst{data.instanceId}";
         
         HideAllIcons();
     }

@@ -84,6 +84,9 @@ public class BoardManager : MonoBehaviour
         yield return StartCoroutine(IA.Instance.ApplyAllBonus());
         yield return StartCoroutine(IA.Instance.ApplyAllAttacksCoroutine());
 
+        yield return StartCoroutine(IA.Instance.ApplyAllMalusEndTurn());
+
+
         aiTurnLaunched = false;
         hasLoggedWaitingPlayer = false;
         roundResolutionInProgress = false;

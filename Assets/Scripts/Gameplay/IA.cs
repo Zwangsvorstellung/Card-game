@@ -13,25 +13,28 @@ public struct AttackInfo
     public CardUI targetPlayer;    // Cible si c'est une carte joueur
     public CardAI targetAI;        // Cible si c'est une carte IA
     public int damage;
+    public int precision;
     public bool isPlayerAttack;     // true si c'est une attaque du joueur, false si c'est l'IA
     
-    public AttackInfo(CardAI attacker, CardUI target, int damage)
+    public AttackInfo(CardAI attacker, CardUI target, int damage, int precision)
     {
         this.attackerAI = attacker;
         this.attackerPlayer = null;
         this.targetPlayer = target;
         this.targetAI = null;
         this.damage = damage;
+        this.precision = precision;
         this.isPlayerAttack = false;
     }
     
-    public AttackInfo(CardUI attacker, CardAI target, int damage)
+    public AttackInfo(CardUI attacker, CardAI target, int damage, int precision)
     {
         this.attackerAI = null;
         this.attackerPlayer = attacker;
         this.targetPlayer = null;
         this.targetAI = target;
         this.damage = damage;
+        this.precision = precision;
         this.isPlayerAttack = true;
     }
 }
@@ -233,6 +236,7 @@ public class IA : MonoBehaviour
         GameManager.Instance.EndTurn();
     }
 
+    // début du tour
     public void ApplyBonusAI(List<CardAI> cards)
     {
         int newDefense;
@@ -264,6 +268,12 @@ public class IA : MonoBehaviour
                 card.defenseText.SetText(newDefense.ToString());
             }
 
+            // Neo + 1 ATK si cible différente
+            if(card.nameCard == "Neo"){}
+
+            // freeze une carte adverse au hasard (prendre entre 1 et 4)
+            if(card.nameCard == "Désir"){}
+
         }
     }
 
@@ -274,6 +284,7 @@ public class IA : MonoBehaviour
         
         List<CardAI> cardsAIOnBoard = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed").ToList();
         List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed").ToList();
+        
         bool aiStart = GameManager.Instance.aiStart;
 
         if (aiStart)
@@ -290,6 +301,46 @@ public class IA : MonoBehaviour
         // Petite pause supplémentaire avant de tout réinitialiser
         yield return new WaitForSeconds(0.5f);
     }
+
+    /// Applique les malus à la fin du tour
+    public IEnumerator ApplyAllMalusEndTurn()
+    {
+        Debug.Log($"[ATTACK] ===== APPLICATION DES MALUS A LA FIN DU TOUR =====");
+        
+        List<CardAI> cardsAIOnBoard = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed").ToList();
+        List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed").ToList();
+        bool aiStart = GameManager.Instance.aiStart;
+
+        if (aiStart)
+        {
+        }
+        else
+        {
+        }
+
+        // Petite pause supplémentaire avant de tout réinitialiser
+        yield return new WaitForSeconds(0.5f);
+    }
+
+    public IEnumerator ApplyAllBonusEndTurn()
+    {
+        Debug.Log($"[ATTACK] ===== APPLICATION DES BONUS A LA FIN DU TOUR =====");
+        
+        List<CardAI> cardsAIOnBoard = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed").ToList();
+        List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed").ToList();
+        bool aiStart = GameManager.Instance.aiStart;
+
+        if (aiStart)
+        {
+        }
+        else
+        {
+        }
+
+        // Petite pause supplémentaire avant de tout réinitialiser
+        yield return new WaitForSeconds(0.5f);
+    }
+    
 
     /// Exécute une attaque de l'IA : met à jour les états et applique les effets visuels.
     /// <param name="attacker">La carte IA qui attaque (CardAI)</param>
@@ -367,7 +418,8 @@ public class IA : MonoBehaviour
         Debug.Log($"[IA]   Attaques IA stockées: {aiAttacksThisTurn.Count + 1}");
         
         // Stocke l'attaque pour l'appliquer à la fin du tour (avec les attaques du joueur)
-        aiAttacksThisTurn.Add(new AttackInfo(attacker, target, damage));
+        int precision = 100;
+        aiAttacksThisTurn.Add(new AttackInfo(attacker, target, damage, precision));
     }
 
     /// Fait passer le tour d'une carte IA
@@ -428,6 +480,7 @@ public class IA : MonoBehaviour
         string attackerName;
         string targetName;
         int newDefense;
+        int precision = attack.precision;
         
         if (attack.isPlayerAttack)
         {
@@ -492,6 +545,7 @@ public class IA : MonoBehaviour
     private static List<AttackInfo> GetPlayerAttacks()
     {
         List<AttackInfo> playerAttacks = new List<AttackInfo>();
+        int precision = 100;
         
         int playerCardsCount = BoardManager.cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot);
         Debug.Log($"[ATTACK] Récupération des attaques du joueur depuis {playerCardsCount} cartes...");
@@ -517,7 +571,7 @@ public class IA : MonoBehaviour
                              $"(ATK:{cardUI.attaqueValue} vs DEF:{target.defenseValue} = {damage} dégâts)");
                     
                     // Ajoute l'attaque du joueur
-                    playerAttacks.Add(new AttackInfo(cardUI, target, damage));
+                    playerAttacks.Add(new AttackInfo(cardUI, target, damage, precision));
                 }
                 else
                 {
