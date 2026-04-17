@@ -6,7 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 
-public class CardAI : MonoBehaviour, IPointerClickHandler
+public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
 {
     [Header("Composants UI")]
     public Image imageCarte;
