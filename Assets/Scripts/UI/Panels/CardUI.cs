@@ -58,6 +58,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public int idCard;
     public string nameCard;
     public int indexCarte; // Index dans la collection
+    public int indexHierarchieOriginal;
 
     private void Awake()
     {
@@ -72,6 +73,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     {
         startPosition = rectTransform.anchoredPosition;
         positionWithOffset = rectTransform.anchoredPosition + offsetClick;
+        indexHierarchieOriginal = transform.GetSiblingIndex();
     }
 
     private void Update()

@@ -67,6 +67,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     public string instanceId; // ID unique de la carte
     public int idCard;
     public int indexCarte; // Index dans la collection
+    public int indexHierarchieOriginal;
 
     void Awake()
     {
@@ -78,6 +79,8 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     private void Start()
     {
         startPosition = rectTransform.anchoredPosition;
+        indexHierarchieOriginal = transform.GetSiblingIndex();
+
     }
 
     void Update()
@@ -275,5 +278,23 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     {
         return nameCapacity != null &&
             nameCapacity.text.Contains(cap.ToString());
+    }
+
+    public List<CarteAI> GetAdjacentCardsList(CarteAI card)
+    {
+        var (left, right) = BoardManager.Instance.GetAdjacentCards(
+            card.index,
+            card.isPlayer ? "player" : "opponent"
+        );
+
+        List<CarteAI> result = new List<CarteAI>();
+
+        if (left != null)
+            result.Add(left.GetComponent<CarteAI>());
+
+        if (right != null)
+            result.Add(right.GetComponent<CarteAI>());
+
+        return result;
     }
 }

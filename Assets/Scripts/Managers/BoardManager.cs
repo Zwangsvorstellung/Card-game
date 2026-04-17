@@ -402,4 +402,21 @@ public class BoardManager : MonoBehaviour
         }
     }
 */
+
+    public (ICard left, ICard right) GetAdjacentCards(ICard card)
+    {
+        if (card is CardUI ui)
+        {
+            var (l, r) = GetAdjacentCards(ui);
+            return (l, r);
+        }
+
+        if (card is CardAI ai)
+        {
+            var (l, r) = GetAdjacentCards(ai);
+            return (l, r);
+        }
+
+        return (null, null);
+    }
 } 

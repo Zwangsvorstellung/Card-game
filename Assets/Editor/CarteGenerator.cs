@@ -19,7 +19,7 @@ public class CarteGenerator
             (3, "Cassandre", "Aura de Force","+1 d'ATQ aux alliés adjacents si Cassandre passe son tour", 4, 4, 3, "d9af4e"),
             (4, "Solicia", "Réflexion partielle","Quand un allié est attaqué, inflige -1 DF à l’attaquant.", 3, 6, 4, "47a658"),
             (5, "Triomphe", "Frappe Puissante","1 chance sur 2 d'acquérir un malus ou bonus de DF de 1 à l'attaque", 4, 5, 5, "854b22"),
-            (6, "Désir", "Tentation", "Si Désir passe son tour, un adversaire au hasard ne pourra attaquer au tour suivant",3, 4, 6, "262752"),
+            (6, "Désir", "Tentation", "Si Désir passe son tour, une attaque ne sera pas effectuée",3, 4, 6, "262752"),
             (7, "Vilaine", "Malus d’attaque", "Inflige -1 d'ATQ à sa cible sur le tour courant", 5, 3, 7, "ebbc38"),
             (8, "Jaycota", "Attaque de Provocation", "Si attaquée, inflige -1 DF à l’attaquant en représaille", 2, 6, 8, "6f0000"),
             (9, "Neo", "Attaque Surprise","Augmentation de l'ATQ de 1 à chaque tour si Neo vise une cible différente",  4, 4, 9,"94a2a7"),
