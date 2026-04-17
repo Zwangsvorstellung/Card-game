@@ -32,7 +32,7 @@ public class CarteGenerator
             (16, "Zarla", "Aubaine", "Si pas ciblée, elle gagne +1 DF. Si attaquée, gagne +1 ATK", 4, 3, 16,"552842"),
             (17, "Tyroine", "Aléatoire", "Vise un adversaire aléatoirement et ignore 1 point DF", 4, 5, 17,"0d3175"),
             (18, "Ondine", "Vague létale", "Inflige les 3 points de dégâts à des cibles aléatoire", 3, 5, 18,"91c6da"),
-            (19, "Ruby", "Combo", "Si inflige des dégâts, inflige aussi 1 dégât à un ennemi adjacent à la cible.", 4, 4, 19,"901412"),
+            (19, "Ruby", "Combo", "Si attaque, inflige aussi 1 dégât à un ennemi adjacent à la cible.", 4, 4, 19,"901412"),
             (20, "Minoson", "Protection", "Quand un allié est attaqué, 50 % de chance que 50 % des dégâts soient transférés à Minoson", 3, 4, 20,"3f0f07")
         };
 
