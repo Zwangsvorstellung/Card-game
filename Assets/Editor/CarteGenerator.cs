@@ -25,14 +25,14 @@ public class CarteGenerator
             (9, "Neo", "Attaque Surprise","Augmentation de l'ATQ de 1 à chaque tour si Neo vise une cible différente",  4, 4, 9,"94a2a7"),
             (10, "Anaxagore", "Percée Défensive", "Réduit la DF de la cible de 1 à l'attaque", 4, 5, 10,"3b4d65"),
             (11, "Clorel", "Régénération", "Gagne 1 point de DF s'il n’attaque pas", 5, 4, 11,"372507"),
-            (12, "Belindra", "Bouclier collectif", "Réduction des dégâts reçus d'1 point des alliés adjacents si n’attaque pas", 3, 7, 12,"2e869c"),
+            (12, "Belindra", "Bouclier collectif", "Réduction des dégâts reçus d'1 point des alliés si n’attaque pas", 3, 7, 12,"2e869c"),
             (13, "Trahison", "Terreur Sélective", "Si n’attaque pas, les adversaires passifs subissent -1 DF", 4, 4, 13,"afe0cf"),
             (14, "Xiang", "Ignorance Défensive", "Ignore 1 point de défense adverse", 4, 4, 14,"8341dc"),
             (15, "Ambroise", "Onde de Choc Passive", "Si Ambroise n’attaque pas, inflige -1 DF à un adversaire aléatoire passif", 3, 4, 15,"b40000"),
             (16, "Zarla", "Aubaine", "Si pas ciblée, elle gagne +1 DF. Si attaquée, gagne +1 ATK", 4, 3, 16,"552842"),
             (17, "Tyroine", "Aléatoire", "Vise un adversaire aléatoirement et ignore 1 point DF", 4, 5, 17,"0d3175"),
-            (18, "Ondine", "Vague létale", "Inflige les 3 points de dégâts à des cibles aléatoire", 3, 5, 18,"91c6da"),
-            (19, "Ruby", "Combo", "Si attaque, inflige aussi 1 dégât à un ennemi adjacent à la cible.", 4, 4, 19,"901412"),
+            (18, "Ondine", "Vague létale", "Inflige ses dégats si elle est ciblée", 3, 5, 18,"91c6da"),
+            (19, "Ruby", "Combo", "Dégâts aléatoires entre 0 et 4 points", 4, 4, 19,"901412"),
             (20, "Minoson", "Protection", "Quand un allié est attaqué, 50 % de chance que 50 % des dégâts soient transférés à Minoson", 3, 4, 20,"3f0f07")
         };
 

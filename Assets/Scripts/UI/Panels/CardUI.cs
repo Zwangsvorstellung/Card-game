@@ -262,21 +262,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
             SetDefenseValue(newDef);
             //PanelManager.instance?.AddLog($"{nameCard} : PASSER sélectionné (+1 défense)");
         }
-        else if(nameCard == "Cassandre"){
-            int index = carteUI.indexHierarchieOriginal;
-
-            var (leftCard, rightCard) = BoardManager.Instance.GetAdjacentCards(index, 'player');
-
-            //PanelManager.instance.AddLog($"Cassandre passe son tour");
-
-            if(leftCard != null)
-                ApplyAttackBonus(leftCard, leftCard.nameCard);
-            if(rightCard != null)
-                ApplyAttackBonus(rightCard, rightCard.nameCard);
-        }
         else if(nameCard == "Désir"){
-
-            //PanelManager.instance.AddLog("   → Sélection aléatoire Désir");
 
             var availableTargetsOpponent = CarteBoardInteraction.AllCardsInteractions
                 .Where(c => c.isCardOpponent)
@@ -304,37 +290,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
 
                 //PanelManager.instance.AddLog($"   → Cible aléatoire player sélectionnée : {chosenTarget.nameCard}");
             }
-            else
-            {
-                //PanelManager.instance.AddLog("   → Aucune cible adverse disponible");
-            }
         }
-        else if(nameCard == "Neo")
-        {
-            UnsetAttackBonus(this, nameCard);
-            lastTarget = "";
-        }
-        else if(nameCard == "Ambroise")
-        {
-            // Marquer qu'Ambroise veut appliquer son effet plus tard
-            GameManager.ambroiseEffectPending = true;
-            //PanelManager.instance?.AddLog($"{nameCard} : Onde de Choc Passive en attente.");
-        }
-        else if(nameCard == "Trahison")
-        {
-            // Marquer que Trahison veut appliquer son effet plus tard
-            GameManager.trahisonEffectPending = true;
-            //PanelManager.instance?.AddLog($"{nameCard} : Terreur Sélective en attente.");
-        }
-        else if(nameCard == "Belindra")
-        {
-            //PanelManager.instance?.AddLog($"{nameCard} : Belindra active Bouclier collectif.");
-        }
-        else if(nameCard == "Zao")
-        {
-            //PanelManager.instance?.AddLog($"{nameCard} : Zao passe son tour. Elle est intouchable.");
-        }
-        
+
         CheckEndOfTurn();
         */
     }
