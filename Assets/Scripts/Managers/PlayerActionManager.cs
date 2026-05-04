@@ -90,6 +90,9 @@ public class PlayerActionManager : MonoBehaviour
     public void GetNextStep()
     {
         PanelManager.Instance.HideButtonNextStep();
+        // Fin du round
+        GameManager.Instance.initRound();
+        GameManager.Instance.EndTurn();
     }
 
     public void ClickOnPassed(GameObject buttonObject)

@@ -153,14 +153,15 @@ public class BoardManager : MonoBehaviour
         yield return StartCoroutine(IA.Instance.ApplyAllBonus());
         yield return StartCoroutine(IA.Instance.ApplyAllAttacksCoroutine());
 
-        yield return StartCoroutine(IA.Instance.ApplyAllMalusEndTurn());
+        //yield return StartCoroutine(IA.Instance.ApplyAllMalusEndTurn());
 
         aiTurnLaunched = false;
         hasLoggedWaitingPlayer = false;
         roundResolutionInProgress = false;
     }
 
-    public void ResetBoardForNextTurn(){
+    public IEnumerator ResetBoardForNextTurn()
+    {
         GameManager.Instance.isEndturnPlayer = false;
         GameManager.Instance.isEndturnAI = false;
         aiTurnLaunched = false;
@@ -178,8 +179,7 @@ public class BoardManager : MonoBehaviour
             card.ResetCardEndTurn();
         }
 
-        yield return StartCoroutine(BoardManager.Instance.HandleNextTurnTransition());
-
+        yield return BoardManager.Instance.HandleNextTurnTransition();
         ReplaceOpponentYellowCards();
     }
 
@@ -293,12 +293,12 @@ public class BoardManager : MonoBehaviour
 
     IEnumerator StartAITurnWithDelay(float delay)
     {
-        Debug.Log($"[AI] Réflexion en cours... (delay: {delay}s, timeScale: {Time.timeScale})");
+       // Debug.Log($"[AI] Réflexion en cours... (delay: {delay}s, timeScale: {Time.timeScale})");
         yield return new WaitForSecondsRealtime(delay);
-        Debug.Log($"[AI] Fin réflexion, tentative de lancement du tour IA (timeScale: {Time.timeScale})");
+       // Debug.Log($"[AI] Fin réflexion, tentative de lancement du tour IA (timeScale: {Time.timeScale})");
 
         IA ai = IA.Instance;
-        Debug.Log($"[AI] IA trouvée: {ai.name} (activeInHierarchy: {ai.gameObject.activeInHierarchy})");
+        //Debug.Log($"[AI] IA trouvée: {ai.name} (activeInHierarchy: {ai.gameObject.activeInHierarchy})");
         ai.StartAITurn();
     }
 
@@ -316,16 +316,16 @@ public class BoardManager : MonoBehaviour
     private IEnumerator FadeYellowCards(float fromAlpha, float toAlpha, float duration)
     {
         var yellowCardsUI = BoardManager.cardsOnBoardUI
-            .Where(c => c != null && c.yellowCard)
+            .Where(c => c != null && c.isYellow)
             .ToList();
 
         var yellowCardsAI = BoardManager.cardsOnBoardAI
-            .Where(c => c != null && c.yellowCard)
+            .Where(c => c != null && c.isYellow)
             .ToList();
 
         foreach (var card in yellowCardsUI)
         {
-            var anim = card.GetComponent<CardAnimations>();
+            var anim = card.GetComponent<CardsAnimation>();
             var img = card.GetComponentInChildren<Image>();
 
             if (anim == null || img == null)
@@ -334,13 +334,13 @@ public class BoardManager : MonoBehaviour
             anim.targetImage = img;
 
             yield return StartCoroutine(
-                anim.Fade(card, fromAlpha, toAlpha, duration)
+                anim.Fade(card.gameObject, fromAlpha, toAlpha, duration)
             );
         }
 
         foreach (var card in yellowCardsAI)
         {
-            var anim = card.GetComponent<CardAnimations>();
+            var anim = card.GetComponent<CardsAnimation>();
             var img = card.GetComponentInChildren<Image>();
 
             if (anim == null || img == null)
@@ -349,7 +349,7 @@ public class BoardManager : MonoBehaviour
             anim.targetImage = img;
 
             yield return StartCoroutine(
-                anim.Fade(card, fromAlpha, toAlpha, duration)
+                anim.Fade(card.gameObject, fromAlpha, toAlpha, duration)
             );
         }
     }
@@ -358,13 +358,13 @@ public class BoardManager : MonoBehaviour
     {
         if (card is CardUI ui)
         {
-            var (l, r) = GetAdjacentCards(ui);
+            var (l, r) = ui.GetAdjacentCards(ui);
             return (l, r);
         }
 
         if (card is CardAI ai)
         {
-            var (l, r) = GetAdjacentCards(ai);
+            var (l, r) = ai.GetAdjacentCards(ai);
             return (l, r);
         }
 

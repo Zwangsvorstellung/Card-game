@@ -158,9 +158,13 @@ public class GameManager : MonoBehaviour
 
         PanelManager.Instance?.ShowTurnBanner(currentPlayerAction);
     }
+    
+    public void confirmEndRound(){
+        PanelManager.Instance.ShowButtonNextStep();
+    }
 
     public void initRound(){
-        boardManager.ResetBoardForNextTurn();
+        StartCoroutine(boardManager.ResetBoardForNextTurn());
     }
 
     public void EndTurn()

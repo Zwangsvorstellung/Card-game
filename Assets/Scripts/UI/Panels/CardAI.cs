@@ -37,6 +37,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     public LayoutGroup layoutGroup;
 
     public bool isCardOpponent = true;
+    public bool isCardPlayer = false;
     public bool isSelect = false;
     public bool isFrozen = false;
     public int freezeAtTurn = 0;
@@ -267,5 +268,48 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     {
         if (other == null) return false;
         return Mathf.Abs(indexCarte - other.indexCarte) == 1;
+    }
+
+    public (CardAI left, CardAI right) GetAdjacentCards(CardAI card)
+    {
+        CardAI left = null;
+        CardAI right = null;
+
+        int index = card.indexCarte;
+        var list = BoardManager.cardsOnBoardAI;
+
+        if (index > 0)
+            left = list[index - 1];
+
+        if (index < list.Count - 1)
+            right = list[index + 1];
+
+        return (left, right);
+    }
+
+    public string INameCard => nameCard;
+
+    string ICard.nameCard => nameCard;
+
+    int ICard.defenseValue
+    {
+        get => defenseValue;
+        set => defenseValue = value;
+    }
+        int ICard.attaqueValue
+    {
+        get => attaqueValue;
+        set => attaqueValue = value;
+    }
+
+    TMP_Text ICard.defenseText => defenseText;
+    TMP_Text ICard.attaqueText => attaqueText;
+
+    string ICard.stateOffensif => stateOffensif;
+    string ICard.stateDefensif => stateDefensif;
+    bool ICard.isCardPlayer
+    {
+        get => isCardPlayer;
+        set => isCardPlayer = value;
     }
 }

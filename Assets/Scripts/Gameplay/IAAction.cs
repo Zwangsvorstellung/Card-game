@@ -183,9 +183,9 @@ public static class IAAction
 
         // 8) FINALISATION DU SCORE
         // ==========================================
-        Debug.Log($"[IA] Score d'attaque de {attacker.nameCard} vers {defender.nameCard}: {scoring}");
+        //Debug.Log($"[IA] Score d'attaque de {attacker.nameCard} vers {defender.nameCard}: {scoring}");
         
-        return Math.Max(scoring, 0);
+        return Mathf.Max(scoring, 0);
     }
 
     /// Évalue le score de rester passif (ne pas attaquer) pour une carte.
@@ -281,7 +281,7 @@ public static class IAAction
         foreach (CardUI opponent in opponents)
         {
             int attackScore = RateAttack(attacker, opponent, allies, opponents);
-            Debug.Log($"Attaquant: {attacker.nameCard} ennemi: {opponent.nameCard} score attaque: {attackScore}");
+            //Debug.Log($"Attaquant: {attacker.nameCard} ennemi: {opponent.nameCard} score attaque: {attackScore}");
             
             // Garde la cible avec le meilleur score
             if (attackScore > maxAttackScore)

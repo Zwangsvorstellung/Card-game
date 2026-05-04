@@ -288,10 +288,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         return nameCapacity.text.Contains(cap.ToString());
     }
 
-    public bool IsAdjacentTo(CardUI a, CardUI b)
+    public bool IsAdjacentTo(CardUI other)
     {
-        if (a == null || b == null) return false;
-        return Mathf.Abs(a.indexCarte - b.indexCarte) == 1;
+        if (other == null) return false;
+        return Mathf.Abs(indexCarte - other.indexCarte) == 1;
     }
 
     public void HideAsEmptySlot()
@@ -308,5 +308,48 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
 
         foreach (Transform child in transform)
             child.gameObject.SetActive(false);
+    }
+
+    public (CardUI left, CardUI right) GetAdjacentCards(CardUI card)
+    {
+        CardUI left = null;
+        CardUI right = null;
+
+        int index = card.indexCarte;
+        var list = BoardManager.cardsOnBoardUI;
+
+        if (index > 0)
+            left = list[index - 1];
+
+        if (index < list.Count - 1)
+            right = list[index + 1];
+
+        return (left, right);
+    }
+
+    public string INameCard => nameCard;
+
+    string ICard.nameCard => nameCard;
+
+    int ICard.defenseValue
+    {
+        get => defenseValue;
+        set => defenseValue = value;
+    }
+    int ICard.attaqueValue
+    {
+        get => attaqueValue;
+        set => attaqueValue = value;
+    }
+
+    TMP_Text ICard.defenseText => defenseText;
+    TMP_Text ICard.attaqueText => attaqueText;
+
+    string ICard.stateOffensif => stateOffensif;
+    string ICard.stateDefensif => stateDefensif;
+    bool ICard.isCardPlayer
+    {
+        get => isCardPlayer;
+        set => isCardPlayer = value;
     }
 }
