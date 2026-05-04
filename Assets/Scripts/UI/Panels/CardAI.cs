@@ -33,26 +33,18 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
 
     public GameObject atk;
 
-
     //private LayoutElement layoutElement;
     public LayoutGroup layoutGroup;
 
     public bool isCardOpponent = true;
     public bool isSelect = false;
     public bool isFrozen = false;
+    public int freezeAtTurn = 0;
     public bool isYellow = false;
     public bool isHiddenSlot = false;
     public bool actionChoiceDo = false;
     public string stateOffensif;
     public string stateDefensif;
-
-    enum OffensiveState { None, Passed, SelectTarget }
-    enum DefensiveState { None, Cibled }
-
-    //OffensiveState stateOffensif;
-    //DefensiveState stateDefensif;
-    //bool isPassed = stateOffensif == OffensiveState.Passed;
-
 
     public string target;
     public int targetID;
@@ -80,7 +72,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     {
         startPosition = rectTransform.anchoredPosition;
         indexHierarchieOriginal = transform.GetSiblingIndex();
-
     }
 
     void Update()
@@ -228,6 +219,12 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
         actionChoiceDo = false;
         stateOffensif = "wait";
         stateDefensif = "notCibled";
+
+        if(freezeAtTurn != GameManager.Instance.round)
+        {
+            isFrozen = false;
+        }
+        freezeAtTurn = 0;
         lastTarget = target;
         target = "";
         targetID = 0;
@@ -260,41 +257,15 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
         rectTransform.anchoredPosition = startPosition;
     }
 
-    /// Vérifie si deux cartes IA sont adjacentes (pour les alliés).
-    public bool IsAdjacentTo(CardAI a, CardAI b)
-    {
-        if (a == null || b == null) return false;
-        return Mathf.Abs(a.indexCarte - b.indexCarte) == 1;
-    }
-    
-    /// Vérifie si une carte IA est adjacente à une carte joueur (pour les attaques).
-    public bool IsAdjacentTo(CardAI a, CardUI b)
-    {
-        if (a == null || b == null) return false;
-        return Mathf.Abs(a.indexCarte - b.indexCarte) == 1;
-    }
-
     public bool HasCapacity(IAAction.Capacity cap)
     {
-        return nameCapacity != null &&
-            nameCapacity.text.Contains(cap.ToString());
+        if (nameCapacity == null) return false;
+        return nameCapacity.text.Contains(cap.ToString());
     }
 
-    public List<CarteAI> GetAdjacentCardsList(CarteAI card)
+    public bool IsAdjacentTo(CardAI other)
     {
-        var (left, right) = BoardManager.Instance.GetAdjacentCards(
-            card.index,
-            card.isPlayer ? "player" : "opponent"
-        );
-
-        List<CarteAI> result = new List<CarteAI>();
-
-        if (left != null)
-            result.Add(left.GetComponent<CarteAI>());
-
-        if (right != null)
-            result.Add(right.GetComponent<CarteAI>());
-
-        return result;
+        if (other == null) return false;
+        return Mathf.Abs(indexCarte - other.indexCarte) == 1;
     }
 }

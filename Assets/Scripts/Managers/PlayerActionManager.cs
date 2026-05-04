@@ -35,8 +35,6 @@ public class PlayerActionManager : MonoBehaviour
 
     public void ConfirmSelection(GameObject buttonObject)
     {
-        Debug.Log($"[PLAYER] ===== VALIDATION DU DECK =====");
-        
         GameManager.Instance.mode = "selectCardToPlayAction";
 
         PanelManager.Instance.HideInstructionText();
@@ -55,11 +53,6 @@ public class PlayerActionManager : MonoBehaviour
 
         GameManager.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
 
-        foreach (var card in GameManager.Instance.piochePlayerA)
-        {
-            Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
-        }
-
         foreach (var card in unselectedCards)
             GameManager.Instance.piochePlayerA.Enqueue(card);
 
@@ -76,14 +69,9 @@ public class PlayerActionManager : MonoBehaviour
 
         GameManager.Instance.mainPlayerB = new Queue<CarteData>(opponentCards);
 
-        if (opponentDeck != null)
-        {
-            foreach (var card in remainingCards)
-            {
-                GameManager.Instance.piochePlayerB.Enqueue(card);
-            }
-        }
-        
+        foreach (var card in remainingCards)
+            GameManager.Instance.piochePlayerB.Enqueue(card);
+
         Debug.Log($"[PLAYER] Cartes IA générées: {opponentCards.Count}");
         foreach (var card in opponentCards)
         {
@@ -94,17 +82,14 @@ public class PlayerActionManager : MonoBehaviour
         CamController.Instance.GoToBoardView();
 
         buttonObject.SetActive(false);
-
         MainUIManager.Instance.gameObject.SetActive(false);
         
         GameManager.Instance.StartTurn();
-
     }
 
     public void GetNextStep()
     {
         PanelManager.Instance.HideButtonNextStep();
-        //BoardManager.Instance.StartCoroutine(BoardManager.Instance.HandleNextTurnTransition());
     }
 
     public void ClickOnPassed(GameObject buttonObject)
@@ -163,7 +148,6 @@ public class PlayerActionManager : MonoBehaviour
         Debug.Log($"[PLAYER] Clic sur carte IA (cible): {cardAI.nameCard} (DEF:{cardAI.defenseValue})");
         BoardManager.Instance.selectCardOpponentOnBoard(cardAI);
     }
-
 
     public void PlayHoverSound(AudioSource audio) => audio?.Play();
 }

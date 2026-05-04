@@ -46,6 +46,91 @@ public class GameManager : MonoBehaviour
         else if (Instance != this)
             Destroy(gameObject);
     }
+    void Start()
+    {
+        round = 1;
+        mode = "selectDeck";
+        isGameOver = false;
+        playerScore = 10;
+        scoreOpponent = 10;
+                
+        deckPlayerA = new List<CarteData>();
+        deckPlayerB = new List<CarteData>();
+
+        // Charger toutes les cartes .asset dans Resources/CartesGenerees
+        CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
+        
+        // Mélanger toutes les cartes et les répartir entre les deux joueurs (deck partagé)
+        List<CarteData> allCards = new List<CarteData>();
+        int cardsAdded = 0;
+        foreach (var asset in cartesAssets)
+        {
+            if (limitCardsForDebug && cardsAdded >= debugCardsPerDeck)
+                break;
+
+            // Une instance pour A
+            CarteData dataA = new CarteData(
+                asset.idCard,
+                asset.nom,
+                asset.nameCapacity,
+                asset.descriptionCapacity,
+                asset.atk,
+                asset.def,
+                asset.capacityId,
+                asset.image           
+            );
+            // Une instance pour B
+            CarteData dataB = new CarteData(
+                asset.idCard,
+                asset.nom,
+                asset.nameCapacity,
+                asset.descriptionCapacity,
+                asset.atk,
+                asset.def,
+                asset.capacityId,
+                asset.image
+            );
+            deckPlayerA.Add(dataA);
+            deckPlayerB.Add(dataB);
+            cardsAdded++;
+        }
+        Shuffle(deckPlayerA);
+        Shuffle(deckPlayerB);
+
+        // Convertir en Queue et distribuer 7 cartes pour la main de chaque joueur
+        mainPlayerA = new Queue<CarteData>();
+        mainPlayerB = new Queue<CarteData>();
+        piochePlayerA = new Queue<CarteData>();
+        piochePlayerB = new Queue<CarteData>();
+
+        // Distribuer les cartes dans les mains
+        int nombreCartesMain = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerA.Count);
+        int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerB.Count);
+
+        for (int i = 0; i < nombreCartesMain; i++)
+        {
+            mainPlayerA.Enqueue(deckPlayerA[i]);
+        }
+        for (int i = 0; i < nombreCartesMainAdversaire; i++)
+        {
+            mainPlayerB.Enqueue(deckPlayerB[i]);
+        }
+
+        // Le reste va dans la pioche
+        for (int i = nombreCartesMain; i < deckPlayerA.Count; i++)
+        {
+            piochePlayerA.Enqueue(deckPlayerA[i]);
+        }
+        for (int i = nombreCartesMainAdversaire; i < deckPlayerB.Count; i++)
+        {
+            piochePlayerB.Enqueue(deckPlayerB[i]);
+        }
+
+        mainUIManager.ShowHand(mainPlayerA.ToList());
+        
+        Debug.Log($"[GAME] Decks créés - Joueur: {mainPlayerA.Count} cartes, IA: {mainPlayerB.Count} cartes");
+        Debug.Log($"[GAME] Pioches créées - Joueur: {piochePlayerA.Count} cartes, IA: {piochePlayerB.Count} cartes");
+    }
 
     public void StartTurn()
     {
@@ -140,93 +225,6 @@ public class GameManager : MonoBehaviour
         PanelManager.Instance.logResultEndGame.SetText(popupMessage);
         
         return true;
-    }
-
-    void Start()
-    {
-        round = 1;
-        mode = "selectDeck";
-        isGameOver = false;
-
-        playerScore = 10;
-        scoreOpponent = 10;
-                
-        deckPlayerA = new List<CarteData>();
-        deckPlayerB = new List<CarteData>();
-
-        // Charger toutes les cartes .asset dans Resources/CartesGenerees
-        CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
-        
-        // Mélanger toutes les cartes et les répartir entre les deux joueurs (deck partagé)
-        List<CarteData> allCards = new List<CarteData>();
-        int cardsAdded = 0;
-        foreach (var asset in cartesAssets)
-        {
-            if (limitCardsForDebug && cardsAdded >= debugCardsPerDeck)
-                break;
-
-            // Une instance pour A
-            CarteData dataA = new CarteData(
-                asset.idCard,
-                asset.nom,
-                asset.nameCapacity,
-                asset.descriptionCapacity,
-                asset.atk,
-                asset.def,
-                asset.capacityId,
-                asset.image           
-            );
-            // Une instance pour B
-            CarteData dataB = new CarteData(
-                asset.idCard,
-                asset.nom,
-                asset.nameCapacity,
-                asset.descriptionCapacity,
-                asset.atk,
-                asset.def,
-                asset.capacityId,
-                asset.image
-            );
-            deckPlayerA.Add(dataA);
-            deckPlayerB.Add(dataB);
-            cardsAdded++;
-        }
-        Shuffle(deckPlayerA);
-        Shuffle(deckPlayerB);
-
-        // Convertir en Queue et distribuer 7 cartes pour la main de chaque joueur
-        mainPlayerA = new Queue<CarteData>();
-        mainPlayerB = new Queue<CarteData>();
-        piochePlayerA = new Queue<CarteData>();
-        piochePlayerB = new Queue<CarteData>();
-
-        // Distribuer les cartes dans les mains
-        int nombreCartesMain = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerA.Count);
-        int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerB.Count);
-
-        for (int i = 0; i < nombreCartesMain; i++)
-        {
-            mainPlayerA.Enqueue(deckPlayerA[i]);
-        }
-        for (int i = 0; i < nombreCartesMainAdversaire; i++)
-        {
-            mainPlayerB.Enqueue(deckPlayerB[i]);
-        }
-
-        // Le reste va dans la pioche
-        for (int i = nombreCartesMain; i < deckPlayerA.Count; i++)
-        {
-            piochePlayerA.Enqueue(deckPlayerA[i]);
-        }
-        for (int i = nombreCartesMainAdversaire; i < deckPlayerB.Count; i++)
-        {
-            piochePlayerB.Enqueue(deckPlayerB[i]);
-        }
-
-        mainUIManager.ShowHand(mainPlayerA.ToList());
-        
-        Debug.Log($"[GAME] Decks créés - Joueur: {mainPlayerA.Count} cartes, IA: {mainPlayerB.Count} cartes");
-        Debug.Log($"[GAME] Pioches créées - Joueur: {piochePlayerA.Count} cartes, IA: {piochePlayerB.Count} cartes");
     }
     
     public List<CarteData> GetSelectedCards()

@@ -21,13 +21,11 @@ public class BoardManager : MonoBehaviour
     private bool aiTurnLaunched;
     private bool roundResolutionInProgress;
 
-
     void Awake()
     {
         if (Instance != null && Instance != this) Destroy(gameObject);
         else Instance = this;
     }
-
     void Update()
     {
         if (GameManager.Instance.mode == "deck") return;
@@ -49,14 +47,20 @@ public class BoardManager : MonoBehaviour
                 }
 
                 // Vérifie si toutes les cartes joueur ont fait leur choix
-                if(cardsOnBoardUI.Where(card => card != null && !card.isHiddenSlot).All(card => card.actionChoiceDo)){
+                var activePlayerCards = cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot).ToList();
+
+                if (activePlayerCards.All(card => card.actionChoiceDo))
+                {
                     GameManager.Instance.isEndturnPlayer = true;
                     hasLoggedWaitingPlayer = false;
+
                     Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
-                    int visiblePlayerCards = cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot);
+
+                    int visiblePlayerCards = activePlayerCards.Count;
+                    int attacksCount = activePlayerCards.Count(c => c.stateOffensif == "atk");
+                    int passesCount = activePlayerCards.Count(c => c.stateOffensif == "passed");
+
                     Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({visiblePlayerCards} cartes)");
-                    int attacksCount = cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot && c.stateOffensif == "atk");
-                    int passesCount = cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot && c.stateOffensif == "passed");
                     Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
 
                     // Si le joueur termine en premier, on passe immédiatement la main à l'IA.
@@ -74,22 +78,6 @@ public class BoardManager : MonoBehaviour
             Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des choix");
             StartCoroutine(ResolveRoundCoroutine());
         }
-    }
-
-    private IEnumerator ResolveRoundCoroutine()
-    {
-        roundResolutionInProgress = true;
-        GameManager.Instance.currentPlayerAction = "NONE";
-
-        yield return StartCoroutine(IA.Instance.ApplyAllBonus());
-        yield return StartCoroutine(IA.Instance.ApplyAllAttacksCoroutine());
-
-        yield return StartCoroutine(IA.Instance.ApplyAllMalusEndTurn());
-
-
-        aiTurnLaunched = false;
-        hasLoggedWaitingPlayer = false;
-        roundResolutionInProgress = false;
     }
 
     public void SetupBoardCards(List<CarteData> cardsOpponent, List<CarteData> cardsPlayer)
@@ -135,17 +123,18 @@ public class BoardManager : MonoBehaviour
             Debug.Log($"[BOARD] Sélection de la cible IA: {cardAI.nameCard}");
             int idAttacker = cardAI.isSelectCard();
 
-            var card = cardsOnBoardUI.FirstOrDefault(c => c.idCard == idAttacker);
-            if (card != null)
+            var attackerCard = cardsOnBoardUI.FirstOrDefault(c => c.idCard == idAttacker);
+            if (attackerCard != null)
             {
-                Debug.Log($"[BOARD] Cible assignée: {card.nameCard} → {cardAI.nameCard}");
-                card.SetDataTarget(cardAI);
+                Debug.Log($"[BOARD] Cible assignée: {attackerCard.nameCard} → {cardAI.nameCard}");
+                attackerCard.SetDataTarget(cardAI);
                 GameManager.Instance.mode = "selectCardToPlayAction";
                 Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
             }
         }
     }
 
+    // déselectionner toutes les autres cartes
     public void DeselectAllOtherCards()
     {
         foreach (var card in cardsOnBoardUI.Where(c => c.isSelect && !c.actionChoiceDo))
@@ -158,6 +147,21 @@ public class BoardManager : MonoBehaviour
     public CardUI GetDataAttacker()
     {
         return cardsOnBoardUI.FirstOrDefault(card => card.stateOffensif == "selectTarget");
+    }
+
+    private IEnumerator ResolveRoundCoroutine()
+    {
+        roundResolutionInProgress = true;
+        GameManager.Instance.currentPlayerAction = "NONE";
+
+        yield return StartCoroutine(IA.Instance.ApplyAllBonus());
+        yield return StartCoroutine(IA.Instance.ApplyAllAttacksCoroutine());
+
+        yield return StartCoroutine(IA.Instance.ApplyAllMalusEndTurn());
+
+        aiTurnLaunched = false;
+        hasLoggedWaitingPlayer = false;
+        roundResolutionInProgress = false;
     }
 
     public void ResetBoardForNextTurn(){
@@ -177,6 +181,8 @@ public class BoardManager : MonoBehaviour
         {
             card.ResetCardEndTurn();
         }
+
+        yield return StartCoroutine(BoardManager.Instance.HandleNextTurnTransition());
 
         ReplaceOpponentYellowCards();
     }
@@ -289,44 +295,6 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    /// <summary>Retire une carte de mainPlayerB (carte masquée sans remplaçant).</summary>
-    void SyncRemoveFromMainPlayerB(string instanceId)
-    {
-        var gm = GameManager.Instance;
-        if (gm.mainPlayerB == null) return;
-        var list = gm.mainPlayerB.Where(c => c.instanceId != instanceId).ToList();
-        gm.mainPlayerB = new Queue<CarteData>(list);
-    }
-
-    /// <summary>Remplace une carte dans mainPlayerB (carte remplacée depuis la pioche).</summary>
-    void SyncReplaceInMainPlayerB(string oldInstanceId, CarteData newCard)
-    {
-        var gm = GameManager.Instance;
-        if (gm.mainPlayerB == null) return;
-        var list = gm.mainPlayerB.Where(c => c.instanceId != oldInstanceId).ToList();
-        list.Add(newCard);
-        gm.mainPlayerB = new Queue<CarteData>(list);
-    }
-
-    /// <summary>Retire une carte de mainPlayerA (carte masquée sans remplaçant).</summary>
-    void SyncRemoveFromMainPlayerA(string instanceId)
-    {
-        var gm = GameManager.Instance;
-        if (gm.mainPlayerA == null) return;
-        var list = gm.mainPlayerA.Where(c => c.instanceId != instanceId).ToList();
-        gm.mainPlayerA = new Queue<CarteData>(list);
-    }
-
-    /// <summary>Remplace une carte dans mainPlayerA (carte remplacée depuis la pioche).</summary>
-    void SyncReplaceInMainPlayerA(string oldInstanceId, CarteData newCard)
-    {
-        var gm = GameManager.Instance;
-        if (gm.mainPlayerA == null) return;
-        var list = gm.mainPlayerA.Where(c => c.instanceId != oldInstanceId).ToList();
-        list.Add(newCard);
-        gm.mainPlayerA = new Queue<CarteData>(list);
-    }
-
     IEnumerator StartAITurnWithDelay(float delay)
     {
         Debug.Log($"[AI] Réflexion en cours... (delay: {delay}s, timeScale: {Time.timeScale})");
@@ -338,70 +306,57 @@ public class BoardManager : MonoBehaviour
         ai.StartAITurn();
     }
 
-/*
     public IEnumerator HandleNextTurnTransition()
     {
+        Debug.Log("[BOARD] Transition fin de tour - début fade");
+
         // 1) Fade des cartes de 1 à 0 (disparition)
         yield return StartCoroutine(FadeYellowCards(1f, 0f, 0.5f));
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.2f);
 
-        // 2) Remplacement des cartes après le fade
-        CarteBoardInteraction interactionBoard = FindFirstObjectByType<CarteBoardInteraction>();
-        BoardManager.Instance.ReplaceOpponentYellowCards();
-
-        ResetBoardForNextTurn();
+        Debug.Log("[BOARD] Remplacement des cartes jaunes");
     }
-    public (CarteBoardInteraction leftCard, CarteBoardInteraction rightCard) GetAdjacentCards(int index, string team)
-    {
-        List<CarteBoardInteraction> allCards = CarteBoardInteraction.AllCardsInteractions;
 
-        CarteBoardInteraction leftCard = allCards.Find(c =>
-        {
-            var carteUI = c.GetComponent<CarteUI>();
-            if (carteUI == null) return false;
-
-            bool isTeamMatch = (team == "opponent" && c.isCardOpponent) ||
-                            (team == "player" && c.isCardPlayer);
-
-            return isTeamMatch && carteUI.indexHierarchieOriginal == index - 1;
-        });
-
-        CarteBoardInteraction rightCard = allCards.Find(c =>
-        {
-            var carteUI = c.GetComponent<CarteUI>();
-            if (carteUI == null) return false;
-
-            bool isTeamMatch = (team == "opponent" && c.isCardOpponent) ||
-                            (team == "player" && c.isCardPlayer);
-
-            return isTeamMatch && carteUI.indexHierarchieOriginal == index + 1;
-        });
-
-        return (leftCard, rightCard);
-        
-    }
     private IEnumerator FadeYellowCards(float fromAlpha, float toAlpha, float duration)
     {
-        var yellowCards = CarteBoardInteraction.AllCardsInteractions
-        .Where(c => c.yellowCard && (c.isCardPlayer || c.isCardOpponent))
-        .ToList();
+        var yellowCardsUI = BoardManager.cardsOnBoardUI
+            .Where(c => c != null && c.yellowCard)
+            .ToList();
 
-        foreach (var card in yellowCards)
+        var yellowCardsAI = BoardManager.cardsOnBoardAI
+            .Where(c => c != null && c.yellowCard)
+            .ToList();
+
+        foreach (var card in yellowCardsUI)
         {
             var anim = card.GetComponent<CardAnimations>();
             var img = card.GetComponentInChildren<Image>();
 
-            if (anim != null && img != null)
-            {
-                anim.targetImage = img;
-                Debug.Log($"Fading card {card.name}, img={img}");
+            if (anim == null || img == null)
+                continue;
 
-                yield return StartCoroutine(anim.Fade(card.GetComponent<CarteUI>(), fromAlpha, toAlpha, duration));
-            }
+            anim.targetImage = img;
 
+            yield return StartCoroutine(
+                anim.Fade(card, fromAlpha, toAlpha, duration)
+            );
+        }
+
+        foreach (var card in yellowCardsAI)
+        {
+            var anim = card.GetComponent<CardAnimations>();
+            var img = card.GetComponentInChildren<Image>();
+
+            if (anim == null || img == null)
+                continue;
+
+            anim.targetImage = img;
+
+            yield return StartCoroutine(
+                anim.Fade(card, fromAlpha, toAlpha, duration)
+            );
         }
     }
-*/
 
     public (ICard left, ICard right) GetAdjacentCards(ICard card)
     {
@@ -418,5 +373,45 @@ public class BoardManager : MonoBehaviour
         }
 
         return (null, null);
+    }
+
+    // ==========================================
+    // SYNC
+    // ==========================================
+
+    /// Retire une carte de mainPlayerB (carte masquée sans remplaçant).
+    void SyncRemoveFromMainPlayerB(string instanceId)
+    {
+        var gm = GameManager.Instance;
+        if (gm.mainPlayerB == null) return;
+        var list = gm.mainPlayerB.Where(c => c.instanceId != instanceId).ToList();
+        gm.mainPlayerB = new Queue<CarteData>(list);
+    }
+    /// Remplace une carte dans mainPlayerB (carte remplacée depuis la pioche)
+    void SyncReplaceInMainPlayerB(string oldInstanceId, CarteData newCard)
+    {
+        var gm = GameManager.Instance;
+        if (gm.mainPlayerB == null) return;
+        var list = gm.mainPlayerB.Where(c => c.instanceId != oldInstanceId).ToList();
+        list.Add(newCard);
+        gm.mainPlayerB = new Queue<CarteData>(list);
+    }
+
+    /// Retire une carte de mainPlayerA (carte masquée sans remplaçant)
+    void SyncRemoveFromMainPlayerA(string instanceId)
+    {
+        var gm = GameManager.Instance;
+        if (gm.mainPlayerA == null) return;
+        var list = gm.mainPlayerA.Where(c => c.instanceId != instanceId).ToList();
+        gm.mainPlayerA = new Queue<CarteData>(list);
+    }
+    /// Remplace une carte dans mainPlayerA (carte remplacée depuis la pioche)
+    void SyncReplaceInMainPlayerA(string oldInstanceId, CarteData newCard)
+    {
+        var gm = GameManager.Instance;
+        if (gm.mainPlayerA == null) return;
+        var list = gm.mainPlayerA.Where(c => c.instanceId != oldInstanceId).ToList();
+        list.Add(newCard);
+        gm.mainPlayerA = new Queue<CarteData>(list);
     }
 } 

@@ -94,23 +94,4 @@ public class PanelManager : MonoBehaviour
         turnBannerPanel.SetActive(false);
         turnBannerCoroutine = null;
     }
-
-       /* public void AddLog(string message)
-    {
-        logs.Add(message);
-        
-       // if (logs.Count > MAX_LOGS)
-           // logs.RemoveAt(0);
-        
-        zoneLogs?.SetText(string.Join("\n", logs));
-
-        // ➤ Forcer le scroll tout en bas
-        ScrollRect scroll = zoneLogs?.GetComponentInParent<ScrollRect>();
-        if (scroll)
-        {
-            Canvas.ForceUpdateCanvases(); // Important pour forcer le layout à se mettre à jour
-            scroll.verticalNormalizedPosition = 0f;
-        }
-        */
-    
 }

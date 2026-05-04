@@ -65,15 +65,6 @@ public class CarteUI : MonoBehaviour
         indexHierarchieOriginal = transform.GetSiblingIndex();
     }
 
-    /*private int CountSelectedCards()
-    {
-        Transform parentPanel = transform.parent;
-        return parentPanel.GetComponentsInChildren<CarteUI>(true)
-            .Count(carte => carte.isSelect);
-    }
-    */
-
-
     public void ShowAttackIcon(int numberAtk)
     {
         //passedIcon.SetActive(false);

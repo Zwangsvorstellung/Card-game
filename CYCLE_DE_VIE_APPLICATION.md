@@ -269,7 +269,7 @@ IA.ExecuteAITurn() → Boucle principale
    - Garde la meilleure attaque (score > seuil minimum)
 
 2. **Exécute l'attaque** :
-   - `IA.ExecuteAttack(bestAttacker, bestTarget)`
+   - `IA.SaveAttack(bestAttacker, bestTarget)`
    - `IA.SimulateAIAttack()` : Met à jour les états
    - `IA.ApplyAttack()` : Met à jour l'UI et stocke l'attaque
    - Stocke dans `aiAttacksThisTurn` (liste des attaques IA)

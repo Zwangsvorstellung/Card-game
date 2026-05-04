@@ -112,9 +112,9 @@ public class CardsAnimation : MonoBehaviour
         rectTransform.localRotation = Quaternion.Euler(0, 0, 0);
     }
 
-    public IEnumerator Glow(CarteUI carteUI, float duration = 1f, float glowIntensity = 0.5f, float pulseSpeed = 3f)
+    public IEnumerator Glow(GameObject cardGO, float duration = 1f, float glowIntensity = 0.5f, float pulseSpeed = 3f)
     {
-        Image img = carteUI.GetComponentInChildren<Image>();
+        Image img = cardGO.GetComponentInChildren<Image>();
         if (img == null)
         {
             Debug.LogError("Image component not found!");
@@ -159,13 +159,13 @@ public class CardsAnimation : MonoBehaviour
         rectTransform.rotation = originalRot;
     }
 
-    public IEnumerator Fade(CarteUI carteUI, float startAlpha, float endAlpha, float duration = 0.5f)
+    public IEnumerator Fade(GameObject cardGO, float startAlpha, float endAlpha, float duration = 0.5f)
     {
-        if (carteUI == null) yield break;
+        if (cardGO == null) yield break;
         
-        CanvasGroup canvasGroup = carteUI.GetComponent<CanvasGroup>();
+        CanvasGroup canvasGroup = cardGO.GetComponent<CanvasGroup>();
         if (canvasGroup == null) 
-                canvasGroup = carteUI.gameObject.AddComponent<CanvasGroup>();
+                canvasGroup = cardGO.gameObject.AddComponent<CanvasGroup>();
 
         canvasGroup.interactable = true;
         canvasGroup.blocksRaycasts = true;
@@ -180,6 +180,8 @@ public class CardsAnimation : MonoBehaviour
         }
 
         canvasGroup.alpha = endAlpha;
+        //canvasGroup.interactable = visible;
+        //canvasGroup.blocksRaycasts = visible;
     }
 
     public IEnumerator Rotate360(float duration = 1f)
