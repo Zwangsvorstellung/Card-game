@@ -82,8 +82,6 @@ public class BoardManager : MonoBehaviour
 
     public void SetupBoardCards(List<CarteData> cardsOpponent, List<CarteData> cardsPlayer)
     {
-        Debug.Log($"[BOARD] ===== SETUP DU PLATEAU =====");
-        
         // Instancier les cartes de l'adversaire (4 premières)
         foreach (var card in cardsOpponent)
         {
@@ -116,21 +114,19 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    // selection de la cible à attaquer 
+    // selection manuelle de la cible à attaquer (JOUEUR)
     public void selectCardOpponentOnBoard(CardAI cardAI)
     {
         if(GameManager.Instance.mode == "selectCardOpponentToAttack"){
             Debug.Log($"[BOARD] Sélection de la cible IA: {cardAI.nameCard}");
-            int idAttacker = cardAI.isSelectCard();
 
+            int idAttacker = cardAI.isSelectCard();
             var attackerCard = cardsOnBoardUI.FirstOrDefault(c => c.idCard == idAttacker);
-            if (attackerCard != null)
-            {
-                Debug.Log($"[BOARD] Cible assignée: {attackerCard.nameCard} → {cardAI.nameCard}");
-                attackerCard.SetDataTarget(cardAI);
-                GameManager.Instance.mode = "selectCardToPlayAction";
-                Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
-            }
+
+            Debug.Log($"[BOARD] Cible assignée: {attackerCard.nameCard} → {cardAI.nameCard}");
+            attackerCard.SetDataTarget(cardAI);
+            GameManager.Instance.mode = "selectCardToPlayAction";
+            Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
         }
     }
 

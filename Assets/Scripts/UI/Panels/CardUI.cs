@@ -206,7 +206,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     }
     public void Deselect()
     {
-        isSelect = false;          
+        isSelect = false;
         GameManager.Instance.mode = "selectCardToPlayAction";
         stateOffensif = "wait";
 

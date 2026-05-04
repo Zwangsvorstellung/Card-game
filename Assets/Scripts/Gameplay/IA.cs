@@ -117,7 +117,6 @@ public class IA : MonoBehaviour
         bool hasMinosonOpponent = cardsUIOnBoard.Any(c => c.nameCard == "Minoson");
         bool hasBelindraOpponent = cardsUIOnBoard.Any(c => c.nameCard == "Belindra" && c.stateOffensif == "passed");
         
-        // Boucle principale - continue tant qu'on n'a pas le max d'attaques et qu'il reste des cartes IA disponibles
         Debug.Log($"[IA] Boucle d'exécution - Max attaques: {GameManager.MAX_NUMBER_ATK_ROUND}, Cartes dispo: {cardsAIOnBoard.Count}");
         
         while (attackSaved < GameManager.MAX_NUMBER_ATK_ROUND && cardsAIOnBoard.Count > 0)
@@ -139,7 +138,7 @@ public class IA : MonoBehaviour
                 
                 Debug.Log($"[IA]   {cardAI.nameCard} (ATK:{cardAI.attaqueValue}, DEF:{cardAI.defenseValue}) → " +
                          $"attack={decision.attack}, score={decision.score}, " +
-                         $"target={(decision.target != null ? decision.target.nameCard : "null")}");
+                         $"target={decision.target.nameCard}");
 
                 // Si la décision est d'attaquer et que le score est suffisant
                 if (decision.attack && decision.score > bestScoring && decision.score >= seuilMinAttaque)
@@ -184,14 +183,12 @@ public class IA : MonoBehaviour
             }
         }
 
-        // Attente finale avant de terminer le tour
         yield return new WaitForSeconds(1f);
         
         Debug.Log($"[IA] Attaques stockées: {aiAttacksThisTurn.Count}");
         foreach (var attack in aiAttacksThisTurn)
         {
-            if (attack.attackerAI != null)
-                Debug.Log($"[IA]   - {attack.attackerAI.nameCard} → {attack.targetPlayer.nameCard} ({attack.damage} dégâts)");
+            Debug.Log($"[IA] - {attack.attackerAI.nameCard} → {attack.targetPlayer.nameCard} ({attack.damage} dégâts)");
         }
 
         GameManager.Instance.isEndturnAI = true;
@@ -334,40 +331,6 @@ public class IA : MonoBehaviour
             }
         }
     }
-
-    public void buffAtk(IEnumerable<ICard> cards)
-    {
-        foreach (var card in cards)
-        {
-            card.attaqueValue++;
-            card.attaqueText.SetText(card.attaqueValue.ToString());
-        }
-    }
-    public void buffDf(IEnumerable<ICard> cards)
-    {
-        foreach (var card in cards)
-        {
-            card.defenseValue++;
-            card.defenseText.SetText(card.defenseValue.ToString());
-        }
-    }
-    public void debuffAtk(IEnumerable<ICard> cards)
-    {
-        foreach (var card in cards)
-        {
-            card.attaqueValue--;
-            card.attaqueText.SetText(card.attaqueValue.ToString());
-        }
-    }
-    public void debuffDf(IEnumerable<ICard> cards)
-    {
-        foreach (var card in cards)
-        {
-            card.defenseValue--;
-            card.defenseText.SetText(card.defenseValue.ToString());
-        }
-    }
-
     public void ApplyBonusCibled(IEnumerable<ICard> cards)
     {
         foreach (var card in cards)
@@ -429,7 +392,6 @@ public class IA : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
     }
-
     public IEnumerator ApplyAllBonusEndTurn()
     {
         Debug.Log($"[ATTACK] ===== APPLICATION DES BONUS A LA FIN DU TOUR =====");
@@ -597,22 +559,22 @@ public class IA : MonoBehaviour
         // ===== MODS SPECIFIQUES =====
 
         // si on vise une carte qui attaque, aucun dégat
-        if (attack.targetStateOffensif.Equals("atk") 
-                && attack.targetStateDefensif.Equals("isAttacked") 
-                && !target.nameCard.Equals("Zao"))
+        if (attack.targetStateOffensif == "atk") 
+                && attack.targetStateDefensif == "isAttacked" 
+                && target.nameCard. != "Zao")
         {
             damage = 0;
             Debug.Log($"[CIBLAGE] → {targetName} non touché par {attackerName} car en ATK");
         }
 
         // Ondine inflige uniquement des dégâts si elle est ciblée
-        if(attacker.nameCard == "Ondine") && !attacker.stateDefensif.Equals("isAttacked")){
+        if(attacker.nameCard == "Ondine") && attacker.stateDefensif != "isAttacked"){
             damage = 0;
             Debug.Log($"[ATTACK] → {attackerName} ne peut infliger de dégâts car elle n'est pas ciblée");
         }
 
         // sauf Zao qui est inversée
-        if (target.nameCard == "Zao") && attack.targetStateOffensif.Equals("passed")){
+        if (target.nameCard == "Zao" && attack.targetStateOffensif == "passed"){
             damage = 0;
             Debug.Log($"[CIBLAGE] → {targetName} non touché par {attackerName} car en PASSED");
         }
@@ -772,10 +734,7 @@ public class IA : MonoBehaviour
         int precision = 100;
         
         int playerCardsCount = BoardManager.cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot);
-
-        var activeAICards = BoardManager.cardsOnBoardAI
-            .Where(c => c != null && !c.isHiddenSlot)
-            .ToList();
+        var activeAICards = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot).ToList();
         var aiCardsById = activeAICards.ToDictionary(c => c.idCard);
 
         bool hasSoliciaOpponent = activeAICards.Any(c => c.nameCard == "Solicia");
@@ -808,10 +767,43 @@ public class IA : MonoBehaviour
             Debug.Log($"[ATTACK] Attaque joueur trouvée: {cardUI.nameCard} → {target.nameCard} " +
                         $"(ATK:{cardUI.attaqueValue} vs DEF:{target.defenseValue} = {damage} dégâts)");
             
-            // Ajoute l'attaque du joueur
             playerAttacks.Add(new AttackInfo(cardUI, target, damage, precision, hasSoliciaOpponent, hasMinosonOpponent, hasBelindraOpponent));
         }
-        
+
         return playerAttacks;
+    }
+
+    /// BUFF ET DEBUFF ///
+    public void buffAtk(IEnumerable<ICard> cards)
+    {
+        foreach (var card in cards)
+        {
+            card.attaqueValue++;
+            card.attaqueText.SetText(card.attaqueValue.ToString());
+        }
+    }
+    public void buffDf(IEnumerable<ICard> cards)
+    {
+        foreach (var card in cards)
+        {
+            card.defenseValue++;
+            card.defenseText.SetText(card.defenseValue.ToString());
+        }
+    }
+    public void debuffAtk(IEnumerable<ICard> cards)
+    {
+        foreach (var card in cards)
+        {
+            card.attaqueValue--;
+            card.attaqueText.SetText(card.attaqueValue.ToString());
+        }
+    }
+    public void debuffDf(IEnumerable<ICard> cards)
+    {
+        foreach (var card in cards)
+        {
+            card.defenseValue--;
+            card.defenseText.SetText(card.defenseValue.ToString());
+        }
     }
 } 

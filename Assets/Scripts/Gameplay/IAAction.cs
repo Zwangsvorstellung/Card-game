@@ -193,7 +193,6 @@ public static class IAAction
     /// <param name="card">La carte qui envisagerait de rester passive (CardAI)</param>
     /// <param name="allies">Liste des alliés de la carte</param>
     /// <param name="opponents">Liste des ennemis</param>
-    /// <returns>Un score entier représentant la valeur de rester passif</returns>
     public static int RatePassif(
         CardAI card,
         List<CardAI> allies,
