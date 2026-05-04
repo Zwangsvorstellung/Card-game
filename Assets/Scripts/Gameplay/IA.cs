@@ -559,16 +559,16 @@ public class IA : MonoBehaviour
         // ===== MODS SPECIFIQUES =====
 
         // si on vise une carte qui attaque, aucun dégat
-        if (attack.targetStateOffensif == "atk") 
+        if (attack.targetStateOffensif == "atk"
                 && attack.targetStateDefensif == "isAttacked" 
-                && target.nameCard. != "Zao")
+                && target.nameCard != "Zao")
         {
             damage = 0;
             Debug.Log($"[CIBLAGE] → {targetName} non touché par {attackerName} car en ATK");
         }
 
         // Ondine inflige uniquement des dégâts si elle est ciblée
-        if(attacker.nameCard == "Ondine") && attacker.stateDefensif != "isAttacked"){
+        if(attacker.nameCard == "Ondine" && attacker.stateDefensif != "isAttacked"){
             damage = 0;
             Debug.Log($"[ATTACK] → {attackerName} ne peut infliger de dégâts car elle n'est pas ciblée");
         }
