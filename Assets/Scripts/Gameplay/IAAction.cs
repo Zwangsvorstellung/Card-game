@@ -42,16 +42,12 @@ public static class IAAction
     {
         if (attacker == null || defender == null) return 0;
 
-        // Récupération des valeurs d'attaque et de défense
         int atk = attacker.attaqueValue;
         int def = defender.defenseValue;
-
-        // Calcul des dégâts nets (attaque - défense)
-        // Si les dégâts sont négatifs, on fixe à 1 (minimum de dégâts)
         int baseDamage = atk - def;
         if (baseDamage < 0)
             baseDamage = 1;
-
+            
         // score initial basé sur les dégâts potentiels
         int scoring = baseDamage;
 
@@ -172,7 +168,6 @@ public static class IAAction
         // 8) FINALISATION DU SCORE
         // ==========================================
         //Debug.Log($"[IA] Score d'attaque de {attacker.nameCard} vers {defender.nameCard}: {scoring}");
-        
         return Mathf.Max(scoring, 0);
     }
 

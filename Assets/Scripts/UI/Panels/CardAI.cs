@@ -78,7 +78,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     {
         if (isHiddenSlot) return;
 
-        /// ????
+        /// CHECK
         //UpdatePassedState();
         //UpdateDefensiveState();
         //UpdateFreezeState();
@@ -193,7 +193,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     public int isSelectCard()
     {   
         if(stateDefensif != "cibled"){
-
             StartCoroutine(cardsAnimation.ColorFlash(this, Color.red, 0.5f));
             StartCoroutine(cardsAnimation.Shake(0.3f, 5f));
 

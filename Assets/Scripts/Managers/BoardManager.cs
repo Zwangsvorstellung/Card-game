@@ -8,7 +8,6 @@ using TMPro;
 public class BoardManager : MonoBehaviour
 {
     public static BoardManager Instance { get; private set; }
-
     public GameObject cartePrefab;
     public GameObject cartePrefabAI;
     public  List<string> roundDamage = new List<string>(); 
@@ -45,7 +44,6 @@ public class BoardManager : MonoBehaviour
                     Debug.Log($"[BOARD] En attente du joueur (isEndturnPlayer: {GameManager.Instance.isEndturnPlayer})");
                     hasLoggedWaitingPlayer = true;
                 }
-
                 // Vérifie si toutes les cartes joueur ont fait leur choix
                 var activePlayerCards = cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot).ToList();
 
@@ -53,8 +51,7 @@ public class BoardManager : MonoBehaviour
                 {
                     GameManager.Instance.isEndturnPlayer = true;
                     hasLoggedWaitingPlayer = false;
-
-                    Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
+                    //Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
 
                     int visiblePlayerCards = activePlayerCards.Count;
                     int attacksCount = activePlayerCards.Count(c => c.stateOffensif == "atk");
@@ -130,7 +127,6 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    // déselectionner toutes les autres cartes
     public void DeselectAllOtherCards()
     {
         foreach (var card in cardsOnBoardUI.Where(c => c.isSelect && !c.actionChoiceDo))
@@ -152,7 +148,6 @@ public class BoardManager : MonoBehaviour
 
         yield return StartCoroutine(IA.Instance.ApplyAllBonus());
         yield return StartCoroutine(IA.Instance.ApplyAllAttacksCoroutine());
-
         //yield return StartCoroutine(IA.Instance.ApplyAllMalusEndTurn());
 
         aiTurnLaunched = false;
@@ -167,7 +162,6 @@ public class BoardManager : MonoBehaviour
         aiTurnLaunched = false;
         roundResolutionInProgress = false;
         hasLoggedWaitingPlayer = false;
-
         GameManager.Instance.mode = "selectCardToPlayAction";
 
         foreach (CardUI card in cardsOnBoardUI)
@@ -185,14 +179,14 @@ public class BoardManager : MonoBehaviour
 
     public void ReplaceOpponentYellowCards()
     {
-        var yellowOpponent = cardsOnBoardAI.Where(c => c.isYellow).ToList();
-        var yellowPlayer = cardsOnBoardUI.Where(c => c.isYellow).ToList();
+        var yellowOAI = cardsOnBoardAI.Where(c => c.isYellow).ToList();
+        var yellowUI = cardsOnBoardUI.Where(c => c.isYellow).ToList();
 
-        if (yellowOpponent.Count == 0 && yellowPlayer.Count == 0) 
+        if (yellowOAI.Count == 0 && yellowUI.Count == 0) 
             return;
 
-        var deckPlayer = GameManager.Instance.piochePlayerA;
-        var deckOpponent = GameManager.Instance.piochePlayerB;
+        var deckUI = GameManager.Instance.piochePlayerA;
+        var deckAI = GameManager.Instance.piochePlayerB;
 
         var cartesIntoBoardOpponent = cardsOnBoardAI
                                         .Select(c => c.idCard)
@@ -202,15 +196,15 @@ public class BoardManager : MonoBehaviour
                                         .Select(c => c.idCard)
                                         .ToHashSet();
 
-        var availableCardsOpponent = deckOpponent
+        var availableCardsOpponent = deckAI
                                     .Where(c => !cartesIntoBoardOpponent.Contains(c.idCard))
                                     .ToList();
 
-        var availableCardsPlayer = deckPlayer
+        var availableCardsPlayer = deckUI
                                     .Where(c => !cartesIntoBoardPlayer.Contains(c.idCard))
                                     .ToList();
 
-        foreach (CardAI card in yellowOpponent)
+        foreach (CardAI card in yellowOAI)
         {
             if (availableCardsOpponent.Count == 0)
             {
@@ -224,11 +218,11 @@ public class BoardManager : MonoBehaviour
             var newCard = availableCardsOpponent[idx];
             availableCardsOpponent.RemoveAt(idx);
         
-            var tempList = deckOpponent.ToList();
+            var tempList = deckAI.ToList();
             tempList.Remove(newCard);
-            deckOpponent.Clear();
+            deckAI.Clear();
 
-            foreach (var c in tempList) deckOpponent.Enqueue(c);
+            foreach (var c in tempList) deckAI.Enqueue(c);
 
             Transform parent = card.transform.parent;
             int siblingIndex = card.transform.GetSiblingIndex();
@@ -250,7 +244,7 @@ public class BoardManager : MonoBehaviour
             SyncReplaceInMainPlayerB(oldInstanceId, newCard);
         }
 
-        foreach (CardUI card in yellowPlayer)
+        foreach (CardUI card in yellowUI)
         {
             if (availableCardsPlayer.Count == 0)
             {
@@ -264,11 +258,11 @@ public class BoardManager : MonoBehaviour
             var newCard = availableCardsPlayer[idx];
             availableCardsPlayer.RemoveAt(idx);
         
-            var tempList = deckPlayer.ToList();
+            var tempList = deckUI.ToList();
             tempList.Remove(newCard);
-            deckPlayer.Clear();
+            deckUI.Clear();
 
-            foreach (var c in tempList) deckPlayer.Enqueue(c);
+            foreach (var c in tempList) deckUI.Enqueue(c);
 
             Transform parent = card.transform.parent;
             int siblingIndex = card.transform.GetSiblingIndex();
@@ -305,11 +299,8 @@ public class BoardManager : MonoBehaviour
     public IEnumerator HandleNextTurnTransition()
     {
         Debug.Log("[BOARD] Transition fin de tour - début fade");
-
-        // 1) Fade des cartes de 1 à 0 (disparition)
         yield return StartCoroutine(FadeYellowCards(1f, 0f, 0.5f));
         yield return new WaitForSeconds(0.2f);
-
         //Debug.Log("[BOARD] Remplacement des cartes jaunes");
     }
 
@@ -370,7 +361,6 @@ public class BoardManager : MonoBehaviour
 
         return (null, null);
     }
-
     // ==========================================
     // SYNC
     // ==========================================
@@ -408,4 +398,4 @@ public class BoardManager : MonoBehaviour
         list.Add(newCard);
         gm.mainPlayerA = new Queue<CarteData>(list);
     }
-} 
+}

@@ -128,7 +128,7 @@ public class GameManager : MonoBehaviour
         //Debug.Log($"[GAME] Pioches créées - Joueur: {piochePlayerA.Count} cartes, IA: {piochePlayerB.Count} cartes");
     }
 
-    public void StartTurn()
+    public void StartRound()
     {
         if (isGameOver || CheckGameOver())
             return;
@@ -173,16 +173,17 @@ public class GameManager : MonoBehaviour
         
         round++;
 
+        // CHECK
         // Chaque tour : choix aléatoire (joueur ou IA commence)
-        aiStart = Random.Range(0, 2) == 0;
-        if(aiStart)
-            currentPlayerAction = "AI";
-        else
-            currentPlayerAction = "UI";
+       // aiStart = Random.Range(0, 2) == 0;
+       // if(aiStart)
+        //    currentPlayerAction = "AI";
+        //else
+        //    currentPlayerAction = "UI";
 
         //Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(aiStart ? "IA" : "JOUEUR")} (aléatoire)");
 
-        StartTurn();
+        StartRound();
     }
 
     public bool CheckGameOver()

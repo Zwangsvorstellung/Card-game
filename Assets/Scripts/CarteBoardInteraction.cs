@@ -48,7 +48,6 @@ public class CarteBoardInteraction : MonoBehaviour
     public GameObject buttonAtk;
     public GameObject buttonPass;
     private static Color colorAtk1 = new Color(0.8f, 0.8f, 1f, 1f);
-    private static List<CarteBoardInteraction> coloredCards = new List<CarteBoardInteraction>();
     private static List<CarteBoardInteraction> targetCards = new List<CarteBoardInteraction>();
     private struct AttaqueInfo
     {
@@ -142,7 +141,6 @@ Les attaques restent dans attaquesDuTour et ne sont pas appliquées
 
 Cycle de vie des actions — IA
 
-Début du tour IA → StartAITurn() → ExecuteAITurn() (ligne 28)
 IA décide les actions → IAAction.DecideAction() (ligne 66)
 Évalue chaque carte IA
 Choisit attaquer ou passer

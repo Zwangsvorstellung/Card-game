@@ -80,17 +80,15 @@ public class PlayerActionManager : MonoBehaviour
 
         BoardManager.Instance.SetupBoardCards(opponentCards, selectedCards);
         CamController.Instance.GoToBoardView();
-
         buttonObject.SetActive(false);
         MainUIManager.Instance.gameObject.SetActive(false);
         
-        GameManager.Instance.StartTurn();
+        GameManager.Instance.StartRound();
     }
 
     public void GetNextStep()
     {
         PanelManager.Instance.HideButtonNextStep();
-        // Fin du round
         GameManager.Instance.initRound();
         GameManager.Instance.EndTurn();
     }
@@ -116,7 +114,6 @@ public class PlayerActionManager : MonoBehaviour
     public void ClickOnMainCard(CardMain cardMain)
     {
         if(GameManager.Instance.mode == "deck"){
-
             if(!cardMain.isSelect)
             {
                 if (MainUIManager.Instance.CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
@@ -134,7 +131,6 @@ public class PlayerActionManager : MonoBehaviour
                 */
                 cardMain.DeselectCardMain();
             }
-
             int numberCardsSelect = MainUIManager.Instance.CountSelectedCards();
             MainUIManager.Instance.ShowValidateButton(numberCardsSelect >= GameManager.MAX_CARTES_TAPIS);
         }

@@ -238,15 +238,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         actionChoiceDo = true;
         isSelect = false;
         imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
-        
-        Debug.Log($"[CARD-UI] {nameCard} passe son tour (ATK:{attaqueValue}, DEF:{defenseValue})");
-   
-        /* 
-        if (!coloredCards.Contains(this))
-            coloredCards.Add(this);
-        StartCoroutine(cardAnimations.ChangeColorSmoothly(imgCard, new Color(0.4f, 0.4f, 0.4f, 1f), 0.5f));
-        if (layoutElement) layoutElement.ignoreLayout = true;
-        */
+        //Debug.Log($"[CARD-UI] {nameCard} passe son tour (ATK:{attaqueValue}, DEF:{defenseValue})");
+        //if (layoutElement) layoutElement.ignoreLayout = true;
     }
 
     public void OnAttack()
@@ -258,9 +251,19 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         stateOffensif = "selectTarget";
         GameManager.Instance.numberOfAttacksUsedPlayer++;
         
-        Debug.Log($"[CARD-UI] {nameCard} passe en mode ATTAQUE (ATK:{attaqueValue}, DEF:{defenseValue})");
+        //Debug.Log($"[CARD-UI] {nameCard} passe en mode ATTAQUE (ATK:{attaqueValue}, DEF:{defenseValue})");
         Debug.Log($"[CARD-UI] Attaques utilisées joueur: {GameManager.Instance.numberOfAttacksUsedPlayer}/{GameManager.MAX_NUMBER_ATK_ROUND}");
 
+        // si Triomphe -> choisir aléatoire qui n'est pas déjà ciblée
+        if(nameCard == "Triomphe"){
+            List<CardAI> targetsAI = BoardManager.cardsOnBoardAI.Where(c => c.stateDefensif != "cibled").ToList();
+            if(targetsAI.Count > 0){
+                int randomTarget = Random.Range(0, targets.Count);
+                CardAI randomTargetCard = targets[randomTarget];
+                PlayerActionManager.Instance.ClickSelectTargetOnBoard(randomTargetCard);
+            }
+            // TO DO - cas ou pas de carte possible
+        }
         // if (layoutElement) layoutElement.ignoreLayout = true;               
     }
 
@@ -270,12 +273,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         targetID = cardAI.idCard;
         actionChoiceDo = true;
         isSelect = false;    
-        stateOffensif = "atk";      
+        stateOffensif = "atk";
         
-        Debug.Log($"[CARD-UI] {nameCard} cible {cardAI.nameCard} (ATK:{attaqueValue} vs DEF:{cardAI.defenseValue})");
+        //Debug.Log($"[CARD-UI] {nameCard} cible {cardAI.nameCard} (ATK:{attaqueValue} vs DEF:{cardAI.defenseValue})");
         int damage = attaqueValue - cardAI.defenseValue;
         if (damage < 0) damage = 1;
-        Debug.Log($"[CARD-UI] Dégâts potentiels: {damage} (sera appliqué à la fin du tour)");
+        //Debug.Log($"[CARD-UI] Dégâts potentiels: {damage} (sera appliqué à la fin du tour)");
     }
 
     public bool HasCapacity(IAAction.Capacity cap)
@@ -283,13 +286,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         if (nameCapacity == null) return false;
         return nameCapacity.text.Contains(cap.ToString());
     }
-
     public bool IsAdjacentTo(CardUI other)
     {
         if (other == null) return false;
         return Mathf.Abs(indexCarte - other.indexCarte) == 1;
     }
-
     public void HideAsEmptySlot()
     {
         isHiddenSlot = true;
@@ -305,7 +306,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         foreach (Transform child in transform)
             child.gameObject.SetActive(false);
     }
-
     public (CardUI left, CardUI right) GetAdjacentCards(CardUI card)
     {
         CardUI left = null;
