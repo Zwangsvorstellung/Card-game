@@ -5,54 +5,6 @@ using System.Collections;
 using UnityEngine.UI;
 using static IAAction;
 
-public struct AttackInfo
-{
-    public CardAI attackerAI;      // Attaquant si c'est l'IA (null si c'est le joueur)
-    public CardUI attackerPlayer;  // Attaquant si c'est le joueur (null si c'est l'IA)
-    public CardUI targetPlayer;    // Cible si c'est une carte joueur
-    public CardAI targetAI;        // Cible si c'est une carte IA
-    public int damage;
-    public bool isPlayerAttack;     // true si c'est une attaque du joueur, false si c'est l'IA
-    public string attackerStateOffensif;
-    public string attackerStateDefensif;
-    public string targetStateOffensif;
-    public string targetStateDefensif;
-    public bool hasSoliciaOpponent;
-    public bool hasBelindraOpponentStatePassed;
-    
-    public AttackInfo(CardAI attacker, CardUI target, int damage, bool hasSoliciaOpponent, bool hasBelindraOpponentStatePassed)
-    {
-        this.attackerAI = attacker;
-        this.attackerPlayer = null;
-        this.targetPlayer = target;
-        this.targetAI = null;
-        this.damage = damage;
-        this.isPlayerAttack = false;
-        this.attackerStateOffensif = attacker.stateOffensif;
-        this.attackerStateDefensif = attacker.stateDefensif;
-        this.targetStateOffensif = target.stateOffensif;
-        this.targetStateDefensif = target.stateDefensif;
-        this.hasSoliciaOpponent = hasSoliciaOpponent;
-        this.hasBelindraOpponentStatePassed = hasBelindraOpponentStatePassed;
-    }
-    
-    public AttackInfo(CardUI attacker, CardAI target, int damage, bool hasSoliciaOpponent, bool hasBelindraOpponentStatePassed)
-    {
-        this.attackerAI = null;
-        this.attackerPlayer = attacker;
-        this.targetPlayer = null;
-        this.targetAI = target;
-        this.damage = damage;
-        this.isPlayerAttack = true;
-        this.attackerStateOffensif = attacker.stateOffensif;
-        this.attackerStateDefensif = attacker.stateDefensif;
-        this.targetStateOffensif = target.stateOffensif;
-        this.targetStateDefensif = target.stateDefensif;
-        this.hasSoliciaOpponent = hasSoliciaOpponent;
-        this.hasBelindraOpponentStatePassed = hasBelindraOpponentStatePassed;
-    }
-}
-
 /// Gère le comportement de l'IA pour les tours de l'adversaire. - Utilise IAAction pour évaluer les meilleures actions et les exécute.
 public class IA : MonoBehaviour
 {
@@ -456,8 +408,8 @@ public class IA : MonoBehaviour
         
         // Calcule les dégâts potentiels
         int damage = attacker.attaqueValue - target.defenseValue;
-        if (damage < 0) damage = 1; // Minimum 1 dégât
-        
+        damage = Mathf.Max(1, damage);
+  
         // Enregistre l'attaque dans les logs du tour
         string attackLog = $"{attacker.nameCard} → {target.nameCard} (ATK:{attacker.attaqueValue} vs DEF:{target.defenseValue}) = {damage} dégâts";
         BoardManager.Instance.roundDamage.Add(attackLog);
@@ -522,33 +474,14 @@ public class IA : MonoBehaviour
             targetPlayer = attack.targetPlayer;
         }
 
-        string attackerName;
-        string targetName;
-        int attackerDefense;
-        int targetDefense;
-        int attackerAtk;
-        int targetAtk;
+        string attackerName = attack.AttackerName;
+        string targetName = attack.TargetName;
 
-        bool isPlayerAttack = attack.isPlayerAttack;
+        int attackerDefense = attack.isPlayerAttack ? attack.attackerPlayer.defenseValue : attack.attackerAI.defenseValue;
+        int targetDefense = attack.isPlayerAttack ? attack.targetAI.defenseValue : attack.targetPlayer.defenseValue;
 
-        if (isPlayerAttack)
-        {
-            attackerName = attackerPlayer.nameCard;
-            targetName = targetAI.nameCard;
-            attackerDefense = attackerPlayer.defenseValue;
-            targetDefense = targetAI.defenseValue;
-            attackerAtk = attackerPlayer.attaqueValue;
-            targetAtk = targetAI.attaqueValue;
-        }
-        else
-        {
-            attackerName = attackerAI.nameCard;
-            targetName = targetPlayer.nameCard;
-            attackerDefense = attackerAI.defenseValue;
-            targetDefense = targetPlayer.defenseValue;
-            attackerAtk = attackerAI.attaqueValue;
-            targetAtk = targetPlayer.attaqueValue;
-        }
+        int attackerAtk = attack.isPlayerAttack ? attack.attackerPlayer.attaqueValue : attack.attackerAI.attaqueValue;
+        int targetAtk = attack.isPlayerAttack ? attack.targetAI.attaqueValue : attack.targetPlayer.attaqueValue;
 
         // ===== BASE =====
         int damage = attack.damage;
@@ -618,7 +551,7 @@ public class IA : MonoBehaviour
         // Ruby dégat aléatoire entre 0 et 4 points
         if(attackerName == "Ruby"){
             damage = Random.Range(0, 5);
-            Debug.Log($"[ATTACK] → {attackerName} inflige {damage}] dégâts à {targetName}");
+            Debug.Log($"[ATTACK] → {attackerName} inflige {damage} dégâts à {targetName}");
         }
 
         // 1 chance sur 2 de gagner ou perdre 1 de df à chaque attaque
@@ -676,10 +609,8 @@ public class IA : MonoBehaviour
             Debug.Log($"[ATTACK] → {targetName} ciblé, inflige -1 DF en retour à {attackerName})");
         }
 
-        targetDefense = targetDefense - damage;
-
-        if (targetDefense < 0) targetDefense = 0;
-        if (attackerDefense < 0) attackerDefense = 0;
+        targetDefense = Mathf.Max(0, targetDefense - damage);
+        attackerDefense = Mathf.Max(0, attackerDefense);
 
         if (isPlayerAttack)
         {
@@ -701,10 +632,8 @@ public class IA : MonoBehaviour
         }
 
         Debug.Log($"[ATTACK] → {attackerName} inflige {damage} à {targetName}");
-        Debug.Log($"[targetDefense]   DEF avant: {(targetDefense + damage)}, DEF après: {targetDefense}");
-        Debug.Log($"[attackerDefense]   DEF avant: {(attackerDefense + damage)}, DEF après: {attackerDefense}");
+        Debug.Log($"[DEF] {targetName} DEF: {targetDefense} | {attackerName} DEF: {attackerDefense}");
 
-        // ===== ELIMINATION =====
         if (targetDefense <= 0)
         {
             if (isPlayerAttack) targetAI.isYellow = true;

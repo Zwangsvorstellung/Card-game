@@ -254,8 +254,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         //Debug.Log($"[CARD-UI] {nameCard} passe en mode ATTAQUE (ATK:{attaqueValue}, DEF:{defenseValue})");
         Debug.Log($"[CARD-UI] Attaques utilisées joueur: {GameManager.Instance.numberOfAttacksUsedPlayer}/{GameManager.MAX_NUMBER_ATK_ROUND}");
 
-        // si Triomphe -> choisir aléatoire qui n'est pas déjà ciblée
-        if(nameCard == "Triomphe"){
+        // si Tyroine -> choisir aléatoire qui n'est pas déjà ciblée
+        if(nameCard == "Tyroine"){
             List<CardAI> targetsAI = BoardManager.cardsOnBoardAI.Where(c => c.stateDefensif != "cibled").ToList();
             if(targetsAI.Count > 0){
                 int randomTarget = Random.Range(0, targets.Count);
