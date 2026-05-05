@@ -1342,7 +1342,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1717872437429368769}
-  - component: {fileID: -4982608492103844277}
   - component: {fileID: 347962613626030302}
   - component: {fileID: 4067109074748166681}
   m_Layer: 0
@@ -1371,7 +1370,6 @@ RectTransform:
   - {fileID: 7218918881588189153}
   - {fileID: 3472997033112014117}
   - {fileID: 2760778179266733789}
-  - {fileID: 771261735086906539}
   - {fileID: 3437519549349261007}
   - {fileID: 5282576930911771902}
   - {fileID: 6120313252962964364}
@@ -1387,46 +1385,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &-4982608492103844277
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5769904588811141156}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ff7a1ad9e0b89e4c81207973db58d9a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  capacites: 
-  isCardPlayer: 0
-  isCardOpponent: 0
-  isSelected: 0
-  isCibledCount: 0
-  stateOffensif: 
-  stateDefensif: 
-  lastTarget: 
-  currentTarget: 
-  bonusAtk: 0
-  bonusDfs: 0
-  malusAtk: 0
-  malusDfs: 0
-  freezeNumberLoop: 0
-  resetBonusAtk: 1
-  nameCard: 
-  choiceDo: 0
-  cardUI: {fileID: 0}
-  layoutGroup: {fileID: 0}
-  freezeIcon: {fileID: 0}
-  startPosition: {x: 0, y: 0, z: 0}
-  newPosition: {x: 0, y: 0, z: 0}
-  rectTransform: {fileID: 0}
-  yellowCard: 0
-  buttonAtk: {fileID: 176428939291699513}
-  buttonPass: {fileID: 7690427643014583751}
-  CurrentTarget: {fileID: 0}
-  WillAttackThisTurn: 0
 --- !u!114 &347962613626030302
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1448,7 +1406,6 @@ MonoBehaviour:
   attaqueValue: 0
   defenseValue: 0
   atk1Icon: {fileID: 2536538780285529986}
-  atk2Icon: {fileID: 8690512137884744385}
   passedIcon: {fileID: 747957135626112345}
   freezeIcon: {fileID: 4250109045803645063}
   rectTransform: {fileID: 1717872437429368769}
@@ -1463,6 +1420,9 @@ MonoBehaviour:
   isCardPlayer: 0
   isSelect: 0
   isFrozen: 0
+  freezeAtTurn: 0
+  isYellow: 0
+  isHiddenSlot: 0
   actionChoiceDo: 0
   stateOffensif: 
   stateDefensif: 
@@ -1474,6 +1434,7 @@ MonoBehaviour:
   idCard: 0
   nameCard: 
   indexCarte: 0
+  indexHierarchieOriginal: 0
 --- !u!114 &4067109074748166681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2003,96 +1964,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &8690512137884744385
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 771261735086906539}
-  - component: {fileID: 1996330029062177552}
-  - component: {fileID: 3909077552512894650}
-  - component: {fileID: 771585270177596988}
-  m_Layer: 0
-  m_Name: atk2
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &771261735086906539
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8690512137884744385}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1717872437429368769}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 114, y: 93.6}
-  m_SizeDelta: {x: 40, y: 40}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &1996330029062177552
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8690512137884744385}
-  m_CullTransparentMesh: 1
---- !u!114 &3909077552512894650
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8690512137884744385}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 46c19e64f9da969488ce0b5e83ecd6b2, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 1
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 1
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!114 &771585270177596988
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8690512137884744385}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abe64e74139e80e47857057811413a7f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  attackName: 
-  tooltipOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &9060330877433209137
 GameObject:
   m_ObjectHideFlags: 0

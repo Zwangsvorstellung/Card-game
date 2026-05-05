@@ -73,6 +73,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         startPosition = rectTransform.anchoredPosition;
         positionWithOffset = rectTransform.anchoredPosition + offsetClick;
         indexHierarchieOriginal = transform.GetSiblingIndex();
+        indexCarte = transform.GetSiblingIndex();
     }
     private void Update()
     {
@@ -87,7 +88,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
             passedIcon.SetActive(false);
         }
 
-        if(stateDefensif == "cibled"){
+        if(stateDefensif == "cibled" || stateDefensif == "isAttacked"){
             atk1Icon.SetActive(true);
         }else{
             atk1Icon.SetActive(false);
@@ -258,8 +259,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         if(nameCard == "Tyroine"){
             List<CardAI> targetsAI = BoardManager.cardsOnBoardAI.Where(c => c.stateDefensif != "cibled").ToList();
             if(targetsAI.Count > 0){
-                int randomTarget = Random.Range(0, targets.Count);
-                CardAI randomTargetCard = targets[randomTarget];
+                int randomTarget = Random.Range(0, targetsAI.Count);
+                CardAI randomTargetCard = targetsAI[randomTarget];
                 PlayerActionManager.Instance.ClickSelectTargetOnBoard(randomTargetCard);
             }
             // TO DO - cas ou pas de carte possible
@@ -306,19 +307,24 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         foreach (Transform child in transform)
             child.gameObject.SetActive(false);
     }
-    public (CardUI left, CardUI right) GetAdjacentCards(CardUI card)
+    public (ICard left, ICard right) GetAdjacentCards(ICard card)
     {
-        CardUI left = null;
-        CardUI right = null;
+        var list = BoardManager.cardsOnBoardUI
+            .Where(c => c != null && !c.isHiddenSlot)
+            .ToList();
 
-        int index = card.indexCarte;
-        var list = BoardManager.cardsOnBoardUI;
+        int index = list.FindIndex(c => c.idCard == card.idCard);
 
-        if (index > 0)
-            left = list[index - 1];
+        Debug.Log($"[ADJ FIX] {card.nameCard} id={card.idCard} index={index}");
 
-        if (index < list.Count - 1)
-            right = list[index + 1];
+        if (index == -1)
+        {
+            Debug.LogWarning($"[ADJ ERROR] Card not found in list: {card.nameCard}");
+            return (null, null);
+        }
+
+        ICard left = (index > 0) ? list[index - 1] : null;
+        ICard right = (index < list.Count - 1) ? list[index + 1] : null;
 
         return (left, right);
     }
@@ -326,6 +332,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public string INameCard => nameCard;
 
     string ICard.nameCard => nameCard;
+
+    int ICard.idCard
+    {
+        get => idCard;
+        set => idCard = value;
+    }
 
     int ICard.defenseValue
     {
@@ -343,6 +355,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
 
     string ICard.stateOffensif => stateOffensif;
     string ICard.stateDefensif => stateDefensif;
+    bool ICard.isHiddenSlot => isHiddenSlot;
+
     bool ICard.isCardPlayer
     {
         get => isCardPlayer;

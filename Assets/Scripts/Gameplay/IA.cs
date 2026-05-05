@@ -242,9 +242,9 @@ public class IA : MonoBehaviour
         {
             buffDf(card);
         }
-        if (card.nameCard == "Cassandre")
+        if (card.nameCard == "Cassandre" && card is CardUI ui)
         {
-            var (left, right) = BoardManager.Instance.GetAdjacentCards(card);
+            var (left, right) = BoardManager.Instance.GetAdjacentCards(ui);
 
             if (left != null) buffAtk(left);
             if (right != null) buffAtk(right);
@@ -283,11 +283,12 @@ public class IA : MonoBehaviour
             List<ICard> enemyCards = new();
             if (card.isCardPlayer)
             {
-                enemyCards = BoardManager.cardsOnBoardAI;
+                enemyCards = BoardManager.cardsOnBoardAI.Cast<ICard>().ToList();
+
             }
             else
             {
-                enemyCards = BoardManager.cardsOnBoardUI;
+                enemyCards = BoardManager.cardsOnBoardUI.Cast<ICard>().ToList();
             }
 
             var targets = enemyCards
@@ -407,15 +408,15 @@ public class IA : MonoBehaviour
         target.stateDefensif = "isAttacked";
         
         // Calcule les dégâts potentiels
-        int damage = attacker.attaqueValue - target.defenseValue;
-        damage = Mathf.Max(1, damage);
+        int damage = attacker.attaqueValue;
+        target.defenseValue -= damage;
+        target.defenseValue = Mathf.Max(0, target.defenseValue);
   
         // Enregistre l'attaque dans les logs du tour
         string attackLog = $"{attacker.nameCard} → {target.nameCard} (ATK:{attacker.attaqueValue} vs DEF:{target.defenseValue}) = {damage} dégâts";
         BoardManager.Instance.roundDamage.Add(attackLog);
         
         Debug.Log($"[IA] ✓ Attaque stockée: {attacker.nameCard} → {target.nameCard} ({damage} dégâts)");
-       // Debug.Log($"[IA]   Attaques IA stockées: {aiAttacks.Count + 1}");
         
         aiAttacks.Add(new AttackInfo(attacker, target, damage, hasSoliciaOpponent, hasBelindraOpponentStatePassed));
     }
@@ -488,7 +489,7 @@ public class IA : MonoBehaviour
 
         // si on vise une carte qui attaque, aucun dégat
         if (attack.targetStateOffensif == "atk"
-                && attack.targetStateDefensif == "isAttacked" 
+                && attack.targetStateDefensif == "isAttacked" // cibled
                 && targetName != "Zao")
         {
             damage = 0;
@@ -509,7 +510,7 @@ public class IA : MonoBehaviour
 
         // la cible attaquée par Hiver sera gelée
         if(attackerName == "Hiver"){
-            if (isPlayerAttack)
+            if (attack.isPlayerAttack)
                 targetAI.freezeAtTurn = GameManager.Instance.round + 1;
             else
                 targetPlayer.freezeAtTurn = GameManager.Instance.round + 1;
@@ -519,12 +520,12 @@ public class IA : MonoBehaviour
 
         // Neo gagne + 1 ATK à chaque tour à son attaque si cible différente
         if(attackerName == "Neo"){
-            if (isPlayerAttack && targetName != attackerPlayer.lastTarget){
+            if (attack.isPlayerAttack && targetName != attackerPlayer.lastTarget){
                 attackerAtk = attackerPlayer.attaqueValue + 1;
                 Debug.Log($"[ATTACK] → {attackerName} gagne 1 ATK car cible {targetName} différente de la dernière ({attackerPlayer.lastTarget})");
             }
 
-            if (!isPlayerAttack && targetName != attackerAI.lastTarget){
+            if (!attack.isPlayerAttack && targetName != attackerAI.lastTarget){
                 attackerAtk = attackerAI.attaqueValue + 1;
                 Debug.Log($"[ATTACK] → {attackerName} gagne 1 ATK car cible {targetName} différente de la dernière ({attackerAI.lastTarget})");
             }
@@ -589,14 +590,21 @@ public class IA : MonoBehaviour
         if(attackerName == "Minoson" && attack.attackerStateOffensif == "atk"){
         
             List<ICard> targets = new();
-            var targetsAI = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot && c.stateDefensif == "isAttacked").ToList();
-            var targetsUI = BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot && c.stateDefensif == "isAttacked").ToList();
+            var targetsAI = BoardManager.cardsOnBoardAI
+                .Where(c => c != null && !c.isHiddenSlot && c.stateDefensif == "isAttacked")
+                .Cast<ICard>()
+                .ToList();
 
-            targets = isPlayerAttack ? targetsUI : targetsAI;
+            var targetsUI = BoardManager.cardsOnBoardUI
+                .Where(c => c != null && !c.isHiddenSlot && c.stateDefensif == "isAttacked")
+                .Cast<ICard>()
+                .ToList();
+
+            targets = attack.isPlayerAttack ? targetsUI : targetsAI;
    
             if(targets.Count > 0){
                 var randomCard = targets[Random.Range(0, targets.Count)];
-                buffDf(randomCard);
+                //buffDf(randomCard);
                 attackerDefense = attackerDefense - 1;
                 Debug.Log($"[ATTACK] → {attackerName} transfère 1DF à {randomCard.nameCard}");
             }else{
@@ -612,7 +620,7 @@ public class IA : MonoBehaviour
         targetDefense = Mathf.Max(0, targetDefense - damage);
         attackerDefense = Mathf.Max(0, attackerDefense);
 
-        if (isPlayerAttack)
+        if (attack.isPlayerAttack)
         {
             targetAI.defenseValue = targetDefense;
             attackerPlayer.defenseValue = attackerDefense;
@@ -636,13 +644,13 @@ public class IA : MonoBehaviour
 
         if (targetDefense <= 0)
         {
-            if (isPlayerAttack) targetAI.isYellow = true;
+            if (attack.isPlayerAttack) targetAI.isYellow = true;
             else targetPlayer.isYellow = true;
         }
 
         if (attackerDefense <= 0)
         {
-            if (isPlayerAttack) attackerPlayer.isYellow = true;
+            if (attack.isPlayerAttack) attackerPlayer.isYellow = true;
             else attackerAI.isYellow = true;
         }
     }
@@ -694,7 +702,12 @@ public class IA : MonoBehaviour
     public void buffAtk(ICard card)
     {
         card.attaqueValue++;
-        card.attaqueText.SetText(card.attaqueValue.ToString());
+
+        if (card is CardUI ui)
+            ui.attaqueText.SetText(ui.attaqueValue.ToString());
+
+        if (card is CardAI ai)
+            ai.attaqueText.SetText(ai.attaqueValue.ToString());
     }
     public void buffDf(ICard card)
     {

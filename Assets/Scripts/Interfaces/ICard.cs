@@ -3,6 +3,7 @@ using TMPro;
 public interface ICard
 {
     string nameCard { get; }
+    int idCard { get; set; }
     int defenseValue { get; set; }
     int attaqueValue { get; set; }
     TMP_Text defenseText { get; }
@@ -10,6 +11,7 @@ public interface ICard
 
     string stateOffensif { get; }
     string stateDefensif { get; }
+    bool isHiddenSlot { get; }
 
     bool isCardPlayer { get; set; }
 }

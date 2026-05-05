@@ -12,7 +12,7 @@ public class ButtonTrigger : MonoBehaviour{
     void Awake()
     {
         button = GetComponent<Button>();
-        button.onClick.AddListener(() => Debug.Log($"[BTN] Click reçu sur {name} ({buttonText})"));
+        //button.onClick.AddListener(() => Debug.Log($"[BTN] Click reçu sur {name} ({buttonText})"));
 
         TMP_Text textComponent = button.GetComponentInChildren<TMP_Text>();
         if (textComponent != null) textComponent.text = buttonText;

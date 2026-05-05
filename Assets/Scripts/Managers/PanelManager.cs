@@ -53,45 +53,14 @@ public class PanelManager : MonoBehaviour
     public void ShowButtonNextStep() => nextStep?.SetActive(true);
     public void HideButtonNextStep() => nextStep?.SetActive(false);
 
-    public void ShowTurnBanner(string currentAction)
+    public void ShowTurnBanner(string player)
     {
-        if (turnBannerPanel == null || turnBannerText == null || turnBannerCanvasGroup == null) return;
-
-        string text = currentAction == "AI" ? "TOUR IA" : "TOUR JOUEUR";
-        turnBannerText.SetText(text);
         turnBannerPanel.SetActive(true);
-
-        if (turnBannerCoroutine != null) StopCoroutine(turnBannerCoroutine);
-        turnBannerCoroutine = StartCoroutine(PlayTurnBannerCoroutine());
-    }
-
-    private IEnumerator PlayTurnBannerCoroutine()
-    {
-        turnBannerCanvasGroup.alpha = 0f;
-
-        float t = 0f;
-        while (t < turnBannerFadeIn)
-        {
-            t += Time.deltaTime;
-            float p = turnBannerFadeIn <= 0f ? 1f : Mathf.Clamp01(t / turnBannerFadeIn);
-            turnBannerCanvasGroup.alpha = p;
-            yield return null;
-        }
-
         turnBannerCanvasGroup.alpha = 1f;
-        yield return new WaitForSeconds(turnBannerHold);
 
-        t = 0f;
-        while (t < turnBannerFadeOut)
-        {
-            t += Time.deltaTime;
-            float p = turnBannerFadeOut <= 0f ? 0f : 1f - Mathf.Clamp01(t / turnBannerFadeOut);
-            turnBannerCanvasGroup.alpha = p;
-            yield return null;
-        }
-
-        turnBannerCanvasGroup.alpha = 0f;
+        turnBannerText.text = player == "AI" ? "IA" : "Joueur";
+    }
+    public void OffTurnBanner(){
         turnBannerPanel.SetActive(false);
-        turnBannerCoroutine = null;
     }
 }

@@ -96,7 +96,7 @@ public class PlayerActionManager : MonoBehaviour
     public void ClickOnPassed(GameObject buttonObject)
     {
         CardUI card = buttonObject.GetComponentInParent<CardUI>();
-        Debug.Log($"[PLAYER] Carte {card.nameCard} choisit de PASSER");
+        //Debug.Log($"[PLAYER] Carte {card.nameCard} choisit de PASSER");
         card.OnPassed();
         GameManager.Instance.mode = "selectCardToPlayAction";
         //Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode}");
@@ -105,7 +105,7 @@ public class PlayerActionManager : MonoBehaviour
     public void ClickOnAttack(GameObject buttonObject)
     {
         CardUI card = buttonObject.GetComponentInParent<CardUI>();
-        Debug.Log($"[PLAYER] Carte {card.nameCard} choisit d'ATTAQUER (ATK:{card.attaqueValue})");
+       // Debug.Log($"[PLAYER] Carte {card.nameCard} choisit d'ATTAQUER (ATK:{card.attaqueValue})");
         card.OnAttack();
         GameManager.Instance.mode = "selectCardOpponentToAttack";
         //Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode} - Sélection de la cible requise");

@@ -19,6 +19,8 @@ public class BoardManager : MonoBehaviour
     private bool hasLoggedWaitingPlayer;
     private bool aiTurnLaunched;
     private bool roundResolutionInProgress;
+    private bool roundResolutionRequested = false;
+    private bool resolvingRound = false;
 
     void Awake()
     {
@@ -58,7 +60,7 @@ public class BoardManager : MonoBehaviour
                     int passesCount = activePlayerCards.Count(c => c.stateOffensif == "passed");
 
                     //Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({visiblePlayerCards} cartes)");
-                    Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
+                    //Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
 
                     // Si le joueur termine en premier, on passe immédiatement la main à l'IA.
                     if (!GameManager.Instance.isEndturnAI)
@@ -71,8 +73,12 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        if(GameManager.Instance.isEndturnPlayer && GameManager.Instance.isEndturnAI && !roundResolutionInProgress){
-            Debug.Log($"[BOARD] Les deux joueurs ont terminé - Application des choix");
+        if (GameManager.Instance.isEndturnPlayer &&
+            GameManager.Instance.isEndturnAI &&
+            !resolvingRound)
+        {
+            PanelManager.Instance?.OffTurnBanner();
+            resolvingRound = true;
             StartCoroutine(ResolveRoundCoroutine());
         }
     }
@@ -153,6 +159,10 @@ public class BoardManager : MonoBehaviour
         aiTurnLaunched = false;
         hasLoggedWaitingPlayer = false;
         roundResolutionInProgress = false;
+        roundResolutionRequested = false;
+        resolvingRound = false;
+        GameManager.Instance.isEndturnPlayer = false;
+        GameManager.Instance.isEndturnAI = false;
     }
 
     public IEnumerator ResetBoardForNextTurn()
@@ -287,7 +297,6 @@ public class BoardManager : MonoBehaviour
 
     IEnumerator StartAITurnWithDelay(float delay)
     {
-       // Debug.Log($"[AI] Réflexion en cours... (delay: {delay}s, timeScale: {Time.timeScale})");
         yield return new WaitForSecondsRealtime(delay);
        // Debug.Log($"[AI] Fin réflexion, tentative de lancement du tour IA (timeScale: {Time.timeScale})");
 
@@ -301,7 +310,6 @@ public class BoardManager : MonoBehaviour
         Debug.Log("[BOARD] Transition fin de tour - début fade");
         yield return StartCoroutine(FadeYellowCards(1f, 0f, 0.5f));
         yield return new WaitForSeconds(0.2f);
-        //Debug.Log("[BOARD] Remplacement des cartes jaunes");
     }
 
     private IEnumerator FadeYellowCards(float fromAlpha, float toAlpha, float duration)
@@ -345,21 +353,31 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    public (ICard left, ICard right) GetAdjacentCards(ICard card)
+    public (CardUI left, CardUI right) GetAdjacentCards(CardUI card)
     {
-        if (card is CardUI ui)
+        Debug.Log($"[ADJ CHECK] card={card.nameCard} indexCarte={card.indexCarte}");
+
+        for (int i = 0; i < BoardManager.cardsOnBoardUI.Count; i++)
         {
-            var (l, r) = ui.GetAdjacentCards(ui);
-            return (l, r);
+            var c = BoardManager.cardsOnBoardUI[i];
+            Debug.Log($"[BOARD ORDER] i={i} name={c.nameCard} indexCarte={c.indexCarte}");
         }
 
-        if (card is CardAI ai)
-        {
-            var (l, r) = ai.GetAdjacentCards(ai);
-            return (l, r);
-        }
+        CardUI left = null;
+        CardUI right = null;
 
-        return (null, null);
+        int index = card.indexCarte;
+        var list = BoardManager.cardsOnBoardUI;
+
+        if (index > 0)
+            left = list[index - 1];
+
+        if (index < list.Count - 1)
+            right = list[index + 1];
+
+        Debug.Log($"[RESULT] left={(left ? left.nameCard : "null")} right={(right ? right.nameCard : "null")}");
+
+        return (left, right);
     }
     // ==========================================
     // SYNC

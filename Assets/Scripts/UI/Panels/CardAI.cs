@@ -72,6 +72,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     {
         startPosition = rectTransform.anchoredPosition;
         indexHierarchieOriginal = transform.GetSiblingIndex();
+        indexCarte = transform.GetSiblingIndex();
     }
 
     void Update()
@@ -79,10 +80,9 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
         if (isHiddenSlot) return;
 
         /// CHECK
-        //UpdatePassedState();
-        //UpdateDefensiveState();
-        //UpdateFreezeState();
-        //UpdateYellowState();
+        UpdatePassedState();
+        UpdateFreezeState();
+        UpdateYellowState();
 
         if(stateOffensif == "passed"){
             passedIcon.SetActive(true);
@@ -135,6 +135,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     void UpdateDefensiveState()
     {
         atk1Icon.SetActive(stateDefensif == "cibled");
+        atk1Icon.SetActive(stateDefensif == "isAttacked");
     }
     void UpdateFreezeState()
     {
@@ -278,6 +279,11 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     public string INameCard => nameCard;
     string ICard.nameCard => nameCard;
 
+    int ICard.idCard
+    {
+        get => idCard;
+        set => idCard = value;
+    }
     int ICard.defenseValue
     {
         get => defenseValue;
@@ -294,6 +300,8 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
 
     string ICard.stateOffensif => stateOffensif;
     string ICard.stateDefensif => stateDefensif;
+    bool ICard.isHiddenSlot => isHiddenSlot;
+
     bool ICard.isCardPlayer
     {
         get => isCardPlayer;
