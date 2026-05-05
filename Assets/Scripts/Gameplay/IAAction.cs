@@ -27,16 +27,12 @@ public static class IAAction
         Aleatoire,       // Ignore 1 défense et attaque aléatoire
         VagueLetale,            // Vague Létale : Inflige ses dégats si elle est ciblée
         Combo,                  // Combo : Dégâts aléatoires entre 0 et 4 points
-        Protection              // Chance de transfert des dégâts (Minoson)
+        Protection              // Switch de DF entre un allié attaqué et Minoson
     }
 
     public static List<Capacity> Capacites;
 
     /// Évalue le score d'une attaque potentielle de l'attaquant vers le défenseur.
-    /// <param name="attacker">La carte qui envisagerait d'attaquer (CardAI)</param>
-    /// <param name="defender">La carte visée par l'attaque (CardUI)</param>
-    /// <param name="attackerAllies">Liste des alliés de l'attaquant (autres cartes du même camp)</param>
-    /// <param name="defenderAllies">Liste des alliés du défenseur (autres cartes du camp adverse)</param>
     /// <returns>Un score entier représentant la valeur de cette attaque (0 = minimum)</returns>
     public static int RateAttack(
         CardAI attacker,
@@ -46,8 +42,6 @@ public static class IAAction
     {
         if (attacker == null || defender == null) return 0;
 
-        // 1) CALCUL DES DÉGÂTS DE BASE
-        // ==========================================
         // Récupération des valeurs d'attaque et de défense
         int atk = attacker.attaqueValue;
         int def = defender.defenseValue;
@@ -58,7 +52,7 @@ public static class IAAction
         if (baseDamage < 0)
             baseDamage = 1;
 
-        // Le score initial est basé sur les dégâts potentiels
+        // score initial basé sur les dégâts potentiels
         int scoring = baseDamage;
 
         // 2) BONUS : CAPACITÉS QUI RÉDUISENT LA DÉFENSE
@@ -145,13 +139,7 @@ public static class IAAction
             if(defenderAllies.Any(a => a.HasCapacity(Capacity.ReflexionPartielle)))
                 scoring--;
 
-            // Protection (Minoson) : chance de transfert des dégâts vers un autre allié
-            // Pénalité légère car cela peut réduire l'efficacité de l'attaque
-            if(defenderAllies.Any(a => a.HasCapacity(Capacity.Protection)))
-                scoring--;
-
-            // Bouclier Collectif : réduit les dégâts si un allié adjacent n'attaque pas
-            // Vérifie si un allié avec Bouclier Collectif est adjacent et ne va pas attaquer
+            // Bouclier Collectif : réduit les dégâts n'attaque pas
             // Pour vérifier si l'allié n'attaque pas, on vérifie son stateOffensif
             if (defenderAllies.Any(a =>
                 a.HasCapacity(Capacity.BouclierCollectif) &&
@@ -190,9 +178,6 @@ public static class IAAction
 
     /// Évalue le score de rester passif (ne pas attaquer) pour une carte.
     /// Plus le score est élevé, plus il est avantageux de ne pas attaquer.
-    /// <param name="card">La carte qui envisagerait de rester passive (CardAI)</param>
-    /// <param name="allies">Liste des alliés de la carte</param>
-    /// <param name="opponents">Liste des ennemis</param>
     public static int RatePassif(
         CardAI card,
         List<CardAI> allies,
@@ -206,7 +191,7 @@ public static class IAAction
         // Très fort bonus car la carte devient invulnérable
         if (card.HasCapacity(Capacity.AgiliteRisque))
         {
-            scoring += 3; // Très fort bonus à rester passif
+            scoring += 3;
         }
 
         // Aura de Force : boost les alliés adjacents si la carte ne fait rien
@@ -222,16 +207,17 @@ public static class IAAction
             scoring += nbAdjacents; // +1 par allié boosté
         }
 
+        // annule une attaque - gros gain
         if (card.HasCapacity(Capacity.Tentation))
         {
-            scoring += 2; // valeur de contrôle du tour adverse
+            scoring += 2;
         }
 
         // Régénération : récupère des PV si on ne fait rien
         // Bonus modéré car la survie est importante
         if (card.HasCapacity(Capacity.Regeneration))
         {
-            scoring += 2; // Bonus modéré pour régénération passive
+            scoring += 2;
         }
 
         // Terreur Sélective : inflige un malus ATK aux ennemis qui n'attaquent pas
@@ -244,7 +230,7 @@ public static class IAAction
             {
                 nbOpponentPassifs = opponents.Count(e => e.stateOffensif == "passed");
             }
-            scoring += nbOpponentPassifs; // Bonus proportionnel au nombre d'ennemis affaiblis
+            scoring += nbOpponentPassifs;
         }
 
         // Onde de Choc Passive : inflige 1 dégât à un ennemi non-attaquant
@@ -303,8 +289,7 @@ public static class IAAction
         return (shouldAttack, bestTarget, shouldAttack ? maxAttackScore : passifScore);
     }
     
-    /// Évalue la menace globale représentée par les ennemis. - Plus le score est élevé, plus les ennemis sont dangereux.
-    /// <returns>Un score de menace (0 = aucune menace)</returns>
+    /// Évalue la menace représentée par les ennemis. - Plus le score est élevé, plus les ennemis sont dangereux.
     public static int EvaluateEnemyThreat(List<CardUI> opponents)
     {
         if (opponents == null || opponents.Count == 0) return 0;
@@ -332,8 +317,6 @@ public static class IAAction
     }
 
     /// Évalue les bonus passifs des ennemis. - Plus le score est élevé, plus les ennemis profitent de rester passifs.
-    /// Cela incite à les attaquer plutôt que de rester passif soi-même.
-    /// <returns>Un score de bonus passif (0 = aucun bonus)</returns>
     public static int EvaluateEnemyPassiveBonus(List<CardUI> opponents)
     {
         if (opponents == null || opponents.Count == 0) return 0;

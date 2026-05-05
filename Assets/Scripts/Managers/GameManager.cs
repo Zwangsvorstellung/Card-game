@@ -23,8 +23,6 @@ public class GameManager : MonoBehaviour
     public Queue<CarteData> piochePlayerA;
     public Queue<CarteData> piochePlayerB;
 
-    public static int playerScore;
-    public static int scoreOpponent;
     public string currentPlayerAction;
 
     public bool isEndturnPlayer = false;
@@ -51,8 +49,6 @@ public class GameManager : MonoBehaviour
         round = 1;
         mode = "selectDeck";
         isGameOver = false;
-        playerScore = 10;
-        scoreOpponent = 10;
                 
         deckPlayerA = new List<CarteData>();
         deckPlayerB = new List<CarteData>();
@@ -128,8 +124,8 @@ public class GameManager : MonoBehaviour
 
         mainUIManager.ShowHand(mainPlayerA.ToList());
         
-        Debug.Log($"[GAME] Decks créés - Joueur: {mainPlayerA.Count} cartes, IA: {mainPlayerB.Count} cartes");
-        Debug.Log($"[GAME] Pioches créées - Joueur: {piochePlayerA.Count} cartes, IA: {piochePlayerB.Count} cartes");
+        //Debug.Log($"[GAME] Decks créés - Joueur: {mainPlayerA.Count} cartes, IA: {mainPlayerB.Count} cartes");
+        //Debug.Log($"[GAME] Pioches créées - Joueur: {piochePlayerA.Count} cartes, IA: {piochePlayerB.Count} cartes");
     }
 
     public void StartTurn()
@@ -141,7 +137,7 @@ public class GameManager : MonoBehaviour
         numberOfAttacksUsedIA = 0;
 
         Debug.Log($"[GAME] ===== DÉBUT DU TOUR {round} =====");
-        Debug.Log($"[GAME] Compteurs réinitialisés - Attaques joueur: {numberOfAttacksUsedPlayer}, Attaques IA: {numberOfAttacksUsedIA}");
+        //Debug.Log($"[GAME] Compteurs réinitialisés - Attaques joueur: {numberOfAttacksUsedPlayer}, Attaques IA: {numberOfAttacksUsedIA}");
     
         aiStart = Random.Range(0, 2) == 0;
 
@@ -173,8 +169,7 @@ public class GameManager : MonoBehaviour
             return;
 
         Debug.Log($"[GAME] ===== FIN DU TOUR {round} =====");
-        Debug.Log($"[GAME] Attaques utilisées - Joueur: {numberOfAttacksUsedPlayer}/{MAX_NUMBER_ATK_ROUND}, IA: {numberOfAttacksUsedIA}/{MAX_NUMBER_ATK_ROUND}");
-        Debug.Log($"[GAME] Scores actuels - Joueur: {playerScore}, IA: {scoreOpponent}");
+        //Debug.Log($"[GAME] Attaques utilisées - Joueur: {numberOfAttacksUsedPlayer}/{MAX_NUMBER_ATK_ROUND}, IA: {numberOfAttacksUsedIA}/{MAX_NUMBER_ATK_ROUND}");
         
         round++;
 
@@ -185,7 +180,7 @@ public class GameManager : MonoBehaviour
         else
             currentPlayerAction = "UI";
 
-        Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(aiStart ? "IA" : "JOUEUR")} (aléatoire)");
+        //Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(aiStart ? "IA" : "JOUEUR")} (aléatoire)");
 
         StartTurn();
     }

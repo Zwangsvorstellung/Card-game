@@ -41,10 +41,10 @@ public class PlayerActionManager : MonoBehaviour
         PanelManager.Instance.HideValidateDeck();
 
         List<CarteData> selectedCards = GameManager.Instance.GetSelectedCards();
-        Debug.Log($"[PLAYER] Cartes sélectionnées: {selectedCards.Count}");
+        //Debug.Log($"[PLAYER] Cartes sélectionnées: {selectedCards.Count}");
         foreach (var card in selectedCards)
         {
-            Debug.Log($"[PLAYER]   - {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+            //Debug.Log($"[PLAYER]   - {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
         }
         
         HashSet<int> selectedCardIds = selectedCards.Select(c => c.idCard).ToHashSet();
@@ -58,7 +58,7 @@ public class PlayerActionManager : MonoBehaviour
 
         foreach (var card in GameManager.Instance.piochePlayerA)
         {
-            Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+            //Debug.Log($"- {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
         }
 
         // Génère 4 cartes aléatoires pour l'opposant
@@ -72,10 +72,10 @@ public class PlayerActionManager : MonoBehaviour
         foreach (var card in remainingCards)
             GameManager.Instance.piochePlayerB.Enqueue(card);
 
-        Debug.Log($"[PLAYER] Cartes IA générées: {opponentCards.Count}");
+        //Debug.Log($"[PLAYER] Cartes IA générées: {opponentCards.Count}");
         foreach (var card in opponentCards)
         {
-            Debug.Log($"[PLAYER]   - {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
+            //Debug.Log($"[PLAYER]   - {card.nom} (ATK:{card.attaque}, DEF:{card.defense})");
         }
 
         BoardManager.Instance.SetupBoardCards(opponentCards, selectedCards);
@@ -101,7 +101,7 @@ public class PlayerActionManager : MonoBehaviour
         Debug.Log($"[PLAYER] Carte {card.nameCard} choisit de PASSER");
         card.OnPassed();
         GameManager.Instance.mode = "selectCardToPlayAction";
-        Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode}");
+        //Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode}");
     }
 
     public void ClickOnAttack(GameObject buttonObject)
@@ -110,7 +110,7 @@ public class PlayerActionManager : MonoBehaviour
         Debug.Log($"[PLAYER] Carte {card.nameCard} choisit d'ATTAQUER (ATK:{card.attaqueValue})");
         card.OnAttack();
         GameManager.Instance.mode = "selectCardOpponentToAttack";
-        Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode} - Sélection de la cible requise");
+        //Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode} - Sélection de la cible requise");
     }
 
     public void ClickOnMainCard(CardMain cardMain)
@@ -142,13 +142,13 @@ public class PlayerActionManager : MonoBehaviour
 
     public void ClickOnBoardCard(CardUI cardUI)
     {
-        Debug.Log($"[PLAYER] Clic sur carte joueur: {cardUI.nameCard} (État: {cardUI.stateOffensif})");
+        //Debug.Log($"[PLAYER] Clic sur carte joueur: {cardUI.nameCard} (État: {cardUI.stateOffensif})");
         BoardManager.Instance.selectCardOnBoard(cardUI);
     }
 
     public void ClickSelectTargetOnBoard(CardAI cardAI)
     {
-        Debug.Log($"[PLAYER] Clic sur carte IA (cible): {cardAI.nameCard} (DEF:{cardAI.defenseValue})");
+        //Debug.Log($"[PLAYER] Clic sur carte IA (cible): {cardAI.nameCard} (DEF:{cardAI.defenseValue})");
         BoardManager.Instance.selectCardOpponentOnBoard(cardAI);
     }
 

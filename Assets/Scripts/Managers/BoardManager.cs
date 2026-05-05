@@ -60,7 +60,7 @@ public class BoardManager : MonoBehaviour
                     int attacksCount = activePlayerCards.Count(c => c.stateOffensif == "atk");
                     int passesCount = activePlayerCards.Count(c => c.stateOffensif == "passed");
 
-                    Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({visiblePlayerCards} cartes)");
+                    //Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({visiblePlayerCards} cartes)");
                     Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
 
                     // Si le joueur termine en premier, on passe immédiatement la main à l'IA.
@@ -68,7 +68,7 @@ public class BoardManager : MonoBehaviour
                     {
                         GameManager.Instance.currentPlayerAction = "AI";
                         PanelManager.Instance?.ShowTurnBanner("AI");
-                        Debug.Log("[GAME] Transition de tour: JOUEUR -> IA");
+                        //Debug.Log("[GAME] Transition de tour: JOUEUR -> IA");
                     }
                 }
             }
@@ -109,7 +109,7 @@ public class BoardManager : MonoBehaviour
     public void selectCardOnBoard(CardUI cardUI)
     {
         if(GameManager.Instance.mode != "selectCardOpponentToAttack"){
-            Debug.Log($"[BOARD] Sélection de la carte joueur: {cardUI.nameCard}");
+            //Debug.Log($"[BOARD] Sélection de la carte joueur: {cardUI.nameCard}");
             cardUI.selectCard();
         }
     }
@@ -118,15 +118,15 @@ public class BoardManager : MonoBehaviour
     public void selectCardOpponentOnBoard(CardAI cardAI)
     {
         if(GameManager.Instance.mode == "selectCardOpponentToAttack"){
-            Debug.Log($"[BOARD] Sélection de la cible IA: {cardAI.nameCard}");
+            //Debug.Log($"[BOARD] Sélection de la cible IA: {cardAI.nameCard}");
 
             int idAttacker = cardAI.isSelectCard();
             var attackerCard = cardsOnBoardUI.FirstOrDefault(c => c.idCard == idAttacker);
 
-            Debug.Log($"[BOARD] Cible assignée: {attackerCard.nameCard} → {cardAI.nameCard}");
+            //Debug.Log($"[BOARD] Cible assignée: {attackerCard.nameCard} → {cardAI.nameCard}");
             attackerCard.SetDataTarget(cardAI);
             GameManager.Instance.mode = "selectCardToPlayAction";
-            Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
+            //Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
         }
     }
 
@@ -310,7 +310,7 @@ public class BoardManager : MonoBehaviour
         yield return StartCoroutine(FadeYellowCards(1f, 0f, 0.5f));
         yield return new WaitForSeconds(0.2f);
 
-        Debug.Log("[BOARD] Remplacement des cartes jaunes");
+        //Debug.Log("[BOARD] Remplacement des cartes jaunes");
     }
 
     private IEnumerator FadeYellowCards(float fromAlpha, float toAlpha, float duration)
@@ -374,7 +374,6 @@ public class BoardManager : MonoBehaviour
     // ==========================================
     // SYNC
     // ==========================================
-
     /// Retire une carte de mainPlayerB (carte masquée sans remplaçant).
     void SyncRemoveFromMainPlayerB(string instanceId)
     {
@@ -392,7 +391,6 @@ public class BoardManager : MonoBehaviour
         list.Add(newCard);
         gm.mainPlayerB = new Queue<CarteData>(list);
     }
-
     /// Retire une carte de mainPlayerA (carte masquée sans remplaçant)
     void SyncRemoveFromMainPlayerA(string instanceId)
     {

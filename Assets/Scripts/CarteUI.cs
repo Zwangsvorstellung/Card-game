@@ -17,11 +17,9 @@ public class CarteUI : MonoBehaviour
     public TMP_Text descriptionCapacity;
     private Coroutine pulseCoroutine;
     private Coroutine pulseAtk1Coroutine;
-    private Coroutine pulseAtk2Coroutine;
 
     [Header("Icônes d'état")]
     public GameObject atk1Icon; // Icône première attaque
-    public GameObject atk2Icon; // Icône deuxième attaque
     public GameObject passedIcon; // Icône "passé"
     public GameObject freezeIcon; // Icône "freeze"
 
@@ -48,8 +46,6 @@ public class CarteUI : MonoBehaviour
         colorDimmed.a = colorDefault.a;
         Transform atk1Transform = transform.Find("atk1");
         atk1Icon = atk1Transform.gameObject;
-        Transform atk2Transform = transform.Find("atk2");
-        atk2Icon = atk2Transform.gameObject;
         Transform freezeTransform = transform.Find("freezeIcon");
         freezeIcon = freezeTransform.gameObject;
         freezeIcon.GetComponent<Image>().color = Color.red;
@@ -69,16 +65,9 @@ public class CarteUI : MonoBehaviour
     {
         //passedIcon.SetActive(false);
         atk1Icon.SetActive(true);
-        atk2Icon.SetActive(false);
     
         RectTransform atkRect = atk1Icon.GetComponent<RectTransform>();
         //pulseAtk1Coroutine  = StartCoroutine(Pulse(atkRect));
-
-        if (numberAtk == 2){
-            atk2Icon.SetActive(true);
-            RectTransform atkRect2 = atk2Icon.GetComponent<RectTransform>();
-            //pulseAtk2Coroutine  = StartCoroutine(Pulse(atkRect2));
-        }
     }
     public void SetAtk1IconColor(string hexColor)
     {
@@ -88,23 +77,9 @@ public class CarteUI : MonoBehaviour
         if (ColorUtility.TryParseHtmlString(hexColor, out color))
             img.color = color;
     }
-    public void SetAtk2IconColor(string hexColor)
-    {
-        Image img = atk2Icon.GetComponent<Image>();
-        Color color;
-        if (!hexColor.StartsWith("#")) hexColor = "#" + hexColor;
-        if (ColorUtility.TryParseHtmlString(hexColor, out color))
-            img.color = color;
-        
-    }
     public void SetAtk1IconTooltip(string attackerName, int atk)
     {
         TooltipTrigger tooltip = atk1Icon.GetComponent<TooltipTrigger>();
-        tooltip.attackName = attackerName + " -" + atk;
-    }
-    public void SetAtk2IconTooltip(string attackerName, int atk)
-    {
-        TooltipTrigger tooltip = atk2Icon.GetComponent<TooltipTrigger>();
         tooltip.attackName = attackerName + " -" + atk;
     }
 }

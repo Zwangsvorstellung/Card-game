@@ -23,7 +23,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
 
     [Header("Icônes d'état")]
     public GameObject atk1Icon; // Icône première attaque
-    public GameObject atk2Icon; // Icône deuxième attaque
     public GameObject passedIcon; // Icône "passé"
     public GameObject freezeIcon; // Icône "freeze"
 
@@ -79,10 +78,11 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     {
         if (isHiddenSlot) return;
 
-        UpdatePassedState();
-        UpdateDefensiveState();
-        UpdateFreezeState();
-        UpdateYellowState();
+        /// ????
+        //UpdatePassedState();
+        //UpdateDefensiveState();
+        //UpdateFreezeState();
+        //UpdateYellowState();
 
         if(stateOffensif == "passed"){
             passedIcon.SetActive(true);
@@ -111,7 +111,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     }
 
     bool isPassedAnimating;
-
     void UpdatePassedState()
     {
         bool isPassed = stateOffensif == "passed";
@@ -137,12 +136,10 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     {
         atk1Icon.SetActive(stateDefensif == "cibled");
     }
-
     void UpdateFreezeState()
     {
         freezeIcon.SetActive(isFrozen);
     }
-
     bool wasYellow;
     void UpdateYellowState()
     {
@@ -174,7 +171,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
 
         attaqueValue = data.attaque;
         defenseValue = data.defense;
-        
         instanceId = data.instanceId;
         idCard = data.idCard;
         gameObject.name = $"CarteAI_{data.nom}_id{data.idCard}_inst{data.instanceId}";   
@@ -185,7 +181,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     public void HideAllIcons()
     {
         atk1Icon.SetActive(false);
-        atk2Icon.SetActive(false);
         passedIcon.SetActive(false);
         freezeIcon.SetActive(false);
     }
@@ -203,7 +198,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
             StartCoroutine(cardsAnimation.Shake(0.3f, 5f));
 
             imageCarte.color = new Color(0.5f, 0.7f, 1f, 1f);
-
             stateDefensif = "cibled";
             CardUI cardUI = BoardManager.Instance.GetDataAttacker();
             nameAttacker = cardUI.nameCard;
@@ -229,11 +223,11 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
         lastTarget = target;
         target = "";
         targetID = 0;
-
         imageCarte.color = Color.white;
 
         HideAllIcons();
-        ResetPosition();
+        rectTransform.anchoredPosition = startPosition;
+
         atk?.SetActive(false);
     }
 
@@ -251,11 +245,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
 
         foreach (Transform child in transform)
             child.gameObject.SetActive(false);
-    }
-
-    public void ResetPosition()
-    {
-        rectTransform.anchoredPosition = startPosition;
     }
 
     public bool HasCapacity(IAAction.Capacity cap)
@@ -288,7 +277,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     }
 
     public string INameCard => nameCard;
-
     string ICard.nameCard => nameCard;
 
     int ICard.defenseValue

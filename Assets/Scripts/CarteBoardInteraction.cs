@@ -48,7 +48,6 @@ public class CarteBoardInteraction : MonoBehaviour
     public GameObject buttonAtk;
     public GameObject buttonPass;
     private static Color colorAtk1 = new Color(0.8f, 0.8f, 1f, 1f);
-    private static Color colorAtk2 = new Color(1f, 0.8f, 0.8f, 1f);
     private static List<CarteBoardInteraction> coloredCards = new List<CarteBoardInteraction>();
     private static List<CarteBoardInteraction> targetCards = new List<CarteBoardInteraction>();
     private struct AttaqueInfo

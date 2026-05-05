@@ -33,7 +33,7 @@ public class CarteGenerator
             (17, "Tyroine", "Aléatoire", "Vise un adversaire aléatoirement et ignore 1 point DF", 4, 5, 17,"0d3175"),
             (18, "Ondine", "Vague létale", "Inflige ses dégats si elle est ciblée", 3, 5, 18,"91c6da"),
             (19, "Ruby", "Combo", "Dégâts aléatoires entre 0 et 4 points", 4, 4, 19,"901412"),
-            (20, "Minoson", "Protection", "Quand un allié est attaqué, 50 % de chance que 50 % des dégâts soient transférés à Minoson", 3, 4, 20,"3f0f07")
+            (20, "Minoson", "Protection", "Si Minoson attaque, il donne 1DF lui appartenant à un allié attaqué", 3, 4, 20,"3f0f07")
         };
 
         foreach (var (idCard, nom, nameCapacity, descriptionCapacity, atk, def, cap, color) in cartes)

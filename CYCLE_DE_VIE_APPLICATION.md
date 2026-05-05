@@ -24,7 +24,6 @@ Unity Start → GameManager.Start()
 **Actions** :
 - Initialise `round = 1`
 - Définit `mode = "selectDeck"`
-- Initialise les scores : `playerScore = 10`, `scoreOpponent = 10`
 - Charge toutes les cartes depuis `Resources/CartesGenerees`
 - Crée 2 decks (PlayerA et PlayerB) avec toutes les cartes
 - Mélange les decks (`Shuffle()`)

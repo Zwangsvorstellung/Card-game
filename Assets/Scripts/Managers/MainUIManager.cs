@@ -48,12 +48,10 @@ public class MainUIManager : MonoBehaviour
     {
         return GetComponent<VerticalLayoutGroup>();
     }
-
     public void desactivatedLayoutGroup()
     {
         GetComponent<VerticalLayoutGroup>().enabled = false;
     }
-
     public void activatedLayoutGroup()
     {
         GetComponent<VerticalLayoutGroup>().enabled = true;

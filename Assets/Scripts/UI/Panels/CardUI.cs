@@ -21,7 +21,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
 
     [Header("Icônes d'état")]
     public GameObject atk1Icon; // Icône première attaque
-    public GameObject atk2Icon; // Icône deuxième attaque
     public GameObject passedIcon; // Icône "passé"
     public GameObject freezeIcon; // Icône "freeze"
 
@@ -128,15 +127,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         imageCarte.color = Color.white;
         
         HideAllIcons();
-        ResetPosition();
+        
+        rectTransform.anchoredPosition = startPosition;
+        layoutGroup.enabled = true;
+
         atk?.SetActive(false);
     }
 
-    public void ResetPosition()
-    {
-        rectTransform.anchoredPosition = startPosition;
-        layoutGroup.enabled = true;
-    }
 
     public void setAttributesInitCardPlayer(CarteData data)
     {
@@ -161,7 +158,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public void HideAllIcons()
     {
         atk1Icon.SetActive(false);
-        atk2Icon.SetActive(false);
         passedIcon.SetActive(false);
         freezeIcon.SetActive(false);
     }
