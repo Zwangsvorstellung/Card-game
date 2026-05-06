@@ -19,7 +19,6 @@ public class BoardManager : MonoBehaviour
     private bool hasLoggedWaitingPlayer;
     private bool aiTurnLaunched;
     private bool roundResolutionInProgress;
-    private bool roundResolutionRequested = false;
     private bool resolvingRound = false;
 
     void Awake()
@@ -29,11 +28,11 @@ public class BoardManager : MonoBehaviour
     }
     void Update()
     {
-        if (GameManager.Instance.mode == "deck") return;
+        if (GameManager.Instance.mode == GameMode.DECK) return;
 
-        if(GameManager.Instance.currentPlayerAction != "NONE")
+        if (GameManager.Instance.currentPlayerAction != PlayerActionState.NONE)
         {
-            if (GameManager.Instance.currentPlayerAction == "AI" && !aiTurnLaunched && !GameManager.Instance.isEndturnAI)
+            if (GameManager.Instance.currentPlayerAction == PlayerActionState.AI && !aiTurnLaunched && !GameManager.Instance.isEndturnAI)
             {
                 StartCoroutine(StartAITurnWithDelay(1.5f));
                 aiTurnLaunched = true; // S'assurer que l'IA ne démarre qu'une fois
@@ -41,7 +40,7 @@ public class BoardManager : MonoBehaviour
                 hasLoggedWaitingPlayer = false;
             }else
             {
-                if (GameManager.Instance.currentPlayerAction == "UI" && !GameManager.Instance.isEndturnPlayer && !hasLoggedWaitingPlayer)
+                if (GameManager.Instance.currentPlayerAction == PlayerActionState.UI && !GameManager.Instance.isEndturnPlayer && !hasLoggedWaitingPlayer)
                 {
                     Debug.Log($"[BOARD] En attente du joueur (isEndturnPlayer: {GameManager.Instance.isEndturnPlayer})");
                     hasLoggedWaitingPlayer = true;
@@ -53,7 +52,6 @@ public class BoardManager : MonoBehaviour
                 {
                     GameManager.Instance.isEndturnPlayer = true;
                     hasLoggedWaitingPlayer = false;
-                    //Debug.Log($"[BOARD] ===== FIN DU TOUR JOUEUR =====");
 
                     int visiblePlayerCards = activePlayerCards.Count;
                     int attacksCount = activePlayerCards.Count(c => c.stateOffensif == "atk");
@@ -65,9 +63,8 @@ public class BoardManager : MonoBehaviour
                     // Si le joueur termine en premier, on passe immédiatement la main à l'IA.
                     if (!GameManager.Instance.isEndturnAI)
                     {
-                        GameManager.Instance.currentPlayerAction = "AI";
-                        PanelManager.Instance?.ShowTurnBanner("AI");
-                        //Debug.Log("[GAME] Transition de tour: JOUEUR -> IA");
+                        GameManager.Instance.currentPlayerAction = PlayerActionState.AI;
+                        PanelManager.Instance?.ShowTurnBanner(PlayerActionState.AI);
                     }
                 }
             }
@@ -111,7 +108,7 @@ public class BoardManager : MonoBehaviour
     // selection de la carte qui va jouer
     public void selectCardOnBoard(CardUI cardUI)
     {
-        if(GameManager.Instance.mode != "selectCardOpponentToAttack"){
+        if(GameManager.Instance.mode != GameMode.SELECT_CARD_OPPONENT_TO_ATTACK){
             //Debug.Log($"[BOARD] Sélection de la carte joueur: {cardUI.nameCard}");
             cardUI.selectCard();
         }
@@ -120,16 +117,12 @@ public class BoardManager : MonoBehaviour
     // selection manuelle de la cible à attaquer (JOUEUR)
     public void selectCardOpponentOnBoard(CardAI cardAI)
     {
-        if(GameManager.Instance.mode == "selectCardOpponentToAttack"){
-            //Debug.Log($"[BOARD] Sélection de la cible IA: {cardAI.nameCard}");
-
+        if(GameManager.Instance.mode == GameMode.SELECT_CARD_OPPONENT_TO_ATTACK){
             int idAttacker = cardAI.isSelectCard();
             var attackerCard = cardsOnBoardUI.FirstOrDefault(c => c.idCard == idAttacker);
-
             //Debug.Log($"[BOARD] Cible assignée: {attackerCard.nameCard} → {cardAI.nameCard}");
             attackerCard.SetDataTarget(cardAI);
-            GameManager.Instance.mode = "selectCardToPlayAction";
-            //Debug.Log($"[BOARD] Mode changé: {GameManager.Instance.mode}");
+            GameManager.Instance.mode = GameMode.SELECT_CARD_TO_PLAY_ACTION;
         }
     }
 
@@ -150,7 +143,7 @@ public class BoardManager : MonoBehaviour
     private IEnumerator ResolveRoundCoroutine()
     {
         roundResolutionInProgress = true;
-        GameManager.Instance.currentPlayerAction = "NONE";
+        GameManager.Instance.currentPlayerAction = PlayerActionState.NONE;
 
         yield return StartCoroutine(IA.Instance.ApplyAllBonus());
         yield return StartCoroutine(IA.Instance.ApplyAllAttacksCoroutine());
@@ -159,7 +152,6 @@ public class BoardManager : MonoBehaviour
         aiTurnLaunched = false;
         hasLoggedWaitingPlayer = false;
         roundResolutionInProgress = false;
-        roundResolutionRequested = false;
         resolvingRound = false;
         GameManager.Instance.isEndturnPlayer = false;
         GameManager.Instance.isEndturnAI = false;
@@ -172,7 +164,7 @@ public class BoardManager : MonoBehaviour
         aiTurnLaunched = false;
         roundResolutionInProgress = false;
         hasLoggedWaitingPlayer = false;
-        GameManager.Instance.mode = "selectCardToPlayAction";
+        GameManager.Instance.mode = GameMode.SELECT_CARD_TO_PLAY_ACTION;
 
         foreach (CardUI card in cardsOnBoardUI)
         {
@@ -189,34 +181,34 @@ public class BoardManager : MonoBehaviour
 
     public void ReplaceOpponentYellowCards()
     {
-        var yellowOAI = cardsOnBoardAI.Where(c => c.isYellow).ToList();
+        var yellowAI = cardsOnBoardAI.Where(c => c.isYellow).ToList();
         var yellowUI = cardsOnBoardUI.Where(c => c.isYellow).ToList();
 
-        if (yellowOAI.Count == 0 && yellowUI.Count == 0) 
+        if (yellowAI.Count == 0 && yellowUI.Count == 0) 
             return;
 
         var deckUI = GameManager.Instance.piochePlayerA;
         var deckAI = GameManager.Instance.piochePlayerB;
 
-        var cartesIntoBoardOpponent = cardsOnBoardAI
+        var cardsIntoBoardAI = cardsOnBoardAI
                                         .Select(c => c.idCard)
                                         .ToHashSet();
 
-        var cartesIntoBoardPlayer = cardsOnBoardUI
+        var cardsIntoBoardUI = cardsOnBoardUI
                                         .Select(c => c.idCard)
                                         .ToHashSet();
 
-        var availableCardsOpponent = deckAI
-                                    .Where(c => !cartesIntoBoardOpponent.Contains(c.idCard))
+        var availableCardsAI = deckAI
+                                    .Where(c => !cardsIntoBoardAI.Contains(c.idCard))
                                     .ToList();
 
-        var availableCardsPlayer = deckUI
-                                    .Where(c => !cartesIntoBoardPlayer.Contains(c.idCard))
+        var availableCardsUI = deckUI
+                                    .Where(c => !cardsIntoBoardUI.Contains(c.idCard))
                                     .ToList();
 
-        foreach (CardAI card in yellowOAI)
+        foreach (CardAI card in yellowAI)
         {
-            if (availableCardsOpponent.Count == 0)
+            if (availableCardsAI.Count == 0)
             {
                 // Plus de remplaçante : on masque définitivement le slot
                 card.HideAsEmptySlot();
@@ -224,9 +216,9 @@ public class BoardManager : MonoBehaviour
                 SyncRemoveFromMainPlayerB(card.instanceId);
                 continue;
             }
-            int idx = Random.Range(0, availableCardsOpponent.Count);
-            var newCard = availableCardsOpponent[idx];
-            availableCardsOpponent.RemoveAt(idx);
+            int idx = Random.Range(0, availableCardsAI.Count);
+            var newCard = availableCardsAI[idx];
+            availableCardsAI.RemoveAt(idx);
         
             var tempList = deckAI.ToList();
             tempList.Remove(newCard);
@@ -256,7 +248,7 @@ public class BoardManager : MonoBehaviour
 
         foreach (CardUI card in yellowUI)
         {
-            if (availableCardsPlayer.Count == 0)
+            if (availableCardsUI.Count == 0)
             {
                 // Plus de remplaçante : on masque définitivement le slot
                 card.HideAsEmptySlot();
@@ -264,9 +256,9 @@ public class BoardManager : MonoBehaviour
                 SyncRemoveFromMainPlayerA(card.instanceId);
                 continue;
             }
-            int idx = Random.Range(0, availableCardsPlayer.Count);
-            var newCard = availableCardsPlayer[idx];
-            availableCardsPlayer.RemoveAt(idx);
+            int idx = Random.Range(0, availableCardsUI.Count);
+            var newCard = availableCardsUI[idx];
+            availableCardsUI.RemoveAt(idx);
         
             var tempList = deckUI.ToList();
             tempList.Remove(newCard);
@@ -298,10 +290,7 @@ public class BoardManager : MonoBehaviour
     IEnumerator StartAITurnWithDelay(float delay)
     {
         yield return new WaitForSecondsRealtime(delay);
-       // Debug.Log($"[AI] Fin réflexion, tentative de lancement du tour IA (timeScale: {Time.timeScale})");
-
         IA ai = IA.Instance;
-        //Debug.Log($"[AI] IA trouvée: {ai.name} (activeInHierarchy: {ai.gameObject.activeInHierarchy})");
         ai.StartAITurn();
     }
 
@@ -326,37 +315,21 @@ public class BoardManager : MonoBehaviour
         {
             var anim = card.GetComponent<CardsAnimation>();
             var img = card.GetComponentInChildren<Image>();
-
-            if (anim == null || img == null)
-                continue;
-
             anim.targetImage = img;
-
-            yield return StartCoroutine(
-                anim.Fade(card.gameObject, fromAlpha, toAlpha, duration)
-            );
+            yield return StartCoroutine(anim.Fade(card.gameObject, fromAlpha, toAlpha, duration));
         }
 
         foreach (var card in yellowCardsAI)
         {
             var anim = card.GetComponent<CardsAnimation>();
             var img = card.GetComponentInChildren<Image>();
-
-            if (anim == null || img == null)
-                continue;
-
             anim.targetImage = img;
-
-            yield return StartCoroutine(
-                anim.Fade(card.gameObject, fromAlpha, toAlpha, duration)
-            );
+            yield return StartCoroutine(anim.Fade(card.gameObject, fromAlpha, toAlpha, duration));
         }
     }
 
     public (CardUI left, CardUI right) GetAdjacentCards(CardUI card)
     {
-        Debug.Log($"[ADJ CHECK] card={card.nameCard} indexCarte={card.indexCarte}");
-
         for (int i = 0; i < BoardManager.cardsOnBoardUI.Count; i++)
         {
             var c = BoardManager.cardsOnBoardUI[i];
@@ -365,18 +338,15 @@ public class BoardManager : MonoBehaviour
 
         CardUI left = null;
         CardUI right = null;
-
-        int index = card.indexCarte;
         var list = BoardManager.cardsOnBoardUI;
 
-        if (index > 0)
-            left = list[index - 1];
+        if (card.indexCarte > 0)
+            left = list[card.indexCarte - 1];
 
-        if (index < list.Count - 1)
-            right = list[index + 1];
+        if (card.indexCarte < list.Count - 1)
+            right = list[card.indexCarte + 1];
 
         Debug.Log($"[RESULT] left={(left ? left.nameCard : "null")} right={(right ? right.nameCard : "null")}");
-
         return (left, right);
     }
     // ==========================================

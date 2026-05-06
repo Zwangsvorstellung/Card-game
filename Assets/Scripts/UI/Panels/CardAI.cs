@@ -49,7 +49,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     public string target;
     public int targetID;
     public string lastTarget;
-    public int lastTargetID;
 
     public string nameAttacker;
     public int idAttacker;
@@ -135,7 +134,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     void UpdateDefensiveState()
     {
         atk1Icon.SetActive(stateDefensif == "cibled");
-        atk1Icon.SetActive(stateDefensif == "isAttacked");
     }
     void UpdateFreezeState()
     {
@@ -255,7 +253,6 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
 
     public bool IsAdjacentTo(CardAI other)
     {
-        if (other == null) return false;
         return Mathf.Abs(indexCarte - other.indexCarte) == 1;
     }
 

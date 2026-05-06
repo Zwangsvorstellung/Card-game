@@ -23,12 +23,12 @@ public class GameManager : MonoBehaviour
     public Queue<CarteData> piochePlayerA;
     public Queue<CarteData> piochePlayerB;
 
-    public string currentPlayerAction;
+    public PlayerActionState currentPlayerAction;
 
     public bool isEndturnPlayer = false;
     public bool isEndturnAI = false;
 
-    public string mode;
+    public GameMode mode;
     public bool aiStart;
     public int round;
     public bool isGameOver;
@@ -47,7 +47,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         round = 1;
-        mode = "selectDeck";
+        mode = GameMode.SELECT_DECK;
         isGameOver = false;
                 
         deckPlayerA = new List<CarteData>();
@@ -143,12 +143,12 @@ public class GameManager : MonoBehaviour
 
         if(aiStart)
         {
-            currentPlayerAction = "AI";
+            currentPlayerAction = PlayerActionState.AI;
             Debug.Log($"[GAME] → L'IA commence ce tour (Round {round})");
         }
         else
         {
-            currentPlayerAction = "UI";
+            currentPlayerAction = PlayerActionState.UI;
             Debug.Log($"[GAME] → Le JOUEUR commence ce tour (Round {round})");
         }
 
@@ -177,9 +177,9 @@ public class GameManager : MonoBehaviour
         // Chaque tour : choix aléatoire (joueur ou IA commence)
        // aiStart = Random.Range(0, 2) == 0;
        // if(aiStart)
-        //    currentPlayerAction = "AI";
+        //    currentPlayerAction = PlayerActionState.AI;
         //else
-        //    currentPlayerAction = "UI";
+        //    currentPlayerAction = PlayerActionState.UI;
 
         //Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(aiStart ? "IA" : "JOUEUR")} (aléatoire)");
 
@@ -203,8 +203,8 @@ public class GameManager : MonoBehaviour
         if (!playerHasNoCards && !aiHasNoCards) return false;
 
         isGameOver = true;
-        currentPlayerAction = "NONE";
-        mode = "gameOver";
+        currentPlayerAction = PlayerActionState.NONE;
+        mode = GameMode.GAME_OVER;
         isEndturnPlayer = true;
         isEndturnAI = true;
 

@@ -53,7 +53,7 @@ public class PanelManager : MonoBehaviour
     public void ShowButtonNextStep() => nextStep?.SetActive(true);
     public void HideButtonNextStep() => nextStep?.SetActive(false);
 
-    public void ShowTurnBanner(string player)
+    public void ShowTurnBanner(PlayerActionState player)
     {
         turnBannerPanel.SetActive(true);
         turnBannerCanvasGroup.alpha = 1f;

@@ -1,0 +1,23 @@
+public enum Capacity
+{
+    AgiliteRisque,
+    FrappeGelee,
+    AuraDeForce,
+    ReflexionPartielle,
+    FrappePuissante,
+    Tentation,
+    MalusAttaque,
+    Provocation,
+    AttaqueSurprise,
+    PerceeDefensive,
+    Regeneration,
+    BouclierCollectif,
+    TerreurSelective,
+    IgnoranceDefensive,
+    OndeDeChocPassive,
+    Aubaine,
+    Aleatoire,
+    VagueLetale,
+    Combo,
+    Protection
+}

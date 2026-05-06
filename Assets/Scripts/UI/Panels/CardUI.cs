@@ -51,7 +51,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public string target;
     public int targetID;
     public string lastTarget;
-    public int lastTargetID;
 
     [Header("Identification")]
     public string instanceId; // ID unique de la carte
@@ -88,7 +87,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
             passedIcon.SetActive(false);
         }
 
-        if(stateDefensif == "cibled" || stateDefensif == "isAttacked"){
+        if(stateDefensif == "cibled"){
             atk1Icon.SetActive(true);
         }else{
             atk1Icon.SetActive(false);
@@ -168,7 +167,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         if(isHiddenSlot) return;
         if(isFrozen) return;
 
-        if(GameManager.Instance.currentPlayerAction == "UI"){
+        if(GameManager.Instance.currentPlayerAction == PlayerActionState.UI){
             if(!actionChoiceDo)
                 PlayerActionManager.Instance.ClickOnBoardCard(this);
         }
@@ -191,7 +190,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public void Select()
     {
         isSelect = true;
-        GameManager.Instance.mode = "hasCardSelectedToAction";
+        GameManager.Instance.mode = GameMode.HAS_CARD_SELECTED_TO_ACTION;
         stateOffensif = "waitOrder";
         rectTransform.anchoredPosition = positionWithOffset;
 
@@ -204,7 +203,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public void Deselect()
     {
         isSelect = false;
-        GameManager.Instance.mode = "selectCardToPlayAction";
+        GameManager.Instance.mode = GameMode.SELECT_CARD_TO_PLAY_ACTION;
         stateOffensif = "wait";
 
         if (layoutGroup?.enabled == true)
@@ -289,7 +288,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     }
     public bool IsAdjacentTo(CardUI other)
     {
-        if (other == null) return false;
         return Mathf.Abs(indexCarte - other.indexCarte) == 1;
     }
     public void HideAsEmptySlot()

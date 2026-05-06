@@ -7,33 +7,9 @@ using UnityEngine.UI;
 /// Calcule les scores d'attaque et de passivité pour aider l'IA à prendre des décisions optimales.
 public static class IAAction
 {
-    public enum Capacity {
-        AgiliteRisque,          // Ne pas attaquer = intouchable
-        FrappeGelee,            // La cible ne peut pas attaquer au prochain tour
-        AuraDeForce,            // Boost alliés adjacents si ne fait rien
-        ReflexionPartielle,     // Inflige 1 dégât de retour si attaqué
-        FrappePuissante,        // +1 dégât supplémentaire
-        Tentation,              // Si Désir passe son tour, une attaque ne sera pas effectuée
-        MalusAttaque,           // Réduit l'attaque de l'ennemi
-        Provocation,            // Inflige 1 dégât en retour (Jaycota)
-        AttaqueSurprise,        // Bonus si attaque une cible différente
-        PerceeDefensive,        // Réduit la défense de la cible
-        Regeneration,           // Récupère des PV si ne fait rien
-        BouclierCollectif,      // Réduit dégâts si allié adjacent pas attaquant
-        TerreurSelective,       // Malus ATK ennemis qui n'attaquent pas
-        IgnoranceDefensive,     // Ignore une partie de la défense
-        OndeDeChocPassive,      // Inflige 1 dégât à un ennemi non-attaquant
-        Aubaine,                // Gagne +1 ATK temporaire si attaquée (Zarla)
-        Aleatoire,       // Ignore 1 défense et attaque aléatoire
-        VagueLetale,            // Vague Létale : Inflige ses dégats si elle est ciblée
-        Combo,                  // Combo : Dégâts aléatoires entre 0 et 4 points
-        Protection              // Switch de DF entre un allié attaqué et Minoson
-    }
-
     public static List<Capacity> Capacites;
 
     /// Évalue le score d'une attaque potentielle de l'attaquant vers le défenseur.
-    /// <returns>Un score entier représentant la valeur de cette attaque (0 = minimum)</returns>
     public static int RateAttack(
         CardAI attacker,
         CardUI defender,
@@ -42,24 +18,25 @@ public static class IAAction
     {
         if (attacker == null || defender == null) return 0;
 
+        // score initial basé sur les dégâts potentiels
         int atk = attacker.attaqueValue;
         int def = defender.defenseValue;
-        int baseDamage = atk - def;
-        if (baseDamage < 0)
-            baseDamage = 1;
-            
-        // score initial basé sur les dégâts potentiels
+
+        int baseDamage = Mathf.Max(1, atk - def);
         int scoring = baseDamage;
 
-        // 2) BONUS : CAPACITÉS QUI RÉDUISENT LA DÉFENSE
-        // ==========================================
+        // ======================================================
+        // BONUS : CAPACITÉS QUI RÉDUISENT LA DÉFENSE
+        // ======================================================
         // Ignorance Défensive / Percée Défensive : réduit la défense de la cible
         // Bonus supplémentaire car ces capacités rendent l'attaque plus efficace
+
         if (attacker.HasCapacity(Capacity.IgnoranceDefensive) || attacker.HasCapacity(Capacity.PerceeDefensive))
             scoring += 1;
 
-        // 3) BONUS OFFENSIFS (capacités de l'attaquant)
-        // ==========================================
+        // ======================================================
+        // BONUS OFFENSIFS (capacités de l'attaquant)
+        // ======================================================
 
         // Frappe Puissante : inflige +1 dégât supplémentaire
         if (attacker.HasCapacity(Capacity.FrappePuissante))
@@ -67,19 +44,16 @@ public static class IAAction
 
         // Attaque Surprise : bonus si on attaque une cible différente de la précédente
         // Cela encourage la diversité des cibles et rend l'attaque plus imprévisible
-        if (attacker.HasCapacity(Capacity.AttaqueSurprise) && !string.IsNullOrEmpty(attacker.lastTarget) && attacker.lastTarget != defender.nameCard)
+
+        if (attacker.HasCapacity(Capacity.AttaqueSurprise) &&
+            !string.IsNullOrEmpty(attacker.lastTarget) &&
+            attacker.lastTarget != defender.nameCard)
             scoring += 1;
 
         // Combo : Dégâts aléatoires entre 0 et 4 points
         if (attacker.HasCapacity(Capacity.Combo))
         {
-            scoring += 2 + Random.Range(0, 3); // 2–4 au lieu de 0–4 brut
-        }
-
-        // Vague Létale : Inflige ses dégats si elle est ciblée
-        if (defender.HasCapacity(Capacity.VagueLetale))
-        {
-            scoring -= 2; // attaquer une Vague Létale est risqué
+            scoring += 2 + Random.Range(0, 3);
         }
 
         // Frappe Gelée / Tentation : la cible ne pourra pas attaquer au prochain tour
@@ -88,27 +62,23 @@ public static class IAAction
             scoring += 1;
 
         if (attacker.HasCapacity(Capacity.Tentation))
-        {
             scoring -= 1; // perdre le contrôle de blocage rend l’attaque moins intéressante
-        }
 
         // Attaque Aléatoire : ignore 1 défense et attaque aléatoire
         // Bonus supplémentaire car cette capacité est puissante
         if (attacker.HasCapacity(Capacity.Aleatoire))
             scoring += 1;
 
-        // 4) BONUS MAJEUR : ÉLIMINATION DE LA CIBLE (KILL)
-        // ==========================================
-        // Si l'attaque totale est supérieure ou égale à la défense totale, on peut tuer la cible
-        // C'est un objectif prioritaire, donc bonus important
-        if (atk >= defender.defenseValue)
-        {
-            scoring += 4; // Prime importante pour élimination de la cible
-        }
+        // ======================================================
+        // PÉNALITÉS : RISQUES DE LA CIBLE
+        // ======================================================
 
-        // 5) PÉNALITÉS : RISQUES DE LA CIBLE
-        // ==========================================
-        // Ces capacités de la cible rendent l'attaque moins souhaitable
+        // Vague Létale : Inflige ses dégats si elle est ciblée
+        if (defender.HasCapacity(Capacity.VagueLetale))
+        {
+            scoring -= 2;
+            Debug.Log($"[CIBLAGE] → attaquer Vague Létale est risqué");
+        }
 
         // Attaque de Provocation (Jaycota) : inflige 1 dégât en retour
         // Pénalité car on prend des dégâts en attaquant
@@ -125,14 +95,15 @@ public static class IAAction
         if (defender.HasCapacity(Capacity.Regeneration))
             scoring--;
 
-        // 6) PÉNALITÉS : RISQUES DES ALLIÉS DE LA CIBLE
-        // ==========================================
-        // Les alliés de la cible peuvent avoir des capacités défensives qui rendent l'attaque risquée
+        // ======================================================
+        // PÉNALITÉS : ALLIÉS DE LA CIBLE
+        // ======================================================
+
         if (defenderAllies != null)
         {
             // Réflexion partielle : un allié inflige 1 dégât de retour si la cible est attaquée
             // Pénalité car on prend des dégâts supplémentaires
-            if(defenderAllies.Any(a => a.HasCapacity(Capacity.ReflexionPartielle)))
+            if (defenderAllies.Any(a => a.HasCapacity(Capacity.ReflexionPartielle)))
                 scoring--;
 
             // Bouclier Collectif : réduit les dégâts n'attaque pas
@@ -146,8 +117,10 @@ public static class IAAction
             }
         }
 
-        // 7) PÉNALITÉS : CAPACITÉS DE L'ATTAQUANT QUI RENDENT L'ATTAQUE MOINS SOUHAITABLE
-        // ==========================================
+        // ======================================================
+        // PÉNALITÉS : CAPACITÉS DE L'ATTAQUANT
+        // ======================================================
+
         // Certaines capacités de l'attaquant sont plus utiles si on ne fait rien
 
         // Régénération : on perd la régénération si on attaque
@@ -165,9 +138,15 @@ public static class IAAction
         if (attacker.HasCapacity(Capacity.TerreurSelective))
             scoring--;
 
-        // 8) FINALISATION DU SCORE
-        // ==========================================
-        //Debug.Log($"[IA] Score d'attaque de {attacker.nameCard} vers {defender.nameCard}: {scoring}");
+        // ======================================================
+        // BONUS MAJEUR : ÉLIMINATION
+        // ======================================================
+
+        if (atk >= defender.defenseValue)
+        {
+            scoring += 4;
+        }
+
         return Mathf.Max(scoring, 0);
     }
 
@@ -179,7 +158,6 @@ public static class IAAction
         List<CardUI> opponents)
     {
         if (card == null) return 0;
-
         int scoring = 0;
 
         // Agilité Risquée : ne pas attaquer = intouchable
@@ -188,7 +166,6 @@ public static class IAAction
         {
             scoring += 3;
         }
-
         // Aura de Force : boost les alliés adjacents si la carte ne fait rien
         // Le bonus est proportionnel au nombre d'alliés boostés
         if (card.HasCapacity(Capacity.AuraDeForce))
@@ -201,20 +178,17 @@ public static class IAAction
             }
             scoring += nbAdjacents; // +1 par allié boosté
         }
-
         // annule une attaque - gros gain
         if (card.HasCapacity(Capacity.Tentation))
         {
             scoring += 2;
         }
-
         // Régénération : récupère des PV si on ne fait rien
         // Bonus modéré car la survie est importante
         if (card.HasCapacity(Capacity.Regeneration))
         {
             scoring += 2;
         }
-
         // Terreur Sélective : inflige un malus ATK aux ennemis qui n'attaquent pas
         // Le bonus est proportionnel au nombre d'ennemis affectés
         if (card.HasCapacity(Capacity.TerreurSelective))
@@ -227,14 +201,13 @@ public static class IAAction
             }
             scoring += nbOpponentPassifs;
         }
-
         // Onde de Choc Passive : inflige 1 dégât à un ennemi non-attaquant
         // Bonus fixe car la cible est aléatoire (pas trop puissant)
         if (card.HasCapacity(Capacity.OndeDeChocPassive))
         {
             scoring += 1;
         }
-        
+
         return scoring;
     }
 
@@ -335,7 +308,6 @@ public static class IAAction
             if (opponent.HasCapacity(Capacity.OndeDeChocPassive))
                 score += 1; // Inflige des dégâts passifs
         }
-
         return score;
     }
 }

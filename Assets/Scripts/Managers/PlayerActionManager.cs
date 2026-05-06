@@ -35,7 +35,7 @@ public class PlayerActionManager : MonoBehaviour
 
     public void ConfirmSelection(GameObject buttonObject)
     {
-        GameManager.Instance.mode = "selectCardToPlayAction";
+        GameManager.Instance.mode = GameMode.SELECT_CARD_TO_PLAY_ACTION;
 
         PanelManager.Instance.HideInstructionText();
         PanelManager.Instance.HideValidateDeck();
@@ -98,7 +98,7 @@ public class PlayerActionManager : MonoBehaviour
         CardUI card = buttonObject.GetComponentInParent<CardUI>();
         //Debug.Log($"[PLAYER] Carte {card.nameCard} choisit de PASSER");
         card.OnPassed();
-        GameManager.Instance.mode = "selectCardToPlayAction";
+        GameManager.Instance.mode = GameMode.SELECT_CARD_TO_PLAY_ACTION;
         //Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode}");
     }
 
@@ -107,13 +107,13 @@ public class PlayerActionManager : MonoBehaviour
         CardUI card = buttonObject.GetComponentInParent<CardUI>();
        // Debug.Log($"[PLAYER] Carte {card.nameCard} choisit d'ATTAQUER (ATK:{card.attaqueValue})");
         card.OnAttack();
-        GameManager.Instance.mode = "selectCardOpponentToAttack";
+        GameManager.Instance.mode = GameMode.SELECT_CARD_OPPONENT_TO_ATTACK;
         //Debug.Log($"[PLAYER] Mode changé: {GameManager.Instance.mode} - Sélection de la cible requise");
     }
 
     public void ClickOnMainCard(CardMain cardMain)
     {
-        if(GameManager.Instance.mode == "deck"){
+        if(GameManager.Instance.mode == GameMode.DECK){
             if(!cardMain.isSelect)
             {
                 if (MainUIManager.Instance.CountSelectedCards() < GameManager.MAX_CARTES_TAPIS){
