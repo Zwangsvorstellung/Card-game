@@ -207,7 +207,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
     }
 
     public void ResetCardEndTurn(){
-        if (isHiddenSlot) return;
+        if (isHiddenSlot && isYellow) return;
 
         actionChoiceDo = false;
         stateOffensif = "wait";
@@ -245,7 +245,7 @@ public class CardAI : MonoBehaviour, IPointerClickHandler, ICard
             child.gameObject.SetActive(false);
     }
 
-    public bool HasCapacity(IAAction.Capacity cap)
+    public bool HasCapacity(Capacity cap)
     {
         if (nameCapacity == null) return false;
         return nameCapacity.text.Contains(cap.ToString());

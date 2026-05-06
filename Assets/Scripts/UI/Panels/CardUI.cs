@@ -104,11 +104,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         }
     }
 
-    void OnEnable() => BoardManager.cardsOnBoardUI.Add(this);
     void OnDisable() => BoardManager.cardsOnBoardUI.Remove(this);
+    private void OnDestroy() => BoardManager.cardsOnBoardUI.Remove(this);
 
     public void ResetCardEndTurn(){
-        if (isHiddenSlot) return;
+        if (isHiddenSlot && isYellow) return;
 
         actionChoiceDo = false;
         stateOffensif = "wait";
@@ -153,6 +153,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         gameObject.name = $"CardUI_{data.nom}_id{data.idCard}_inst{data.instanceId}";
         
         HideAllIcons();
+
+        if (!BoardManager.cardsOnBoardUI.Contains(this))
+        {
+            BoardManager.cardsOnBoardUI.Add(this);
+        }
     }
 
     public void HideAllIcons()
@@ -236,10 +241,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         stateOffensif = "passed";
         rectTransform.anchoredPosition = startPosition - offsetClick;
         actionChoiceDo = true;
+        BoardManager.Instance.CheckPlayerCardsDone();
         isSelect = false;
         imageCarte.color = new Color(0.4f, 0.4f, 0.4f, 1f);
-        //Debug.Log($"[CARD-UI] {nameCard} passe son tour (ATK:{attaqueValue}, DEF:{defenseValue})");
-        //if (layoutElement) layoutElement.ignoreLayout = true;
+        if (layoutElement) layoutElement.ignoreLayout = true;
     }
 
     public void OnAttack()
@@ -251,9 +256,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         stateOffensif = "selectTarget";
         GameManager.Instance.numberOfAttacksUsedPlayer++;
         
-        //Debug.Log($"[CARD-UI] {nameCard} passe en mode ATTAQUE (ATK:{attaqueValue}, DEF:{defenseValue})");
-        Debug.Log($"[CARD-UI] Attaques utilisées joueur: {GameManager.Instance.numberOfAttacksUsedPlayer}/{GameManager.MAX_NUMBER_ATK_ROUND}");
-
         // si Tyroine -> choisir aléatoire qui n'est pas déjà ciblée
         if(nameCard == "Tyroine"){
             List<CardAI> targetsAI = BoardManager.cardsOnBoardAI.Where(c => c.stateDefensif != "cibled").ToList();
@@ -278,10 +280,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         //Debug.Log($"[CARD-UI] {nameCard} cible {cardAI.nameCard} (ATK:{attaqueValue} vs DEF:{cardAI.defenseValue})");
         int damage = attaqueValue - cardAI.defenseValue;
         if (damage < 0) damage = 1;
-        //Debug.Log($"[CARD-UI] Dégâts potentiels: {damage} (sera appliqué à la fin du tour)");
     }
 
-    public bool HasCapacity(IAAction.Capacity cap)
+    public bool HasCapacity(Capacity cap)
     {
         if (nameCapacity == null) return false;
         return nameCapacity.text.Contains(cap.ToString());
@@ -293,7 +294,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public void HideAsEmptySlot()
     {
         isHiddenSlot = true;
-        actionChoiceDo = true;
+        actionChoiceDo = false;
         stateOffensif = "hidden";
         stateDefensif = "hidden";
         isSelect = false;

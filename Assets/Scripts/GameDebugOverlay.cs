@@ -69,7 +69,7 @@ public class GameDebugOverlay : MonoBehaviour
 
         // Affichage infos
         GUILayout.Label("Round: " + gm.round, labelStyle);
-        GUILayout.Label("Mode: " + (gm.mode ?? "null"), labelStyle);
+        GUILayout.Label("Mode: " + (gm.mode.ToString() ?? "null"), labelStyle);
         GUILayout.Label("Current Action: " + (gm.currentPlayerAction.ToString() ?? "null"), labelStyle);
         GUILayout.Space(8);
 

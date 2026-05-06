@@ -13,7 +13,7 @@ public class IA : MonoBehaviour
     private Coroutine aiTurnCoroutine;
     
     [Header("Paramètres")]
-    [SerializeField] private float delayAction = 0.4f;
+    [SerializeField] private float delayAction = 0.2f;
     
     private static List<AttackInfo> aiAttacks = new List<AttackInfo>();
     
@@ -39,7 +39,6 @@ public class IA : MonoBehaviour
     /// évalue les actions possibles et choisit les meilleures. système de scoring pour décider entre attaquer et rester passif.
     private IEnumerator ExecuteAITurn()
     {
-        //Debug.Log($"[IA] ===== DÉBUT DU TOUR IA ExecuteAITurn =====");
         int aiCardsCount = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot);
         
         if (aiCardsCount == 0)
@@ -62,7 +61,6 @@ public class IA : MonoBehaviour
         
         while (attackSaved < GameManager.MAX_NUMBER_ATK_ROUND && cardsAIOnBoard.Count > 0)
         {
-            //Debug.Log($"[IA] --- Itération {attackSaved + 1}/{GameManager.MAX_NUMBER_ATK_ROUND} ---");
             int bestScoring = 0;
             CardAI bestAttacker = null;
             CardUI bestTarget = null;
@@ -93,7 +91,6 @@ public class IA : MonoBehaviour
                 // Debug.Log($"[IA] ✓ Meilleure action trouvée: {bestAttacker.nameCard} → {bestTarget.nameCard} (score: {bestScoring})");
                 SaveAttack(bestAttacker, bestTarget, hasSoliciaOpponent, hasBelindraOpponentStatePassed);
                 attackSaved++;
-                //Debug.Log($"[IA] Attaques sauvegardées: {attackSaved}/{GameManager.MAX_NUMBER_ATK_ROUND}");
                 
                 cardsAIOnBoard.Remove(bestAttacker);
                 cardsUIOnBoard.Remove(bestTarget);
@@ -108,7 +105,6 @@ public class IA : MonoBehaviour
         }
 
         // Les cartes restantes qui n'ont pas attaqué passent leur tour
-        //Debug.Log($"[IA] Cartes restantes à passer: {cardsAIOnBoard.Count(c => !c.actionChoiceDo)}");
         foreach (var cardAI in cardsAIOnBoard)
         {
             if (!cardAI.actionChoiceDo)
@@ -120,7 +116,6 @@ public class IA : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
         
-        //Debug.Log($"[IA] Attaques stockées: {aiAttacks.Count}");
         foreach (var attack in aiAttacks)
         {
             Debug.Log($"[IA] - {attack.attackerAI.nameCard} → {attack.targetPlayer.nameCard} ({attack.damage} dégâts)");
@@ -379,6 +374,7 @@ public class IA : MonoBehaviour
         // Met à jour l'état de l'attaquant
         attacker.actionChoiceDo = true;
         attacker.stateOffensif = "atk";
+        target.stateDefensif = "cibled";
         
         // Met à jour la cible de l'attaquant
         attacker.target = target.nameCard;
@@ -410,12 +406,9 @@ public class IA : MonoBehaviour
         string attackLog = $"{attacker.nameCard} → {target.nameCard} (ATK:{attacker.attaqueValue} vs DEF:{target.defenseValue}) = {damage} dégâts";
         BoardManager.Instance.roundDamage.Add(attackLog);
         
-        Debug.Log($"[IA] ✓ Attaque stockée: {attacker.nameCard} → {target.nameCard} ({damage} dégâts)");
-        
         aiAttacks.Add(new AttackInfo(attacker, target, damage, hasSoliciaOpponent, hasBelindraOpponentStatePassed));
     }
 
-    /// Fait passer le tour d'une carte IA
     private void ExecutePass(CardAI card)
     {
         if (card == null || card.isHiddenSlot) return;
@@ -427,7 +420,6 @@ public class IA : MonoBehaviour
         Vector3 startPosition = card.rectTransform.anchoredPosition;
         Vector3 newPosition = startPosition + new Vector3(0, +30, 0);
         card.rectTransform.anchoredPosition = newPosition;
-        //Debug.Log($"[IA] ✓ {card.nameCard} passe son tour (ATK:{card.attaqueValue}, DEF:{card.defenseValue})");
     }
     
     /// Coroutine pour démarrer le tour de l'IA après un délai.
@@ -619,16 +611,21 @@ public class IA : MonoBehaviour
         Debug.Log($"[ATTACK] → {attackerName} inflige {damage} à {targetName}");
         Debug.Log($"[TARGET] {targetName} DEF: {targetDefense} ATK: {targetAtk} | [ATTACKER] {attackerName} DEF: {attackerDefense} ATK: {attackerAtk}");
 
-        var targetCard = attack.isPlayerAttack ? targetAI : targetPlayer;
-        var attackerCard = attack.isPlayerAttack ? attackerPlayer : attackerAI;
+        if (attack.isPlayerAttack)
+        {
+            if (targetDefense <= 0)
+                targetAI.isYellow = true;
 
-        if (targetDefense <= 0)
-        {
-            targetCard.isYellow = true;
+            if (attackerDefense <= 0)
+                attackerPlayer.isYellow = true;
         }
-        if (attackerDefense <= 0)
+        else
         {
-            attackerCard.isYellow = true;
+            if (targetDefense <= 0)
+                targetPlayer.isYellow = true;
+
+            if (attackerDefense <= 0)
+                attackerAI.isYellow = true;
         }
     }
     
@@ -666,7 +663,7 @@ public class IA : MonoBehaviour
     }
 
     /// BUFF ET DEBUFF
-    public void buffAtk(ICard card)
+    public static void buffAtk(ICard card)
     {
         card.attaqueValue++;
         if (card is CardUI ui)
@@ -674,7 +671,7 @@ public class IA : MonoBehaviour
         if (card is CardAI ai)
             ai.attaqueText.SetText(ai.attaqueValue.ToString());
     }
-    public void buffDf(ICard card)
+    public static void buffDf(ICard card)
     {
         card.defenseValue++;
         if (card is CardUI ui)
@@ -683,7 +680,7 @@ public class IA : MonoBehaviour
             ai.defenseText.SetText(ai.defenseValue.ToString());
 
     }
-    public void debuffAtk(ICard card)
+    public static void debuffAtk(ICard card)
     {
         card.attaqueValue--;
         if (card is CardUI ui)
@@ -691,7 +688,7 @@ public class IA : MonoBehaviour
         if (card is CardAI ai)
             ai.attaqueText.SetText(ai.attaqueValue.ToString());
     }
-    public void debuffDf(ICard card)
+    public static void debuffDf(ICard card)
     {
         card.defenseValue--;
         if (card is CardUI ui)

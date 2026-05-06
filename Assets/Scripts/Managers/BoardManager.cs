@@ -45,28 +45,6 @@ public class BoardManager : MonoBehaviour
                     Debug.Log($"[BOARD] En attente du joueur (isEndturnPlayer: {GameManager.Instance.isEndturnPlayer})");
                     hasLoggedWaitingPlayer = true;
                 }
-                // Vérifie si toutes les cartes joueur ont fait leur choix
-                var activePlayerCards = cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot).ToList();
-
-                if (activePlayerCards.All(card => card.actionChoiceDo))
-                {
-                    GameManager.Instance.isEndturnPlayer = true;
-                    hasLoggedWaitingPlayer = false;
-
-                    int visiblePlayerCards = activePlayerCards.Count;
-                    int attacksCount = activePlayerCards.Count(c => c.stateOffensif == "atk");
-                    int passesCount = activePlayerCards.Count(c => c.stateOffensif == "passed");
-
-                    //Debug.Log($"[BOARD] Toutes les cartes joueur ont fait leur choix ({visiblePlayerCards} cartes)");
-                    //Debug.Log($"[BOARD] Résumé - Attaques: {attacksCount}, Passes: {passesCount}");
-
-                    // Si le joueur termine en premier, on passe immédiatement la main à l'IA.
-                    if (!GameManager.Instance.isEndturnAI)
-                    {
-                        GameManager.Instance.currentPlayerAction = PlayerActionState.AI;
-                        PanelManager.Instance?.ShowTurnBanner(PlayerActionState.AI);
-                    }
-                }
             }
         }
 
@@ -77,6 +55,50 @@ public class BoardManager : MonoBehaviour
             PanelManager.Instance?.OffTurnBanner();
             resolvingRound = true;
             StartCoroutine(ResolveRoundCoroutine());
+        }
+    }
+
+    public void CheckPlayerCardsDone()
+    {
+        if (GameManager.Instance.currentPlayerAction != PlayerActionState.UI)
+            return;
+
+        var activeCards = cardsOnBoardUI
+            .Where(c => c != null && !c.isHiddenSlot)
+            .ToList();
+
+        Debug.Log($"[CHECK] COUNT={activeCards.Count}");
+
+        if (activeCards.Count == 0)
+            return;
+
+        bool allDone = true;
+
+        foreach (var c in activeCards)
+        {
+            if (!c.actionChoiceDo)
+            {
+                allDone = false;
+                break;
+            }
+        }
+
+        Debug.Log($"[CHECK] ALL DONE = {allDone}");
+
+        if (!allDone) return;
+
+        // 🔒 protection anti double trigger
+        if (GameManager.Instance.isEndturnPlayer)
+            return;
+
+        Debug.Log("✅ PLAYER TURN COMPLETE");
+
+        GameManager.Instance.isEndturnPlayer = true;
+
+        if (!GameManager.Instance.isEndturnAI)
+        {
+            GameManager.Instance.currentPlayerAction = PlayerActionState.AI;
+            PanelManager.Instance?.ShowTurnBanner(PlayerActionState.AI);
         }
     }
 
@@ -109,7 +131,6 @@ public class BoardManager : MonoBehaviour
     public void selectCardOnBoard(CardUI cardUI)
     {
         if(GameManager.Instance.mode != GameMode.SELECT_CARD_OPPONENT_TO_ATTACK){
-            //Debug.Log($"[BOARD] Sélection de la carte joueur: {cardUI.nameCard}");
             cardUI.selectCard();
         }
     }
@@ -120,7 +141,6 @@ public class BoardManager : MonoBehaviour
         if(GameManager.Instance.mode == GameMode.SELECT_CARD_OPPONENT_TO_ATTACK){
             int idAttacker = cardAI.isSelectCard();
             var attackerCard = cardsOnBoardUI.FirstOrDefault(c => c.idCard == idAttacker);
-            //Debug.Log($"[BOARD] Cible assignée: {attackerCard.nameCard} → {cardAI.nameCard}");
             attackerCard.SetDataTarget(cardAI);
             GameManager.Instance.mode = GameMode.SELECT_CARD_TO_PLAY_ACTION;
         }
@@ -166,6 +186,9 @@ public class BoardManager : MonoBehaviour
         hasLoggedWaitingPlayer = false;
         GameManager.Instance.mode = GameMode.SELECT_CARD_TO_PLAY_ACTION;
 
+        yield return BoardManager.Instance.HandleNextTurnTransition();
+        ReplaceOpponentYellowCards();
+
         foreach (CardUI card in cardsOnBoardUI)
         {
             card.ResetCardEndTurn();
@@ -174,9 +197,6 @@ public class BoardManager : MonoBehaviour
         {
             card.ResetCardEndTurn();
         }
-
-        yield return BoardManager.Instance.HandleNextTurnTransition();
-        ReplaceOpponentYellowCards();
     }
 
     public void ReplaceOpponentYellowCards()
@@ -236,7 +256,6 @@ public class BoardManager : MonoBehaviour
             GameObject carteGO = GameObject.Instantiate(BoardManager.Instance.cartePrefabAI, parent);
             carteGO.transform.SetSiblingIndex(siblingIndex);
 
-            // Réappliquer la position exacte
             RectTransform rtNewCard = carteGO.GetComponent<RectTransform>();
             rtNewCard.anchoredPosition = oldInitialPosition;
 
@@ -276,11 +295,13 @@ public class BoardManager : MonoBehaviour
             GameObject carteGO = GameObject.Instantiate(BoardManager.Instance.cartePrefab, parent);
             carteGO.transform.SetSiblingIndex(siblingIndex);
 
-            // Réappliquer la position exacte
             RectTransform rtNewCard = carteGO.GetComponent<RectTransform>();
             rtNewCard.anchoredPosition = oldInitialPosition;
 
             CardUI cardUI = carteGO.GetComponent<CardUI>();
+            cardUI.isCardPlayer = true;
+            cardUI.startPosition = oldInitialPosition;
+            cardUI.GetComponent<RectTransform>().anchoredPosition = oldInitialPosition;
             cardUI.setAttributesInitCardPlayer(newCard);
             // Synchroniser mainPlayerA : retirer l'ancienne carte, ajouter la nouvelle
             SyncReplaceInMainPlayerA(oldInstanceId, newCard);

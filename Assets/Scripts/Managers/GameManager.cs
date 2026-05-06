@@ -31,7 +31,6 @@ public class GameManager : MonoBehaviour
     public GameMode mode;
     public bool aiStart;
     public int round;
-    public bool isGameOver;
 
     [Header("Debug")]
     [SerializeField] private bool limitCardsForDebug = true;
@@ -48,7 +47,6 @@ public class GameManager : MonoBehaviour
     {
         round = 1;
         mode = GameMode.SELECT_DECK;
-        isGameOver = false;
                 
         deckPlayerA = new List<CarteData>();
         deckPlayerB = new List<CarteData>();
@@ -130,15 +128,14 @@ public class GameManager : MonoBehaviour
 
     public void StartRound()
     {
-        if (isGameOver || CheckGameOver())
+        if (CheckGameOver())
             return;
 
         numberOfAttacksUsedPlayer = 0;
         numberOfAttacksUsedIA = 0;
 
         Debug.Log($"[GAME] ===== DÉBUT DU TOUR {round} =====");
-        //Debug.Log($"[GAME] Compteurs réinitialisés - Attaques joueur: {numberOfAttacksUsedPlayer}, Attaques IA: {numberOfAttacksUsedIA}");
-    
+
         aiStart = Random.Range(0, 2) == 0;
 
         if(aiStart)
@@ -165,44 +162,25 @@ public class GameManager : MonoBehaviour
 
     public void EndTurn()
     {
-        if (isGameOver || CheckGameOver())
-            return;
-
         Debug.Log($"[GAME] ===== FIN DU TOUR {round} =====");
-        //Debug.Log($"[GAME] Attaques utilisées - Joueur: {numberOfAttacksUsedPlayer}/{MAX_NUMBER_ATK_ROUND}, IA: {numberOfAttacksUsedIA}/{MAX_NUMBER_ATK_ROUND}");
-        
         round++;
-
-        // CHECK
-        // Chaque tour : choix aléatoire (joueur ou IA commence)
-       // aiStart = Random.Range(0, 2) == 0;
-       // if(aiStart)
-        //    currentPlayerAction = PlayerActionState.AI;
-        //else
-        //    currentPlayerAction = PlayerActionState.UI;
-
-        //Debug.Log($"[GAME] Prochain tour ({round}) - Qui commence: {(aiStart ? "IA" : "JOUEUR")} (aléatoire)");
-
         StartRound();
     }
 
     public bool CheckGameOver()
     {
-        if (isGameOver) return true;
+        if (mode == GameMode.GAME_OVER) return true;
 
-        int playerBoard = BoardManager.cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot);
-        int aiBoard = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot);
-        int playerHand = mainPlayerA?.Count ?? 0;
-        int aiHand = mainPlayerB?.Count ?? 0;
+        int playerBoard = BoardManager.cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot && !c.isYellow);
+        int aiBoard = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot && !c.isYellow);
         int playerDeck = piochePlayerA?.Count ?? 0;
         int aiDeck = piochePlayerB?.Count ?? 0;
 
-        bool playerHasNoCards = playerBoard == 0 && playerHand == 0 && playerDeck == 0;
-        bool aiHasNoCards = aiBoard == 0 && aiHand == 0 && aiDeck == 0;
+        bool playerHasNoCards = playerBoard == 0 && playerDeck == 0;
+        bool aiHasNoCards = aiBoard == 0 && aiDeck == 0;
 
         if (!playerHasNoCards && !aiHasNoCards) return false;
 
-        isGameOver = true;
         currentPlayerAction = PlayerActionState.NONE;
         mode = GameMode.GAME_OVER;
         isEndturnPlayer = true;
@@ -217,13 +195,14 @@ public class GameManager : MonoBehaviour
             resultMessage = "Défaite";
 
         string details = $"Round: {round}\n" +
-                         $"Joueur - Plateau:{playerBoard} Main:{playerHand} Pioche:{playerDeck}\n" +
-                         $"IA - Plateau:{aiBoard} Main:{aiHand} Pioche:{aiDeck}";
+                         $"Joueur - Plateau:{playerBoard} Pioche:{playerDeck}\n" +
+                         $"IA - Plateau:{aiBoard} Pioche:{aiDeck}";
         string popupMessage = $"{resultMessage}\n{details}";
 
         PanelManager.Instance.endGamePanel.SetActive(true);
         PanelManager.Instance.logResultEndGame.SetText(popupMessage);
-        
+        boardManager.gameObject.SetActive(false);
+
         return true;
     }
     
