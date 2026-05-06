@@ -58,7 +58,7 @@ public class PanelManager : MonoBehaviour
         turnBannerPanel.SetActive(true);
         turnBannerCanvasGroup.alpha = 1f;
 
-        turnBannerText.text = player == "AI" ? "IA" : "Joueur";
+        turnBannerText.text = player.ToString() == PlayerActionState.AI.ToString() ? "IA" : "Joueur";
     }
     public void OffTurnBanner(){
         turnBannerPanel.SetActive(false);
