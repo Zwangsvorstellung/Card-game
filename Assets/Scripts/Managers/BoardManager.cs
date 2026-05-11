@@ -157,7 +157,7 @@ public class BoardManager : MonoBehaviour
 
     public CardUI GetDataAttacker()
     {
-        return cardsOnBoardUI.FirstOrDefault(card => card.stateOffensif == "selectTarget");
+        return cardsOnBoardUI.FirstOrDefault(card => card.stateOffensif == OffensiveState.SELECT_TARGET);
     }
 
     private IEnumerator ResolveRoundCoroutine()
@@ -207,24 +207,14 @@ public class BoardManager : MonoBehaviour
         if (yellowAI.Count == 0 && yellowUI.Count == 0) 
             return;
 
-        var deckUI = GameManager.Instance.piochePlayerA;
-        var deckAI = GameManager.Instance.piochePlayerB;
+        var deckUI = GameManager.Instance.piochePlayerUI;
+        var deckAI = GameManager.Instance.piochePlayerAI;
 
-        var cardsIntoBoardAI = cardsOnBoardAI
-                                        .Select(c => c.idCard)
-                                        .ToHashSet();
+        var cardsIntoBoardAI = cardsOnBoardAI.Select(c => c.idCard).ToHashSet();
+        var cardsIntoBoardUI = cardsOnBoardUI.Select(c => c.idCard).ToHashSet();
 
-        var cardsIntoBoardUI = cardsOnBoardUI
-                                        .Select(c => c.idCard)
-                                        .ToHashSet();
-
-        var availableCardsAI = deckAI
-                                    .Where(c => !cardsIntoBoardAI.Contains(c.idCard))
-                                    .ToList();
-
-        var availableCardsUI = deckUI
-                                    .Where(c => !cardsIntoBoardUI.Contains(c.idCard))
-                                    .ToList();
+        var availableCardsAI = deckAI.Where(c => !cardsIntoBoardAI.Contains(c.idCard)).ToList();
+        var availableCardsUI = deckUI.Where(c => !cardsIntoBoardUI.Contains(c.idCard)).ToList();
 
         foreach (CardAI card in yellowAI)
         {
@@ -232,8 +222,8 @@ public class BoardManager : MonoBehaviour
             {
                 // Plus de remplaçante : on masque définitivement le slot
                 card.HideAsEmptySlot();
-                // Synchroniser mainPlayerB : retirer la carte éliminée
-                SyncRemoveFromMainPlayerB(card.instanceId);
+                // Synchroniser mainPlayerAI : retirer la carte éliminée
+                SyncRemoveFromMainPlayerAI(card.instanceId);
                 continue;
             }
             int idx = Random.Range(0, availableCardsAI.Count);
@@ -261,8 +251,8 @@ public class BoardManager : MonoBehaviour
 
             CardAI cardAI = carteGO.GetComponent<CardAI>();
             cardAI.setAttributesInitCardAI(newCard);
-            // Synchroniser mainPlayerB : retirer l'ancienne carte, ajouter la nouvelle
-            SyncReplaceInMainPlayerB(oldInstanceId, newCard);
+            // Synchroniser mainPlayerAI : retirer l'ancienne carte, ajouter la nouvelle
+            SyncReplaceInMainPlayerAI(oldInstanceId, newCard);
         }
 
         foreach (CardUI card in yellowUI)
@@ -271,8 +261,8 @@ public class BoardManager : MonoBehaviour
             {
                 // Plus de remplaçante : on masque définitivement le slot
                 card.HideAsEmptySlot();
-                // Synchroniser mainPlayerA : retirer la carte éliminée
-                SyncRemoveFromMainPlayerA(card.instanceId);
+                // Synchroniser mainPlayerUI : retirer la carte éliminée
+                SyncRemoveFromMainPlayerUI(card.instanceId);
                 continue;
             }
             int idx = Random.Range(0, availableCardsUI.Count);
@@ -303,8 +293,8 @@ public class BoardManager : MonoBehaviour
             cardUI.startPosition = oldInitialPosition;
             cardUI.GetComponent<RectTransform>().anchoredPosition = oldInitialPosition;
             cardUI.setAttributesInitCardPlayer(newCard);
-            // Synchroniser mainPlayerA : retirer l'ancienne carte, ajouter la nouvelle
-            SyncReplaceInMainPlayerA(oldInstanceId, newCard);
+            // Synchroniser mainPlayerUI : retirer l'ancienne carte, ajouter la nouvelle
+            SyncReplaceInMainPlayerUI(oldInstanceId, newCard);
         }
     }
 
@@ -325,12 +315,10 @@ public class BoardManager : MonoBehaviour
     private IEnumerator FadeYellowCards(float fromAlpha, float toAlpha, float duration)
     {
         var yellowCardsUI = BoardManager.cardsOnBoardUI
-            .Where(c => c != null && c.isYellow)
-            .ToList();
+            .Where(c => c.isYellow).ToList();
 
         var yellowCardsAI = BoardManager.cardsOnBoardAI
-            .Where(c => c != null && c.isYellow)
-            .ToList();
+            .Where(c => c.isYellow).ToList();
 
         foreach (var card in yellowCardsUI)
         {
@@ -373,38 +361,38 @@ public class BoardManager : MonoBehaviour
     // ==========================================
     // SYNC
     // ==========================================
-    /// Retire une carte de mainPlayerB (carte masquée sans remplaçant).
-    void SyncRemoveFromMainPlayerB(string instanceId)
+    /// Retire une carte de mainPlayerAI (carte masquée sans remplaçant).
+    void SyncRemoveFromMainPlayerAI(string instanceId)
     {
         var gm = GameManager.Instance;
-        if (gm.mainPlayerB == null) return;
-        var list = gm.mainPlayerB.Where(c => c.instanceId != instanceId).ToList();
-        gm.mainPlayerB = new Queue<CarteData>(list);
+        if (gm.mainPlayerAI == null) return;
+        var list = gm.mainPlayerAI.Where(c => c.instanceId != instanceId).ToList();
+        gm.mainPlayerAI = new Queue<CarteData>(list);
     }
-    /// Remplace une carte dans mainPlayerB (carte remplacée depuis la pioche)
-    void SyncReplaceInMainPlayerB(string oldInstanceId, CarteData newCard)
+    /// Remplace une carte dans mainPlayerAI (carte remplacée depuis la pioche)
+    void SyncReplaceInMainPlayerAI(string oldInstanceId, CarteData newCard)
     {
         var gm = GameManager.Instance;
-        if (gm.mainPlayerB == null) return;
-        var list = gm.mainPlayerB.Where(c => c.instanceId != oldInstanceId).ToList();
+        if (gm.mainPlayerAI == null) return;
+        var list = gm.mainPlayerAI.Where(c => c.instanceId != oldInstanceId).ToList();
         list.Add(newCard);
-        gm.mainPlayerB = new Queue<CarteData>(list);
+        gm.mainPlayerAI = new Queue<CarteData>(list);
     }
-    /// Retire une carte de mainPlayerA (carte masquée sans remplaçant)
-    void SyncRemoveFromMainPlayerA(string instanceId)
+    /// Retire une carte de mainPlayerUI (carte masquée sans remplaçant)
+    void SyncRemoveFromMainPlayerUI(string instanceId)
     {
         var gm = GameManager.Instance;
-        if (gm.mainPlayerA == null) return;
-        var list = gm.mainPlayerA.Where(c => c.instanceId != instanceId).ToList();
-        gm.mainPlayerA = new Queue<CarteData>(list);
+        if (gm.mainPlayerUI == null) return;
+        var list = gm.mainPlayerUI.Where(c => c.instanceId != instanceId).ToList();
+        gm.mainPlayerUI = new Queue<CarteData>(list);
     }
-    /// Remplace une carte dans mainPlayerA (carte remplacée depuis la pioche)
-    void SyncReplaceInMainPlayerA(string oldInstanceId, CarteData newCard)
+    /// Remplace une carte dans mainPlayerUI (carte remplacée depuis la pioche)
+    void SyncReplaceInMainPlayerUI(string oldInstanceId, CarteData newCard)
     {
         var gm = GameManager.Instance;
-        if (gm.mainPlayerA == null) return;
-        var list = gm.mainPlayerA.Where(c => c.instanceId != oldInstanceId).ToList();
+        if (gm.mainPlayerUI == null) return;
+        var list = gm.mainPlayerUI.Where(c => c.instanceId != oldInstanceId).ToList();
         list.Add(newCard);
-        gm.mainPlayerA = new Queue<CarteData>(list);
+        gm.mainPlayerUI = new Queue<CarteData>(list);
     }
 }

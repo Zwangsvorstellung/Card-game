@@ -25,11 +25,11 @@ public class PlayerActionManager : MonoBehaviour
 
     public void QuitGame()
     {
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
-#else
+        #else
         Application.Quit();
-#endif
+        #endif
         Debug.Log("Quitting game");
     }
 
@@ -43,24 +43,24 @@ public class PlayerActionManager : MonoBehaviour
         List<CarteData> selectedCards = GameManager.Instance.GetSelectedCards();
         
         HashSet<int> selectedCardIds = selectedCards.Select(c => c.idCard).ToHashSet();
-        List<CarteData> unselectedCards = GameManager.Instance.mainPlayerA
+        List<CarteData> unselectedCards = GameManager.Instance.mainPlayerUI
             .Where(c => !selectedCardIds.Contains(c.idCard)).ToList();
 
-        GameManager.Instance.mainPlayerA = new Queue<CarteData>(selectedCards);
+        GameManager.Instance.mainPlayerUI = new Queue<CarteData>(selectedCards);
 
         foreach (var card in unselectedCards)
-            GameManager.Instance.piochePlayerA.Enqueue(card);
+            GameManager.Instance.piochePlayerUI.Enqueue(card);
 
         // Génère 4 cartes aléatoires pour l'opposant
-        var opponentDeck = GameManager.Instance.mainPlayerB;
+        var opponentDeck = GameManager.Instance.mainPlayerAI;
 
-        List<CarteData> opponentCards = GameManager.Instance.mainPlayerB.Take(4).ToList();
-        List<CarteData> remainingCards = GameManager.Instance.mainPlayerB.Skip(4).ToList();
+        List<CarteData> opponentCards = GameManager.Instance.mainPlayerAI.Take(4).ToList();
+        List<CarteData> remainingCards = GameManager.Instance.mainPlayerAI.Skip(4).ToList();
 
-        GameManager.Instance.mainPlayerB = new Queue<CarteData>(opponentCards);
+        GameManager.Instance.mainPlayerAI = new Queue<CarteData>(opponentCards);
 
         foreach (var card in remainingCards)
-            GameManager.Instance.piochePlayerB.Enqueue(card);
+            GameManager.Instance.piochePlayerAI.Enqueue(card);
 
         BoardManager.Instance.SetupBoardCards(opponentCards, selectedCards);
         CamController.Instance.GoToBoardView();

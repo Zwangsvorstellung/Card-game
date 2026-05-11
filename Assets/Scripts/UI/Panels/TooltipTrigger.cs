@@ -6,7 +6,6 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public string attackName;
     [SerializeField] private Vector3 tooltipOffset = new Vector3(0, 0, 0);
 
-
     public void OnPointerEnter(PointerEventData eventData)
     {
         RectTransform rectTransform = transform as RectTransform;

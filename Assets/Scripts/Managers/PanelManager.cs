@@ -9,14 +9,11 @@ public class PanelManager : MonoBehaviour
 
     [Header("UI Panels")]
     public GameObject instructionText;
-
     public GameObject turnLogPanel;   
     public TMP_Text logPanel;
     private List<string> logs = new List<string>();
-
     public GameObject endGamePanel;   
     public TMP_Text logResultEndGame;
-
     public GameObject validateDeck;   
     public GameObject nextStep;   
 
@@ -24,16 +21,12 @@ public class PanelManager : MonoBehaviour
     public GameObject turnBannerPanel;
     public TMP_Text turnBannerText;
     public CanvasGroup turnBannerCanvasGroup;
-    public float turnBannerFadeIn = 0.15f;
-    public float turnBannerHold = 0.7f;
-    public float turnBannerFadeOut = 0.2f;
-    private Coroutine turnBannerCoroutine;
 
     void Awake()
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject); // éviter les doublons
+            Destroy(gameObject);
             return;
         }
         Instance = this;
@@ -57,7 +50,6 @@ public class PanelManager : MonoBehaviour
     {
         turnBannerPanel.SetActive(true);
         turnBannerCanvasGroup.alpha = 1f;
-
         turnBannerText.text = player.ToString() == PlayerActionState.AI.ToString() ? "IA" : "Joueur";
     }
     public void OffTurnBanner(){

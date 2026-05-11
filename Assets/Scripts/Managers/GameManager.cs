@@ -10,18 +10,18 @@ public class GameManager : MonoBehaviour
     public const int MAX_CARTES_TAPIS = 4;
     public static int MAX_NUMBER_ATK_ROUND = 2;
 
-    public List<CarteData> deckPlayerA;
-    public List<CarteData> deckPlayerB;
+    public List<CarteData> deckPlayerUI;
+    public List<CarteData> deckPlayerAI;
 
     public int numberOfAttacksUsedPlayer;
     public int numberOfAttacksUsedIA;
 
     public MainUIManager mainUIManager;
     public BoardManager boardManager;
-    public Queue<CarteData> mainPlayerA;
-    public Queue<CarteData> mainPlayerB;
-    public Queue<CarteData> piochePlayerA;
-    public Queue<CarteData> piochePlayerB;
+    public Queue<CarteData> mainPlayerUI;
+    public Queue<CarteData> mainPlayerAI;
+    public Queue<CarteData> piochePlayerUI;
+    public Queue<CarteData> piochePlayerAI;
 
     public PlayerActionState currentPlayerAction;
 
@@ -48,14 +48,13 @@ public class GameManager : MonoBehaviour
         round = 1;
         mode = GameMode.SELECT_DECK;
                 
-        deckPlayerA = new List<CarteData>();
-        deckPlayerB = new List<CarteData>();
+        deckPlayerUI = new List<CarteData>();
+        deckPlayerAI = new List<CarteData>();
 
         // Charger toutes les cartes .asset dans Resources/CartesGenerees
         CarteScriptableObject[] cartesAssets = Resources.LoadAll<CarteScriptableObject>("CartesGenerees");
         
         // Mélanger toutes les cartes et les répartir entre les deux joueurs (deck partagé)
-        List<CarteData> allCards = new List<CarteData>();
         int cardsAdded = 0;
         foreach (var asset in cartesAssets)
         {
@@ -84,46 +83,43 @@ public class GameManager : MonoBehaviour
                 asset.capacityId,
                 asset.image
             );
-            deckPlayerA.Add(dataA);
-            deckPlayerB.Add(dataB);
+            deckPlayerUI.Add(dataA);
+            deckPlayerAI.Add(dataB);
             cardsAdded++;
         }
-        Shuffle(deckPlayerA);
-        Shuffle(deckPlayerB);
+        Shuffle(deckPlayerUI);
+        Shuffle(deckPlayerAI);
 
         // Convertir en Queue et distribuer 7 cartes pour la main de chaque joueur
-        mainPlayerA = new Queue<CarteData>();
-        mainPlayerB = new Queue<CarteData>();
-        piochePlayerA = new Queue<CarteData>();
-        piochePlayerB = new Queue<CarteData>();
+        mainPlayerUI = new Queue<CarteData>();
+        mainPlayerAI = new Queue<CarteData>();
+        piochePlayerUI = new Queue<CarteData>();
+        piochePlayerAI = new Queue<CarteData>();
 
         // Distribuer les cartes dans les mains
-        int nombreCartesMain = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerA.Count);
-        int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerB.Count);
+        int nombreCartesMain = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerUI.Count);
+        int nombreCartesMainAdversaire = Mathf.Min(MAX_CARTES_TAPIS_SELECT_DECK, deckPlayerAI.Count);
 
         for (int i = 0; i < nombreCartesMain; i++)
         {
-            mainPlayerA.Enqueue(deckPlayerA[i]);
+            mainPlayerUI.Enqueue(deckPlayerUI[i]);
         }
         for (int i = 0; i < nombreCartesMainAdversaire; i++)
         {
-            mainPlayerB.Enqueue(deckPlayerB[i]);
+            mainPlayerAI.Enqueue(deckPlayerAI[i]);
         }
 
         // Le reste va dans la pioche
-        for (int i = nombreCartesMain; i < deckPlayerA.Count; i++)
+        for (int i = nombreCartesMain; i < deckPlayerUI.Count; i++)
         {
-            piochePlayerA.Enqueue(deckPlayerA[i]);
+            piochePlayerUI.Enqueue(deckPlayerUI[i]);
         }
-        for (int i = nombreCartesMainAdversaire; i < deckPlayerB.Count; i++)
+        for (int i = nombreCartesMainAdversaire; i < deckPlayerAI.Count; i++)
         {
-            piochePlayerB.Enqueue(deckPlayerB[i]);
+            piochePlayerAI.Enqueue(deckPlayerAI[i]);
         }
 
-        mainUIManager.ShowHand(mainPlayerA.ToList());
-        
-        //Debug.Log($"[GAME] Decks créés - Joueur: {mainPlayerA.Count} cartes, IA: {mainPlayerB.Count} cartes");
-        //Debug.Log($"[GAME] Pioches créées - Joueur: {piochePlayerA.Count} cartes, IA: {piochePlayerB.Count} cartes");
+        mainUIManager.ShowHand(mainPlayerUI.ToList());
     }
 
     public void StartRound()
@@ -133,8 +129,6 @@ public class GameManager : MonoBehaviour
 
         numberOfAttacksUsedPlayer = 0;
         numberOfAttacksUsedIA = 0;
-
-        Debug.Log($"[GAME] ===== DÉBUT DU TOUR {round} =====");
 
         aiStart = Random.Range(0, 2) == 0;
 
@@ -171,10 +165,10 @@ public class GameManager : MonoBehaviour
     {
         if (mode == GameMode.GAME_OVER) return true;
 
-        int playerBoard = BoardManager.cardsOnBoardUI.Count(c => c != null && !c.isHiddenSlot && !c.isYellow);
-        int aiBoard = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot && !c.isYellow);
-        int playerDeck = piochePlayerA?.Count ?? 0;
-        int aiDeck = piochePlayerB?.Count ?? 0;
+        int playerBoard = BoardManager.cardsOnBoardUI.Count(c => !c.isHiddenSlot && !c.isYellow);
+        int aiBoard = BoardManager.cardsOnBoardAI.Count(c => !c.isHiddenSlot && !c.isYellow);
+        int playerDeck = piochePlayerUI?.Count ?? 0;
+        int aiDeck = piochePlayerAI?.Count ?? 0;
 
         bool playerHasNoCards = playerBoard == 0 && playerDeck == 0;
         bool aiHasNoCards = aiBoard == 0 && aiDeck == 0;
@@ -209,7 +203,7 @@ public class GameManager : MonoBehaviour
     public List<CarteData> GetSelectedCards()
     {
         MainUIManager mainUIManager = GameObject.Find("MainUIManager").GetComponent<MainUIManager>();
-        List<CarteData> mainList = mainPlayerA.ToList();
+        List<CarteData> mainList = mainPlayerUI.ToList();
         
         return mainUIManager.transform.GetComponentsInChildren<CardMain>(true)
             .Where(card => card.isSelect)

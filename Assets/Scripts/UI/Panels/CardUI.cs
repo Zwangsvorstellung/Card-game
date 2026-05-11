@@ -2,12 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 
 public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
 {
+    public static List<CardName> CardName = new List<CardName>();
+
     [Header("Composants UI")]
     public Image imageCarte;
     public TMP_Text nomText; 
@@ -20,9 +23,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public int defenseValue;
 
     [Header("Icônes d'état")]
-    public GameObject atk1Icon; // Icône première attaque
-    public GameObject passedIcon; // Icône "passé"
-    public GameObject freezeIcon; // Icône "freeze"
+    public GameObject atk1Icon;
+    public GameObject passedIcon;
+    public GameObject freezeIcon;
 
     [Header("Position")]
     public RectTransform rectTransform;
@@ -46,8 +49,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public bool isYellow = false;
     public bool isHiddenSlot = false;
     public bool actionChoiceDo = false;
-    public string stateOffensif;
-    public string stateDefensif;
+    public OffensiveState stateOffensif;
+    public DefensiveState stateDefensif;
     public string target;
     public int targetID;
     public string lastTarget;
@@ -64,8 +67,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         layoutElement = GetComponent<LayoutElement>();
         rectTransform = GetComponent<RectTransform>();
         layoutGroup = transform.parent?.GetComponent<LayoutGroup>();
-        stateDefensif = "notCibled";
-        stateOffensif = "wait";
+        stateDefensif = DefensiveState.NOT_CIBLED;
+        stateOffensif = OffensiveState.WAIT;
     }
     private void Start()
     {
@@ -78,7 +81,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     {
         if (isHiddenSlot) return;
 
-        if(stateOffensif == "passed"){
+        if(stateOffensif == OffensiveState.PASSED){
             passedIcon.SetActive(true);
             RectTransform passedRect = passedIcon.GetComponent<RectTransform>();
             StartCoroutine(CardsAnimation.SwingSablier(passedRect));
@@ -87,17 +90,14 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
             passedIcon.SetActive(false);
         }
 
-        if(stateDefensif == "cibled"){
+        if(stateDefensif == DefensiveState.CIBLED){
             atk1Icon.SetActive(true);
         }else{
             atk1Icon.SetActive(false);
         }
 
-        if(isFrozen){
-            freezeIcon.SetActive(true);
-        }else{
-           freezeIcon.SetActive(false);
-        }
+        if (freezeIcon.activeSelf != isFrozen)
+            freezeIcon.SetActive(isFrozen);
 
         if(isYellow){
             imageCarte.color = new Color(1f, 0.95f, 0.4f, 1f);
@@ -111,8 +111,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         if (isHiddenSlot && isYellow) return;
 
         actionChoiceDo = false;
-        stateOffensif = "wait";
-        stateDefensif = "notCibled";
+        stateOffensif = OffensiveState.WAIT;
+        stateDefensif = DefensiveState.NOT_CIBLED;
 
         if(freezeAtTurn != GameManager.Instance.round)
         {
@@ -123,17 +123,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         lastTarget = target;
         target = "";
         targetID = 0;
-
         imageCarte.color = Color.white;
-        
-        HideAllIcons();
-        
         rectTransform.anchoredPosition = startPosition;
         layoutGroup.enabled = true;
-
+        
+        HideAllIcons();
         atk?.SetActive(false);
     }
-
 
     public void setAttributesInitCardPlayer(CarteData data)
     {
@@ -144,10 +140,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         defenseText?.SetText(data.defense.ToString());
         nameCapacity?.SetText(data.nameCapacity);
         descriptionCapacity?.SetText(data.descriptionCapacity);
-
         attaqueValue = data.attaque;
         defenseValue = data.defense;
-        
         instanceId = data.instanceId;
         idCard = data.idCard;
         gameObject.name = $"CardUI_{data.nom}_id{data.idCard}_inst{data.instanceId}";
@@ -196,7 +190,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     {
         isSelect = true;
         GameManager.Instance.mode = GameMode.HAS_CARD_SELECTED_TO_ACTION;
-        stateOffensif = "waitOrder";
+        stateOffensif = OffensiveState.WAIT_ORDER;
         rectTransform.anchoredPosition = positionWithOffset;
 
         if (layoutGroup?.enabled == true)
@@ -209,12 +203,11 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     {
         isSelect = false;
         GameManager.Instance.mode = GameMode.SELECT_CARD_TO_PLAY_ACTION;
-        stateOffensif = "wait";
+        stateOffensif = OffensiveState.WAIT;
+        rectTransform.anchoredPosition = startPosition;
 
         if (layoutGroup?.enabled == true)
             layoutGroup.enabled = false;
-
-        rectTransform.anchoredPosition = startPosition;
 
         if (layoutElement)
             layoutElement.ignoreLayout = true;
@@ -222,9 +215,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
 
     public void ShowActionButtons()
     {
-        if(GameManager.Instance.numberOfAttacksUsedPlayer < 2)
-            buttonAtk?.SetActive(true);
-
+        buttonAtk?.SetActive(GameManager.Instance.numberOfAttacksUsedPlayer < 2);
         buttonPass?.SetActive(true);
     }
     public void HideActionButtons()
@@ -238,7 +229,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         if (isHiddenSlot) return;
         HideActionButtons();
 
-        stateOffensif = "passed";
+        stateOffensif = OffensiveState.PASSED;
         rectTransform.anchoredPosition = startPosition - offsetClick;
         actionChoiceDo = true;
         BoardManager.Instance.CheckPlayerCardsDone();
@@ -253,12 +244,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         HideActionButtons();
         atk?.SetActive(true);
 
-        stateOffensif = "selectTarget";
+        stateOffensif = OffensiveState.SELECT_TARGET;
         GameManager.Instance.numberOfAttacksUsedPlayer++;
         
         // si Tyroine -> choisir aléatoire qui n'est pas déjà ciblée
-        if(nameCard == "Tyroine"){
-            List<CardAI> targetsAI = BoardManager.cardsOnBoardAI.Where(c => c.stateDefensif != "cibled").ToList();
+        if(nameCard == CardName.TYROINE){
+            List<CardAI> targetsAI = BoardManager.cardsOnBoardAI.Where(c => c.stateDefensif != DefensiveState.CIBLED && c.isHiddenSlot).ToList();
             if(targetsAI.Count > 0){
                 int randomTarget = Random.Range(0, targetsAI.Count);
                 CardAI randomTargetCard = targetsAI[randomTarget];
@@ -275,16 +266,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
         targetID = cardAI.idCard;
         actionChoiceDo = true;
         isSelect = false;    
-        stateOffensif = "atk";
-        
+        stateOffensif = OffensiveState.ATK;
         //Debug.Log($"[CARD-UI] {nameCard} cible {cardAI.nameCard} (ATK:{attaqueValue} vs DEF:{cardAI.defenseValue})");
-        int damage = attaqueValue - cardAI.defenseValue;
-        if (damage < 0) damage = 1;
+        int damage = Mathf.Max(1, attaqueValue - cardAI.defenseValue);
     }
 
     public bool HasCapacity(Capacity cap)
     {
-        if (nameCapacity == null) return false;
         return nameCapacity.text.Contains(cap.ToString());
     }
     public bool IsAdjacentTo(CardUI other)
@@ -295,8 +283,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     {
         isHiddenSlot = true;
         actionChoiceDo = false;
-        stateOffensif = "hidden";
-        stateDefensif = "hidden";
+        stateOffensif = OffensiveState.HIDDEN;
+        stateDefensif = DefensiveState.HIDDEN;
         isSelect = false;
         isFrozen = false;
         isYellow = false;
@@ -309,11 +297,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     public (ICard left, ICard right) GetAdjacentCards(ICard card)
     {
         var list = BoardManager.cardsOnBoardUI
-            .Where(c => c != null && !c.isHiddenSlot)
+            .Where(c => !c.isHiddenSlot)
             .ToList();
 
         int index = list.FindIndex(c => c.idCard == card.idCard);
-
         Debug.Log($"[ADJ FIX] {card.nameCard} id={card.idCard} index={index}");
 
         if (index == -1)
@@ -324,12 +311,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
 
         ICard left = (index > 0) ? list[index - 1] : null;
         ICard right = (index < list.Count - 1) ? list[index + 1] : null;
-
         return (left, right);
     }
 
     public string INameCard => nameCard;
-
     string ICard.nameCard => nameCard;
 
     int ICard.idCard
@@ -352,8 +337,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, ICard
     TMP_Text ICard.defenseText => defenseText;
     TMP_Text ICard.attaqueText => attaqueText;
 
-    string ICard.stateOffensif => stateOffensif;
-    string ICard.stateDefensif => stateDefensif;
+    OffensiveState ICard.stateOffensif => stateOffensif;
+    DefensiveState ICard.stateDefensif => stateDefensif;
     bool ICard.isHiddenSlot => isHiddenSlot;
 
     bool ICard.isCardPlayer
