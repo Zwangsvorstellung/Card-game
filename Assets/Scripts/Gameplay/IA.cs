@@ -52,8 +52,8 @@ public class IA : MonoBehaviour
         int attackSaved = 0;
 
         // Création de copies des listes pour pouvoir les modifier sans affecter les originaux
-        List<CardAI> cardsAIOnBoard = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot).ToList();
-        List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => c != null && !c.isHiddenSlot).ToList();
+        List<CardAI> cardsAIOnBoard = BoardManager.cardsOnBoardAI.Where(c => !c.isHiddenSlot).ToList();
+        List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => !c.isHiddenSlot).ToList();
 
         bool hasSoliciaOpponent = cardsUIOnBoard.Any(c => c.nameCard == CardName.SOLICIA);
         bool hasBelindraOpponentStatePassed = cardsUIOnBoard.Any(c => c.nameCard == CardName.BELINDRA && c.stateOffensif == OffensiveState.PASSED);
@@ -66,7 +66,6 @@ public class IA : MonoBehaviour
             CardUI bestTarget = null;
 
             // Pour chaque carte IA disponible, on évalue la meilleure action
-            // Debug.Log($"[IA] Évaluation de {cardsAIOnBoard.Count} cartes IA...");
             foreach (var cardAI in cardsAIOnBoard)
             {
                 if (cardAI.isFrozen) continue;
@@ -99,7 +98,7 @@ public class IA : MonoBehaviour
             }
             else
             {
-                Debug.Log($"[IA] Aucune attaque intéressante trouvée (score max: {bestScoring}, seuil: {seuilMinAttaque})");
+                Debug.Log($"[IA] Aucune attaque intéressante (score max: {bestScoring}, seuil: {seuilMinAttaque})");
                 break;
             }
         }
@@ -123,7 +122,7 @@ public class IA : MonoBehaviour
 
         GameManager.Instance.isEndturnAI = true;
 
-        var aiCards = BoardManager.cardsOnBoardAI.Where(c => c != null && !c.isHiddenSlot);
+        var aiCards = BoardManager.cardsOnBoardAI.Where(c => !c.isHiddenSlot);
         int visibleAICards = aiCards.Count();
         int attacksCount = aiCards.Count(c => c.stateOffensif == OffensiveState.ATK);
         int passesCount = aiCards.Count(c => c.stateOffensif == OffensiveState.PASSED);

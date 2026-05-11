@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
 using UnityEngine.UI;
+using GameStates;
+using Capacity;
 
 /// Calcule les scores d'attaque et de passivité pour aider l'IA à prendre des décisions optimales.
 public static class IAAction
 {
-    public static List<Capacity> Capacites;
-
     /// Évalue le score d'une attaque potentielle de l'attaquant vers le défenseur.
     public static int RateAttack(
         CardAI attacker,
@@ -25,56 +25,48 @@ public static class IAAction
         int baseDamage = Mathf.Max(1, atk - def);
         int scoring = baseDamage;
 
-        // ======================================================
         // BONUS : CAPACITÉS QUI RÉDUISENT LA DÉFENSE
         // ======================================================
         // Ignorance Défensive / Percée Défensive : réduit la défense de la cible
         // Bonus supplémentaire car ces capacités rendent l'attaque plus efficace
-
-        if (attacker.HasCapacity(Capacity.IgnoranceDefensive) || attacker.HasCapacity(Capacity.PerceeDefensive))
+        if (attacker.HasCapacity(Capacity.IGNORANCE_DEFENSIVE) || attacker.HasCapacity(Capacity.PERCEE_DEFENSIVE))
             scoring += 1;
 
-        // ======================================================
         // BONUS OFFENSIFS (capacités de l'attaquant)
         // ======================================================
-
         // Frappe Puissante : inflige +1 dégât supplémentaire
-        if (attacker.HasCapacity(Capacity.FrappePuissante))
+        if (attacker.HasCapacity(Capacity.FRAPPE_PUISSANTE))
             scoring += 1;
 
         // Attaque Surprise : bonus si on attaque une cible différente de la précédente
         // Cela encourage la diversité des cibles et rend l'attaque plus imprévisible
 
-        if (attacker.HasCapacity(Capacity.AttaqueSurprise) &&
+        if (attacker.HasCapacity(Capacity.ATTAQUE_SURPRISE) &&
             !string.IsNullOrEmpty(attacker.lastTarget) &&
             attacker.lastTarget != defender.nameCard)
             scoring += 1;
 
         // Combo : Dégâts aléatoires entre 0 et 4 points
-        if (attacker.HasCapacity(Capacity.Combo))
-        {
-            scoring += 2 + Random.Range(0, 3);
-        }
+        if (attacker.HasCapacity(Capacity.COMBO))
+            scoring += 2;
 
         // Frappe Gelée / Tentation : la cible ne pourra pas attaquer au prochain tour
         // Bonus stratégique car cela neutralise une menace ennemie
-        if (attacker.HasCapacity(Capacity.FrappeGelee))
+        if (attacker.HasCapacity(Capacity.FRAPPE_GELEE))
             scoring += 1;
 
-        if (attacker.HasCapacity(Capacity.Tentation))
+        if (attacker.HasCapacity(Capacity.TENTATION))
             scoring -= 1; // perdre le contrôle de blocage rend l’attaque moins intéressante
 
         // Attaque Aléatoire : ignore 1 défense et attaque aléatoire
         // Bonus supplémentaire car cette capacité est puissante
-        if (attacker.HasCapacity(Capacity.Aleatoire))
+        if (attacker.HasCapacity(Capacity.ALEATOIRE))
             scoring += 1;
 
-        // ======================================================
         // PÉNALITÉS : RISQUES DE LA CIBLE
         // ======================================================
-
         // Vague Létale : Inflige ses dégats si elle est ciblée
-        if (defender.HasCapacity(Capacity.VagueLetale))
+        if (defender.HasCapacity(Capacity.VAGUE_LETALE))
         {
             scoring -= 2;
             Debug.Log($"[CIBLAGE] → attaquer Vague Létale est risqué");
@@ -82,66 +74,60 @@ public static class IAAction
 
         // Attaque de Provocation (Jaycota) : inflige 1 dégât en retour
         // Pénalité car on prend des dégâts en attaquant
-        if (defender.HasCapacity(Capacity.Provocation))
+        if (defender.HasCapacity(Capacity.PROVOCATION))
             scoring--;
 
         // Aubaine (Zarla) : si attaquée, gagne +1 ATK temporaire au prochain combat
         // Pénalité car on ne veut pas booster l'ennemi
-        if (defender.HasCapacity(Capacity.Aubaine))
+        if (defender.HasCapacity(Capacity.AUBAINE))
             scoring--;
 
         // Régénération : la cible récupère des PV si elle n'attaque pas
         // Pénalité optionnelle car cela peut réduire l'efficacité de l'attaque
-        if (defender.HasCapacity(Capacity.Regeneration))
+        if (defender.HasCapacity(Capacity.REGENERATION))
             scoring--;
 
-        // ======================================================
         // PÉNALITÉS : ALLIÉS DE LA CIBLE
         // ======================================================
-
         if (defenderAllies != null)
         {
+            bool has_REFLEXION_PARTIELLE = defenderAllies.Any(a => a.HasCapacity(Capacity.REFLEXION_PARTIELLE));
+            bool has_BOUCLIER_COLLECTIF = defenderAllies.Any(a => a.HasCapacity(Capacity.BOUCLIER_COLLECTIF) &&
+                                                             a.IsAdjacentTo(defender) &&
+                                                             a.stateOffensif != OffensiveState.ATK);
+
             // Réflexion partielle : un allié inflige 1 dégât de retour si la cible est attaquée
             // Pénalité car on prend des dégâts supplémentaires
-            if (defenderAllies.Any(a => a.HasCapacity(Capacity.ReflexionPartielle)))
+            if (has_REFLEXION_PARTIELLE)
                 scoring--;
 
             // Bouclier Collectif : réduit les dégâts n'attaque pas
             // Pour vérifier si l'allié n'attaque pas, on vérifie son stateOffensif
-            if (defenderAllies.Any(a =>
-                a.HasCapacity(Capacity.BouclierCollectif) &&
-                a.IsAdjacentTo(defender) &&
-                a.stateOffensif != OffensiveState.ATK))
-            {
+            if (has_BOUCLIER_COLLECTIF)
                 scoring--;
-            }
         }
 
-        // ======================================================
         // PÉNALITÉS : CAPACITÉS DE L'ATTAQUANT
         // ======================================================
-
         // Certaines capacités de l'attaquant sont plus utiles si on ne fait rien
 
         // Régénération : on perd la régénération si on attaque
         // Pénalité car on perd un avantage en attaquant
-        if (attacker.HasCapacity(Capacity.Regeneration))
+        if (attacker.HasCapacity(Capacity.REGENERATION))
             scoring--;
 
         // Aura de Force : si Cassandre n'attaque pas, elle booste les alliés adjacents
         // Pénalité si on attaque car on perd l'effet de boost pour les alliés
-        if (attacker.HasCapacity(Capacity.AuraDeForce))
+        if (attacker.HasCapacity(Capacity.AURA_DE_FORCE))
             scoring--;
 
         // Terreur Sélective : si Trahison n'attaque pas, inflige -1 ATK aux ennemis qui n'attaquent pas
         // Pénalité si on attaque car on perd l'effet de malus sur les ennemis
-        if (attacker.HasCapacity(Capacity.TerreurSelective))
+        if (attacker.HasCapacity(Capacity.TERREUR_SELECTIVE))
             scoring--;
 
-        // ======================================================
         // BONUS MAJEUR : ÉLIMINATION
         // ======================================================
-
         if (atk >= defender.defenseValue)
         {
             scoring += 4;
@@ -162,36 +148,33 @@ public static class IAAction
 
         // Agilité Risquée : ne pas attaquer = intouchable
         // Très fort bonus car la carte devient invulnérable
-        if (card.HasCapacity(Capacity.AgiliteRisque))
-        {
+        if (card.HasCapacity(Capacity.AGILITE_RISQUEE))
             scoring += 3;
-        }
+
         // Aura de Force : boost les alliés adjacents si la carte ne fait rien
         // Le bonus est proportionnel au nombre d'alliés boostés
-        if (card.HasCapacity(Capacity.AuraDeForce))
+        if (card.HasCapacity(Capacity.AURA_DE_FORCE))
         {
             // Compte les alliés adjacents (gauche/droite sur le plateau)
             int nbAdjacents = 0;
             if (allies != null)
             {
-                nbAdjacents = allies.Count(a => a != null && a.IsAdjacentTo(card));
+                nbAdjacents = allies.Count(a => a.IsAdjacentTo(card));
             }
             scoring += nbAdjacents; // +1 par allié boosté
         }
         // annule une attaque - gros gain
-        if (card.HasCapacity(Capacity.Tentation))
-        {
+        if (card.HasCapacity(Capacity.TENTATION))
             scoring += 2;
-        }
+        
         // Régénération : récupère des PV si on ne fait rien
         // Bonus modéré car la survie est importante
-        if (card.HasCapacity(Capacity.Regeneration))
-        {
+        if (card.HasCapacity(Capacity.REGENERATION))
             scoring += 2;
-        }
+
         // Terreur Sélective : inflige un malus ATK aux ennemis qui n'attaquent pas
         // Le bonus est proportionnel au nombre d'ennemis affectés
-        if (card.HasCapacity(Capacity.TerreurSelective))
+        if (card.HasCapacity(Capacity.TERREUR_SELECTIVE))
         {
             // Compte les ennemis qui n'ont pas attaqué (état "passed")
             int nbOpponentPassifs = 0;
@@ -203,10 +186,8 @@ public static class IAAction
         }
         // Onde de Choc Passive : inflige 1 dégât à un ennemi non-attaquant
         // Bonus fixe car la cible est aléatoire (pas trop puissant)
-        if (card.HasCapacity(Capacity.OndeDeChocPassive))
-        {
+        if (card.HasCapacity(Capacity.ONDE_DE_CHOC_PASSIVE))
             scoring += 1;
-        }
 
         return scoring;
     }
@@ -238,7 +219,7 @@ public static class IAAction
             //Debug.Log($"Attaquant: {attacker.nameCard} ennemi: {opponent.nameCard} score attaque: {attackScore}");
             
             // Garde la cible avec le meilleur score
-            if (attackScore > maxAttackScore)
+            if (attackScore > maxAttackScore + 1)
             {
                 maxAttackScore = attackScore;
                 bestTarget = opponent;
@@ -247,12 +228,10 @@ public static class IAAction
 
         // Calcule le score de rester passif
         int passifScore = RatePassif(attacker, allies, opponents);
-
         // Ajuste le score passif en fonction de la situation - (valeur réduite pour éviter que l'IA reste trop passive)
         passifScore += Mathf.Max(-2, (2 - opponentThreat) - opponentPassiveBonus);
-
         // Décide : attaquer si le score d'attaque est au moins proche du passif (léger biais agressif)
-        bool shouldAttack = maxAttackScore >= passifScore - 1;
+        bool shouldAttack = maxAttackScore >= passifScore;
 
         return (shouldAttack, bestTarget, shouldAttack ? maxAttackScore : passifScore);
     }
@@ -266,19 +245,19 @@ public static class IAAction
         foreach (var opponent in opponents)
         {
             // Capacités offensives qui augmentent la menace
-            if (opponent.HasCapacity(Capacity.FrappePuissante))
+            if (opponent.HasCapacity(Capacity.FRAPPE_PUISSANTE))
                 score += 2; // Très dangereux
 
-            if (opponent.HasCapacity(Capacity.AttaqueSurprise))
+            if (opponent.HasCapacity(Capacity.ATTAQUE_SURPRISE))
                 score += 1; // Imprévisible
 
-            if (opponent.HasCapacity(Capacity.VagueLetale))
+            if (opponent.HasCapacity(Capacity.VAGUE_LETALE))
                 score += 2; // Peut toucher plusieurs cibles
 
-            if (opponent.HasCapacity(Capacity.Combo))
+            if (opponent.HasCapacity(Capacity.COMBO))
                 score += 1; // Synergie avec les alliés
 
-            if (opponent.HasCapacity(Capacity.Tentation))
+            if (opponent.HasCapacity(Capacity.TENTATION))
                 score += 1; // Peut bloquer nos attaques
         }
         return score;
@@ -293,19 +272,19 @@ public static class IAAction
         foreach (var opponent in opponents)
         {
             // Capacités qui donnent des avantages quand l'ennemi reste passif
-            if (opponent.HasCapacity(Capacity.AgiliteRisque))
+            if (opponent.HasCapacity(Capacity.AGILITE_RISQUEE))
                 score += 3; // Devient intouchable
 
-            if (opponent.HasCapacity(Capacity.AuraDeForce))
+            if (opponent.HasCapacity(Capacity.AURA_DE_FORCE))
                 score += 2; // Boost ses alliés
 
-            if (opponent.HasCapacity(Capacity.Regeneration))
+            if (opponent.HasCapacity(Capacity.REGENERATION))
                 score += 2; // Récupère des PV
 
-            if (opponent.HasCapacity(Capacity.TerreurSelective))
+            if (opponent.HasCapacity(Capacity.TERREUR_SELECTIVE))
                 score += 1; // Affaiblit nos cartes passives
 
-            if (opponent.HasCapacity(Capacity.OndeDeChocPassive))
+            if (opponent.HasCapacity(Capacity.ONDE_DE_CHOC_PASSIVE))
                 score += 1; // Inflige des dégâts passifs
         }
         return score;
