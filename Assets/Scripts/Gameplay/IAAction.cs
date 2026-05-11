@@ -111,7 +111,7 @@ public static class IAAction
             if (defenderAllies.Any(a =>
                 a.HasCapacity(Capacity.BouclierCollectif) &&
                 a.IsAdjacentTo(defender) &&
-                a.stateOffensif != "atk"))
+                a.stateOffensif != OffensiveState.ATK))
             {
                 scoring--;
             }
@@ -197,7 +197,7 @@ public static class IAAction
             int nbOpponentPassifs = 0;
             if (opponents != null)
             {
-                nbOpponentPassifs = opponents.Count(e => e.stateOffensif == "passed");
+                nbOpponentPassifs = opponents.Count(e => e.stateOffensif == OffensiveState.PASSED);
             }
             scoring += nbOpponentPassifs;
         }

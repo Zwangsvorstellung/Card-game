@@ -56,7 +56,6 @@ public class GameDebugOverlay : MonoBehaviour
         GUILayout.BeginArea(viewRect);
         scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Width(viewRect.width), GUILayout.Height(viewRect.height));
 
-        // Vérification GameManager
         if (GameManager.Instance == null)
         {
             GUILayout.Label("GameManager NOT INITIALIZED!", labelStyle);
@@ -67,7 +66,6 @@ public class GameDebugOverlay : MonoBehaviour
 
         GameManager gm = GameManager.Instance;
 
-        // Affichage infos
         GUILayout.Label("Round: " + gm.round, labelStyle);
         GUILayout.Label("Mode: " + (gm.mode.ToString() ?? "null"), labelStyle);
         GUILayout.Label("Current Action: " + (gm.currentPlayerAction.ToString() ?? "null"), labelStyle);
@@ -77,26 +75,26 @@ public class GameDebugOverlay : MonoBehaviour
         GUILayout.Label("AI Attacks: " + gm.numberOfAttacksUsedIA, labelStyle);
         GUILayout.Space(8);
 
-        int mainPlayerA = gm.mainPlayerA != null ? gm.mainPlayerA.Count : 0;
-        int mainPlayerB = gm.mainPlayerB != null ? gm.mainPlayerB.Count : 0;
-        GUILayout.Label("Player Hand: " + mainPlayerA, labelStyle);
-        GUILayout.Label("AI Hand: " + mainPlayerB, labelStyle);
+        int mainPlayerUI = gm.mainPlayerUI != null ? gm.mainPlayerUI.Count : 0;
+        int mainPlayerAI = gm.mainPlayerAI != null ? gm.mainPlayerAI.Count : 0;
+        GUILayout.Label("Player Hand: " + mainPlayerUI, labelStyle);
+        GUILayout.Label("AI Hand: " + mainPlayerAI, labelStyle);
 
-        int piochePlayerA = gm.piochePlayerA != null ? gm.piochePlayerA.Count : 0;
-        int piochePlayerB = gm.piochePlayerB != null ? gm.piochePlayerB.Count : 0;
-        GUILayout.Label("Player Deck: " + piochePlayerA, labelStyle);
-        GUILayout.Label("AI Deck: " + piochePlayerB, labelStyle);
+        int piochePlayerUI = gm.piochePlayerUI != null ? gm.piochePlayerUI.Count : 0;
+        int piochePlayerAI = gm.piochePlayerAI != null ? gm.piochePlayerAI.Count : 0;
+        GUILayout.Label("Player Deck: " + piochePlayerUI, labelStyle);
+        GUILayout.Label("AI Deck: " + piochePlayerAI, labelStyle);
 
-        int totalPlayer = mainPlayerA + piochePlayerA;
-        int totalAI = mainPlayerB + piochePlayerB;
+        int totalPlayer = mainPlayerUI + piochePlayerUI;
+        int totalAI = mainPlayerAI + piochePlayerAI;
         GUILayout.Label("Total Player Cards: " + totalPlayer, labelStyle);
         GUILayout.Label("Total AI Cards: " + totalAI, labelStyle);
         GUILayout.Space(10);
 
-        DrawQueue("PLAYER HAND (mainPlayerA)", gm.mainPlayerA);
-        DrawQueue("PLAYER DECK (piochePlayerA)", gm.piochePlayerA);
-        DrawQueue("AI HAND (mainPlayerB)", gm.mainPlayerB);
-        DrawQueue("AI DECK (piochePlayerB)", gm.piochePlayerB);
+        DrawQueue("PLAYER HAND (mainPlayerUI)", gm.mainPlayerUI);
+        DrawQueue("PLAYER DECK (piochePlayerUI)", gm.piochePlayerUI);
+        DrawQueue("AI HAND (mainPlayerAI)", gm.mainPlayerAI);
+        DrawQueue("AI DECK (piochePlayerAI)", gm.piochePlayerAI);
 
         GUILayout.EndScrollView();
         GUILayout.EndArea();

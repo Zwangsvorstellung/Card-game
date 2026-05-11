@@ -1,0 +1,22 @@
+public enum CardName{
+    CLOREL,
+    DESIR,
+    JAYCOTA,
+    RUBY,
+    TRIOMPHE,
+    NEO,
+    ANAXAGORE,
+    AMBROISE,
+    TYROINE,
+    ZARLA,
+    CASSANDRE,
+    TRAHISON,
+    SOLICIA,
+    BELINDRA,
+    ZAO,
+    ONDINE,
+    HIVER,
+    VILAINE,
+    XIANG,
+    MINOSON
+}

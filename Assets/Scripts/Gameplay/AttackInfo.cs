@@ -7,10 +7,10 @@ public struct AttackInfo
     public CardAI targetAI;        // Cible si c'est une carte IA
     public int damage;
     public bool isPlayerAttack;     // true si c'est une attaque du joueur, false si c'est l'IA
-    public string attackerStateOffensif;
-    public string attackerStateDefensif;
-    public string targetStateOffensif;
-    public string targetStateDefensif;
+    public OffensiveState attackerStateOffensif;
+    public DefensiveState attackerStateDefensif;
+    public OffensiveState targetStateOffensif;
+    public DefensiveState targetStateDefensif;
     public bool hasSoliciaOpponent;
     public bool hasBelindraOpponentStatePassed;
 

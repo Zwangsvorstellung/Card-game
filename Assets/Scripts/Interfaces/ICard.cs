@@ -9,8 +9,8 @@ public interface ICard
     TMP_Text defenseText { get; }
     TMP_Text attaqueText { get; }
 
-    string stateOffensif { get; }
-    string stateDefensif { get; }
+    OffensiveState stateOffensif { get; }
+    DefensiveState stateDefensif { get; }
     bool isHiddenSlot { get; }
 
     bool isCardPlayer { get; set; }

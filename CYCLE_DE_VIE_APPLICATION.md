@@ -25,11 +25,11 @@ Unity Start → GameManager.Start()
 - Initialise `round = 1`
 - Définit `mode = "selectDeck"`
 - Charge toutes les cartes depuis `Resources/CartesGenerees`
-- Crée 2 decks (PlayerA et PlayerB) avec toutes les cartes
+- Crée 2 decks (PlayerUI et PlayerAI) avec toutes les cartes
 - Mélange les decks (`Shuffle()`)
-- Distribue 7 cartes dans `mainPlayerA` et `mainPlayerB`
-- Met le reste dans `piochePlayerA` et `piochePlayerB`
-- Affiche la main du joueur : `mainUIManager.ShowHand(mainPlayerA.ToList())`
+- Distribue 7 cartes dans `mainPlayerUI` et `mainPlayerAI`
+- Met le reste dans `piochePlayerUI` et `piochePlayerAI`
+- Affiche la main du joueur : `mainUIManager.ShowHand(mainPlayerUI.ToList())`
 
 **État** : `mode = "selectDeck"`
 
@@ -60,9 +60,9 @@ Joueur clique sur "Valider" → PlayerActionManager.ConfirmSelection()
 
 **Actions** :
 - Récupère les cartes sélectionnées : `GameManager.GetSelectedCards()`
-- Met les cartes sélectionnées dans `mainPlayerA`
-- Met les cartes non sélectionnées dans `piochePlayerA`
-- Génère 4 cartes aléatoires pour l'adversaire depuis `mainPlayerB`
+- Met les cartes sélectionnées dans `mainPlayerUI`
+- Met les cartes non sélectionnées dans `piochePlayerUI`
+- Génère 4 cartes aléatoires pour l'adversaire depuis `mainPlayerAI`
 - Appelle `BoardManager.SetupBoardCards(opponentCards, selectedCards)`
 - Change la vue vers le plateau : `CamController.GoToBoardView()`
 - Change le mode : `GameManager.Instance.mode = "selectCardToPlayAction"`
