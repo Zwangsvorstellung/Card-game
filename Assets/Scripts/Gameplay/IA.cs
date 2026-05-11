@@ -4,6 +4,10 @@ using System.Linq;
 using System.Collections;
 using UnityEngine.UI;
 using static IAAction;
+using static CardName;
+using static OffensiveState;
+using static DefensiveState;
+using static PlayerActionState;
 
 /// Gère le comportement de l'IA pour les tours de l'adversaire. - Utilise IAAction pour évaluer les meilleures actions et les exécute.
 public class IA : MonoBehaviour
@@ -16,7 +20,6 @@ public class IA : MonoBehaviour
     [SerializeField] private float delayAction = 0.2f;
     
     private static List<AttackInfo> aiAttacks = new List<AttackInfo>();
-    public static List<CardName> CardName = new List<CardName>();
 
     void Awake()
     {
@@ -39,8 +42,7 @@ public class IA : MonoBehaviour
     /// évalue les actions possibles et choisit les meilleures. système de scoring pour décider entre attaquer et rester passif.
     private IEnumerator ExecuteAITurn()
     {
-        int aiCardsCount = BoardManager.cardsOnBoardAI.Count(c => c != null && !c.isHiddenSlot);
-        
+        int aiCardsCount = BoardManager.cardsOnBoardAI.Count(c => !c.isHiddenSlot);
         if (aiCardsCount == 0)
         {
             Debug.Log("[IA] Aucune carte IA trouvée - Arrêt du tour");
@@ -144,23 +146,14 @@ public class IA : MonoBehaviour
     public IEnumerator ApplyAllAttacksCoroutine()
     {
         Debug.Log($"[ATTACK] ===== APPLICATION DES ATTAQUES =====");
-        
         List<AttackInfo> playerAttacks = GetPlayerAttacks();
         // aiAttacks - les attaques de l'IA
         
-        List<AttackInfo> allAttacks = new List<AttackInfo>();
-        bool aiStart = GameManager.Instance.aiStart;
+        List<AttackInfo> allAttacks = new();
 
-        if (aiStart)
-        {
-            allAttacks.AddRange(aiAttacks);
-            allAttacks.AddRange(playerAttacks);
-        }
-        else
-        {
-            allAttacks.AddRange(playerAttacks);
-            allAttacks.AddRange(aiAttacks);
-        }
+        bool aiStart = GameManager.Instance.aiStart;
+        allAttacks.AddRange(aiStart ? aiAttacks : playerAttacks);
+        allAttacks.AddRange(aiStart ? playerAttacks : aiAttacks);
 
         // 3. Application séquentielle avec pause pour laisser l'Update() afficher le jaune
         foreach (var attack in allAttacks)
@@ -168,7 +161,6 @@ public class IA : MonoBehaviour
             ApplySingleAttack(attack);
             yield return new WaitForSeconds(0.8f);
         }
-
         yield return new WaitForSeconds(0.5f);
         
         aiAttacks.Clear();
@@ -185,20 +177,13 @@ public class IA : MonoBehaviour
         
         bool aiStart = GameManager.Instance.aiStart;
 
-        if (aiStart)
-        {
-            ApplyBonus(cardsAIOnBoard);
-            ApplyBonus(cardsUIOnBoard);
-        }
-        else
-        {
-            ApplyBonus(cardsUIOnBoard);
-            ApplyBonus(cardsAIOnBoard);
-        }
+        var first = aiStart ? cardsAIOnBoard : cardsUIOnBoard;
+        var second = aiStart ? cardsUIOnBoard : cardsAIOnBoard;
+        ApplyBonus(first);
+        ApplyBonus(second);
 
         //ApplyAllMalusEndTurn(cardsUIOnBoard);
         //ApplyAllMalusEndTurn(cardsAIOnBoard);
-
         yield return new WaitForSeconds(0.5f);
     }
     public void ApplyBonus(IEnumerable<ICard> cards)
@@ -276,16 +261,13 @@ public class IA : MonoBehaviour
             if (card.isCardPlayer)
             {
                 enemyCards = BoardManager.cardsOnBoardAI.Cast<ICard>().ToList();
-
             }
             else
             {
                 enemyCards = BoardManager.cardsOnBoardUI.Cast<ICard>().ToList();
             }
 
-            var targets = enemyCards
-                .Where(c => !c.isHiddenSlot && c.stateOffensif == OffensiveState.PASSED)
-                .ToList();
+            var targets = enemyCards.Where(c => !c.isHiddenSlot && c.stateOffensif == OffensiveState.PASSED).ToList();
 
             if (targets.Count > 0)
             {
@@ -339,13 +321,6 @@ public class IA : MonoBehaviour
         List<CardUI> cardsUIOnBoard = BoardManager.cardsOnBoardUI.Where(c => !c.isHiddenSlot && c.stateOffensif == OffensiveState.PASSED).ToList();
         bool aiStart = GameManager.Instance.aiStart;
 
-        if (aiStart)
-        {
-        }
-        else
-        {
-        }
-
         yield return new WaitForSeconds(0.5f);
     }
 
@@ -386,10 +361,6 @@ public class IA : MonoBehaviour
     {
         if (attacker == null || target == null || attacker.isHiddenSlot || target.isHiddenSlot) return;
         
-        int attackCount = 0;
-        if (target.atk1Icon != null && target.atk1Icon.activeSelf) attackCount++;
-        attackCount++;
-        
         if (target.atk1Icon != null)
         {
             target.atk1Icon.SetActive(true);
@@ -409,7 +380,7 @@ public class IA : MonoBehaviour
 
     private void ExecutePass(CardAI card)
     {
-        if (card == null || card.isHiddenSlot) return;
+        if (card.isHiddenSlot) return;
         
         card.actionChoiceDo = true;
         card.stateOffensif = OffensiveState.PASSED;
@@ -419,19 +390,10 @@ public class IA : MonoBehaviour
         Vector3 newPosition = startPosition + new Vector3(0, +30, 0);
         card.rectTransform.anchoredPosition = newPosition;
     }
-    
-    /// Coroutine pour démarrer le tour de l'IA après un délai.
-    public IEnumerator StartAITurnCoroutine()
-    {
-        yield return new WaitForSeconds(2f);
-        StartAITurn();
-    }
 
     /// Déplace légèrement la carte vers le bas pour indiquer l'attaque. AI
     private void ApplyIAAttackVisualEffect(CardAI card)
-    {
-        if (card == null || card.rectTransform == null) return;
-        
+    {        
         Vector3 startPosition = card.rectTransform.anchoredPosition;
         Vector3 newPosition = startPosition + new Vector3(0, -50, 0);
         card.rectTransform.anchoredPosition = newPosition;
@@ -554,15 +516,8 @@ public class IA : MonoBehaviour
         if(attackerName == CardName.MINOSON && attack.attackerStateOffensif == OffensiveState.ATK){
         
             List<ICard> targets = new();
-            var targetsAI = BoardManager.cardsOnBoardAI
-                .Where(c => !c.isHiddenSlot && c.stateDefensif == DefensiveState.CIBLED)
-                .Cast<ICard>()
-                .ToList();
-
-            var targetsUI = BoardManager.cardsOnBoardUI
-                .Where(c => !c.isHiddenSlot && c.stateDefensif == DefensiveState.CIBLED)
-                .Cast<ICard>()
-                .ToList();
+            var targetsAI = BoardManager.cardsOnBoardAI.Where(c => !c.isHiddenSlot && c.stateDefensif == DefensiveState.CIBLED).Cast<ICard>().ToList();
+            var targetsUI = BoardManager.cardsOnBoardUI.Where(c => !c.isHiddenSlot && c.stateDefensif == DefensiveState.CIBLED).Cast<ICard>().ToList();
 
             targets = attack.isPlayerAttack ? targetsUI : targetsAI;
    

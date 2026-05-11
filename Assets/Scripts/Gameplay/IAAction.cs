@@ -129,9 +129,7 @@ public static class IAAction
         // BONUS MAJEUR : ÉLIMINATION
         // ======================================================
         if (atk >= defender.defenseValue)
-        {
             scoring += 4;
-        }
 
         return Mathf.Max(scoring, 0);
     }

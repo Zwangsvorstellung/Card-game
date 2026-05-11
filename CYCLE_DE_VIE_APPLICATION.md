@@ -216,7 +216,7 @@ if (cardsOnBoardUI.All(card => card.actionChoiceDo))
 
 ### 5.1 Démarrage du Tour de l'IA
 ```
-BoardManager.MarkEndOfTurn() → StartAI() → IA.StartAITurnCoroutine()
+BoardManager.MarkEndOfTurn() → StartAI() → IA
 → IA.StartAITurn() → IA.ExecuteAITurn()
 ```
 

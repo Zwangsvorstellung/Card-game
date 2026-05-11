@@ -63,17 +63,13 @@ public class BoardManager : MonoBehaviour
         if (GameManager.Instance.currentPlayerAction != PlayerActionState.UI)
             return;
 
-        var activeCards = cardsOnBoardUI
-            .Where(c => c != null && !c.isHiddenSlot)
-            .ToList();
-
+        var activeCards = cardsOnBoardUI.Where(c => !c.isHiddenSlot).ToList();
         Debug.Log($"[CHECK] COUNT={activeCards.Count}");
 
         if (activeCards.Count == 0)
             return;
 
         bool allDone = true;
-
         foreach (var c in activeCards)
         {
             if (!c.actionChoiceDo)
@@ -84,7 +80,6 @@ public class BoardManager : MonoBehaviour
         }
 
         Debug.Log($"[CHECK] ALL DONE = {allDone}");
-
         if (!allDone) return;
 
         // 🔒 protection anti double trigger
@@ -314,11 +309,8 @@ public class BoardManager : MonoBehaviour
 
     private IEnumerator FadeYellowCards(float fromAlpha, float toAlpha, float duration)
     {
-        var yellowCardsUI = BoardManager.cardsOnBoardUI
-            .Where(c => c.isYellow).ToList();
-
-        var yellowCardsAI = BoardManager.cardsOnBoardAI
-            .Where(c => c.isYellow).ToList();
+        var yellowCardsUI = BoardManager.cardsOnBoardUI.Where(c => c.isYellow).ToList();
+        var yellowCardsAI = BoardManager.cardsOnBoardAI.Where(c => c.isYellow).ToList();
 
         foreach (var card in yellowCardsUI)
         {
